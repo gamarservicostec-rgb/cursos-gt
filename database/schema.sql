@@ -4,8 +4,8 @@
 -- Compatible with MySQL 8.0+ / phpMyAdmin / cPanel HostGator
 -- ====================================================
 
-CREATE DATABASE IF NOT EXISTS `gt_cursos` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-USE `gt_cursos`;
+-- CREATE DATABASE IF NOT EXISTS `gt_cursos` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+-- USE `gt_cursos`;
 
 SET FOREIGN_KEY_CHECKS = 0;
 
