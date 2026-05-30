@@ -1,0 +1,8 @@
+---
+deployment:
+  tasks:
+    # DEFINA O CAMINHO DE DESTINO DO SITE AQUI
+    # Para o subdomínio cursos.gtservtec.com.br, o caminho comum é /home1/jairop59/public_html/
+    # Ajuste para a pasta correta do subdomínio caso necessário (ex: /home1/jairop59/public_html/cursos/)
+    - export DEPLOYPATH=/home1/jairop59/public_html/
+    - /bin/rsync -av --exclude='.git' --exclude='.cpanel.yml' --exclude='.env' $cpanel_source_dir/ $DEPLOYPATH
