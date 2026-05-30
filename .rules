@@ -1,0 +1,59 @@
+# REGRAS DO PROJETO — GT CURSOS (.rules)
+
+As regras abaixo são permanentes e obrigatórias para toda e qualquer implementação, modificação ou expansão no repositório do projeto **GT Cursos**. Qualquer violação destas diretrizes resultará na rejeição automática do código.
+
+---
+
+## 1. Padrão Visual e Identidade Amber Neon Fusion
+
+> [!WARNING]
+> **PROIBIÇÃO ABSOLUTA DE ELEMENTOS CLAROS/BRANCOS**
+> O sistema opera em **Dark Mode Absoluto**. Fica terminantemente proibida a criação de superfícies claras, fundos brancos dominantes ou qualquer elemento que quebre a atmosfera de cinema e streaming.
+
+### Paleta Oficial de Cores:
+* **Fundo Geral (Background):** `#0A0A0C` (Preto absoluto com profundidade radial suave)
+* **Superfícies de Componentes (Surfaces):** `#141417` (Cinza escuro translúcido com opacidade de vidro)
+* **Dourado/Âmbar Principal (Primary):** `#F2C94C` (Neon Gold para destaques de ações e marcas)
+* **Glow/Luminosidade (Accent/Glow):** `#FFD700` (Efeito de iluminação dourada sutil com blur)
+* **Texto Principal (Text):** `#F5F5F7` (Branco acinzentado de alta elegância)
+* **Texto Secundário (Muted):** `#8F8F9D` (Cinza neutro para descrições de suporte)
+
+### Estilo Glassmorphism e Efeitos Neon:
+1. **Bordas Translúcidas:** Todos os cards, sidebars e campos de input devem possuir bordas finas semi-transparentes: `border: 1px solid rgba(255, 255, 255, 0.05)` ou `rgba(242, 201, 76, 0.15)` para elementos ativos.
+2. **Backdrop Blur:** Cards e sidebars suspensos devem utilizar desfoque de fundo: `backdrop-filter: blur(20px)` ou Tailwind `backdrop-blur-md` / `backdrop-blur-xl`.
+3. **Neon Glow:** Elementos de ação primária ativos ou em estado hover devem possuir sombras luminosas suaves: `box-shadow: 0 0 20px rgba(242, 201, 76, 0.25)`.
+
+---
+
+## 2. Nomenclatura e Organização
+
+- **Nomes de Arquivos:**
+  - Páginas públicas e administrativas: `lower_snake_case` (ex: `course_details.php`, `classroom.php`).
+  - Scripts de API: `lower_snake_case` ou mapeados de forma direta (ex: `login.php`, `complete_lesson.php`).
+  - Classes e Arquivos de Código-fonte PHP: `PascalCase` (ex: `Database.php`, `AuthMiddleware.php`).
+  - Scripts auxiliares JS e CSS: `lower_snake_case` (ex: `classroom.js`, `checkout.js`).
+- **Nomenclatura no Banco de Dados:**
+  - Tabelas e colunas em `lower_snake_case` no plural para tabelas (`users`, `courses`, `lessons`).
+  - Chaves primárias: `id` (INT AUTO_INCREMENT).
+  - Chaves estrangeiras: `tabela_singular_id` (ex: `course_id`, `user_id`).
+- **Nomenclatura no Código (JS e PHP):**
+  - Variáveis e funções em JavaScript: `camelCase` (ex: `togglePassword`, `updateProgress`).
+  - Métodos e atributos em PHP: `camelCase` (ex: `validateSession`, `getConnection`).
+  - Constantes Globais: `SCREAMING_SNAKE_CASE` (ex: `DB_HOST`, `MERCADO_PAGO_TOKEN`).
+
+---
+
+## 3. Segurança e Robustez Backend
+
+1. **Prepared Statements Obligatórios:** É expressamente proibido realizar interpolação direta de variáveis em strings SQL. Todas as consultas ao banco de dados MySQL devem ser feitas via `PDO` usando queries preparadas (`execute(array)` ou `bindParam()`).
+2. **Proteção contra CSRF:** Todo formulário HTML que envie dados via requisição do tipo `POST`, `PUT` ou `DELETE` deve gerar um campo oculto contendo um token CSRF dinâmico validado em nível de controlador back-end.
+3. **Escape de Output XSS:** Qualquer dado retornado do banco ou de parâmetros de requisição exibidos no HTML deve passar por `htmlspecialchars($data, ENT_QUOTES, 'UTF-8')`.
+4. **Middleware de Controle:** Páginas das rotas `/dashboard/` e `/admin/` devem validar a existência da sessão ativa correspondente no cabeçalho dos arquivos. Caso o aluno tente acessar o admin, o sistema deve emitir um redirecionamento imediato para `403 Forbidden` ou para o login.
+
+---
+
+## 4. Layout e Responsividade
+
+- **Grid de Layout:** Uso rígido do sistema flexbox e grid layout do TailwindCSS em resoluções desktop (`lg:`, `xl:`) baseado no padrão matemático de espaçamento de 8px (`p-2`, `p-4`, `p-6`, `p-8`).
+- **Mobile First e Aplicação Premium:** Todo layout responsivo deve ocultar menus e barras de forma elegante usando gavetas (drawers) ou abas inferiores (bottom navigation sheets), simulando a experiência de um aplicativo mobile nativo. Não são tolerados cortes de texto ou quebras de grade visual em resoluções menores.
+- **Proibido Alterar Layouts Aprovados:** As telas importadas do Stitch servem como estrutura fixa original. Modificações ou melhorias não devem deslocar elementos estruturais sem prévio alinhamento de UX.

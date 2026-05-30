@@ -1,0 +1,21 @@
+# ====================================================
+# CONFIGURAÇÃO DE SEGURANÇA E ROTAS — GT CURSOS (.htaccess)
+# ====================================================
+
+RewriteEngine On
+
+# 1. Bloqueia acesso direto a pastas confidenciais e arquivos de regras
+RewriteRule ^(src|storage|logs|database|\.rules|\.workflows) - [F,L]
+
+# 2. Impede a listagem automática de diretórios (Directory Browsing)
+Options -Indexes
+
+# 3. Rota Amigável para Verificação de Certificados
+# Traduz: /certificate/verify/ABC-123  =>  /public/certificate_verify.php?code=ABC-123
+RewriteRule ^certificate/verify/([a-zA-Z0-9\-]+)$ public/certificate_verify.php?code=$1 [L,QSA]
+
+# 4. Encaminha requisições da raiz diretamente para a pasta /public/
+RewriteCond %{REQUEST_URI} !^/public/
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)$ public/$1 [L]

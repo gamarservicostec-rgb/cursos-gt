@@ -1,0 +1,17 @@
+# Proteção contra vazamento de segredos
+.env
+
+# Arquivos do Sistema Operacional
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs de Erros
+error_log
+php_errors.log
+
+# Diretórios de Desenvolvimento
+.gemini/
+.idea/
+.vscode/
+node_modules/

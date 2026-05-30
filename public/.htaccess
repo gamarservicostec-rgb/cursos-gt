@@ -1,0 +1,41 @@
+# ====================================================
+# OTIMIZAÇÕES DE PERFORMANCE — /public/.htaccess
+# ====================================================
+
+# 1. Impede a listagem automática de diretórios
+Options -Indexes
+
+# 2. Ativa Compressão Gzip (mod_deflate) para carregamento ultra rápido
+<IfModule mod_deflate.c>
+    # Compacta arquivos de texto, html, css, javascript e xml
+    AddOutputFilterByType DEFLATE text/html text/plain text/xml text/css text/javascript application/javascript application/x-javascript application/json application/xml
+    
+    # Remove bugs de navegadores antigos
+    BrowserMatch ^Mozilla/4 gzip-only-text/html
+    BrowserMatch ^Mozilla/4\.0[678] no-gzip
+    BrowserMatch \bMSIE !no-gzip !gzip-only-text/html
+</IfModule>
+
+# 3. Ativa Cache do Navegador (mod_expires) para Assets Estáticos
+<IfModule mod_expires.c>
+    ExpiresActive On
+    
+    # Imagens e Mídias (1 mês)
+    ExpiresByType image/jpg "access plus 1 month"
+    ExpiresByType image/jpeg "access plus 1 month"
+    ExpiresByType image/gif "access plus 1 month"
+    ExpiresByType image/png "access plus 1 month"
+    ExpiresByType image/webp "access plus 1 month"
+    ExpiresByType image/svg+xml "access plus 1 month"
+    
+    # CSS e JavaScript (1 semana)
+    ExpiresByType text/css "access plus 1 week"
+    ExpiresByType text/javascript "access plus 1 week"
+    ExpiresByType application/javascript "access plus 1 week"
+    
+    # Fontes Web (1 ano)
+    ExpiresByType font/woff "access plus 1 year"
+    ExpiresByType font/woff2 "access plus 1 year"
+    ExpiresByType font/ttf "access plus 1 year"
+    ExpiresByType font/otf "access plus 1 year"
+</IfModule>

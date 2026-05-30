@@ -1,0 +1,66 @@
+# WORKFLOWS DO PROJETO — GT CURSOS (.workflows)
+
+Os fluxos descritos abaixo ditam a cadência de desenvolvimento, controle de qualidade, testes e publicação do sistema **GT Cursos** hospedado na HostGator.
+
+---
+
+## 1. Fluxo de Planejamento e Design
+1. **Entrada de Demanda/Funcionalidade:** Toda nova funcionalidade deve iniciar com a leitura atenta dos requisitos do PRD e mapeamento das telas complementares no Stitch.
+2. **Definição Técnica:** Mapear tabelas extras no banco de dados MySQL e criar a lista de endpoints necessários da API REST em PHP.
+3. **Plano de Implementação:** Escrever as modificações pretendidas no arquivo de planejamento (`PLANEJAMENTO_MASTER.md`) e obter aprovação antes de codificar arquivos executáveis.
+
+---
+
+## 2. Fluxo de Implementação de Recursos
+1. **Modelagem de Dados (Fase 1):** Escrever as migrations / scripts SQL de tabelas no arquivo `/database/schema.sql`. Testar a criação e os relacionamentos no phpMyAdmin local.
+2. **API REST Backend (Fase 2):** Codificar a rota da API em `/public/api/` criando o tratamento do payload (inputs), validações de segurança (autenticação, rate limit, sanitização) e resposta em JSON formatado.
+3. **Interface Visual (Fase 3):** Criar a página pública ou painel em HTML5 e TailwindCSS. Garantir que as tags do layout usem a folha de estilos `custom.css` com a estética *Neon Amber Fusion*.
+4. **Acoplamento Dinâmico (Fase 4):** Ligar a interface à API via chamadas assíncronas `fetch` em JavaScript Vanilla. Manipular o DOM de forma limpa para renderizar loadings suaves, placeholders de esqueleto e estados de erro.
+
+---
+
+## 3. Fluxo de Testes e Controle de Qualidade (QA)
+
+> [!IMPORTANT]
+> **PROTOCOLO OBRIGATÓRIO DE QUALIDADE**
+> Nenhuma funcionalidade ou arquivo pode ser enviado para deploy em produção sem passar pelo protocolo de 4 etapas descrito abaixo.
+
+1. **Etapa 1: Console Clean Validation**
+   - Abrir o console do Chrome DevTools.
+   - Navegar por todas as rotas e interagir com formulários.
+   - **Métrica de Sucesso:** Zero erros (`Uncaught ReferenceError`, `TypeError`, etc.) ou advertências críticas de segurança e CORS no console.
+2. **Etapa 2: Network Latency & Response Audit**
+   - Abrir a aba *Network* (Rede) no DevTools.
+   - Filtrar por requisições `Fetch/XHR`.
+   - **Métrica de Sucesso:** Todas as chamadas retornando HTTP `200 OK` (ou `201 Created`) em menos de 300ms, com payload JSON válido.
+3. **Etapa 3: Simulador de Dispositivos e Touch**
+   - Ativar o modo de emulação de dispositivos móveis (Toggle Device Toolbar - Ctrl+Shift+M).
+   - Testar o layout nas dimensões exatas de um iPhone SE/12 Pro (Mobile pequeno/médio), iPad Air (Tablet) e Notebook 13 polegadas.
+   - **Métrica de Sucesso:** Zero transbordamentos de tela horizontais (horizontal overflow), botões perfeitamente clicáveis via touch (tamanho mínimo de 44x44px) e textos legíveis.
+4. **Etapa 4: Lighthouse Score Threshold**
+   - Rodar auditoria no Lighthouse para a Landing Page e páginas públicas.
+   - **Métricas Mínimas em Produção:** Performance >= 85, Acessibilidade >= 90, Melhores Práticas >= 90, SEO >= 90.
+
+---
+
+## 4. Fluxo de Versionamento e Deploy
+
+```mermaid
+graph LR
+    Local[Desenvolvimento Local] -->|Git Commit| Main[Branch Principal - main]
+    Main -->|Git Push| GitHub[Repositório Remoto GitHub]
+    GitHub -->|Push Automático / Git Webhook| HostGator[Git Version Control cPanel HostGator]
+    HostGator -->|Deploy Sincronizado| Production[Pasta public_html Produção]
+```
+
+### Regras de Versionamento (Git):
+* Commits devem seguir o padrão de *Conventional Commits*:
+  - `feat: adiciona checkout transparente do mercado pago`
+  - `fix: corrige autoplay do player da bunny no safari`
+  - `docs: atualiza planejamento master com campos de gamificacao`
+  - `style: insere glows de glassmorphism no dashboard de aluno`
+
+### Regras de Deploy (HostGator):
+1. **Configuração de Diretório:** O conteúdo da pasta `/public/` do repositório Git do cPanel deve estar perfeitamente mapeado para a pasta `/public_html/` ou um subdomínio específico.
+2. **Arquivos de Configuração Sensíveis:** Chaves secretas de APIs (Mercado Pago, Gmail, Discloud) e senhas do banco de dados MySQL de produção **NÃO** devem ser commitadas no repositório público do GitHub. Elas devem ser guardadas em um arquivo PHP isolado (`src/Config/AppConfig.php` ou `.env` protegido por `.htaccess` contra acesso web direto).
+3. **Backups Periódicos:** Tarefas cron diárias configuradas no cPanel para exportar o dump do banco de dados MySQL e compactar a pasta de uploads de anexos e certificados.
