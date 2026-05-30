@@ -1,4 +1,4 @@
 ---
 deployment:
   tasks:
-    - /bin/rsync -av --exclude='.git' --exclude='.cpanel.yml' --exclude='.env' $cpanel_source_dir/ /home1/jairop59/cursos.gtservtec.com.br/
+    - /bin/rsync -av --exclude='.git' --exclude='.cpanel.yml' --exclude='.env' /home1/jairop59/repositories/cursos-gt-novo/ /home1/jairop59/cursos.gtservtec.com.br/
