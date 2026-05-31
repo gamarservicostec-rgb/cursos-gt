@@ -1,6 +1,5 @@
 # Proteção contra vazamento de segredos
 .env
-/.htaccess
 
 # Arquivos do Sistema Operacional
 .DS_Store
