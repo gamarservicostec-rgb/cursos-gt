@@ -114,7 +114,13 @@ try {
                 <a href="#faq" class="hover:text-primary transition-colors">FAQ</a>
             </nav>
 
-            <div class="flex items-center gap-6">
+            <div class="flex flex-1 justify-end items-center gap-6">
+                <!-- Botão do WhatsApp -->
+                <a href="https://wa.me/5511946721741" target="_blank" class="flex items-center justify-center rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 p-2.5 hover:bg-emerald-500 hover:text-background-dark transition-all duration-300 hover:shadow-[0_0_15px_rgba(16,185,129,0.3)]" title="Falar no WhatsApp">
+                    <svg class="h-5 w-5 fill-current" viewBox="0 0 24 24">
+                        <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.514 2.266 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.502-5.724-1.455L0 24zm6.59-4.846c1.665.989 3.3 1.513 5.367 1.515 5.53.003 10.028-4.492 10.03-10.025.002-2.68-1.038-5.197-2.93-7.091c-1.892-1.893-4.41-2.931-7.096-2.933-5.534 0-10.03 4.493-10.032 10.027-.001 1.777.464 3.506 1.345 5.037L1.86 21.19l4.787-1.25zM17.51 15.01c-.267-.134-1.579-.78-1.821-.865-.243-.086-.42-.13-.596.134-.176.265-.682.865-.837 1.04-.155.174-.31.195-.577.062-.267-.134-1.13-.416-2.152-1.327-.794-.708-1.33-1.582-1.487-1.85-.158-.266-.017-.41.116-.543.12-.12.267-.31.4-.467.135-.156.18-.26.27-.435.09-.175.045-.325-.022-.46-.067-.134-.596-1.436-.816-1.968-.215-.518-.432-.448-.596-.456-.153-.008-.33-.009-.507-.009-.176 0-.464.067-.707.325-.243.258-.928.907-.928 2.212 0 1.304.949 2.563 1.08 2.731.133.17 1.868 2.853 4.525 4.001.633.273 1.127.436 1.513.559.636.202 1.214.174 1.671.106.509-.076 1.579-.646 1.8-.1237.221-.592.221-1.1.155-1.185-.066-.086-.243-.13-.51-.264z"/>
+                    </svg>
+                </a>
                 <?php if (isset($_SESSION['user_id'])): ?>
                     <div class="flex items-center gap-4">
                         <a href="<?php echo ($_SESSION['user_role'] === 'admin') ? 'admin/index.php' : 'dashboard/index.php'; ?>" class="flex items-center justify-center rounded border border-primary text-primary text-xs font-bold px-5 py-2.5 uppercase tracking-widest hover:bg-primary hover:text-background-dark transition-all duration-300 hover:shadow-glow">
