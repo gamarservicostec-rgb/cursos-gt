@@ -14,8 +14,7 @@ Options -Indexes
 # Traduz: /certificate/verify/ABC-123  =>  /public/certificate_verify.php?code=ABC-123
 RewriteRule ^certificate/verify/([a-zA-Z0-9\-]+)$ public/certificate_verify.php?code=$1 [L,QSA]
 
-# 4. Encaminha requisições da raiz diretamente para a pasta /public/
+# 4. Encaminha requisições da raiz diretamente para a pasta /public/ de forma transparente
 RewriteCond %{REQUEST_URI} !^/public/
 RewriteCond %{REQUEST_FILENAME} !-f
-RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule ^(.*)$ public/$1 [L]
