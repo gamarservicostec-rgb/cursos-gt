@@ -293,6 +293,10 @@ try {
             <span class="material-symbols-outlined">school</span>
             <span class="font-label-sm text-label-sm">Cursos</span>
         </a>
+        <a class="flex items-center gap-4 px-4 py-3 rounded-lg text-on-surface-variant hover:text-white hover:bg-white/5 transition-all duration-200" href="categories.php">
+            <span class="material-symbols-outlined">category</span>
+            <span class="font-label-sm text-label-sm">Categorias</span>
+        </a>
         <a class="flex items-center gap-4 px-4 py-3 rounded-lg text-on-surface-variant hover:text-white hover:bg-white/5 transition-all duration-200" href="students.php">
             <span class="material-symbols-outlined">person</span>
             <span class="font-label-sm text-label-sm">Alunos</span>

@@ -7,16 +7,29 @@ require_once __DIR__ . '/../src/Config/Database.php';
 // Inicia sessão
 AppConfig::startSession();
 
-// Conecta ao banco de dados e busca cursos ativos
+// Conecta ao banco de dados e busca cursos e categorias ativos
 $dbInstance = Database::getInstance();
 $db = $dbInstance->getConnection();
 
 try {
-    $stmt = $db->prepare("SELECT id, title, description, thumbnail_url, type, price FROM courses WHERE status = 'active' ORDER BY id ASC");
+    // Busca os cursos ativos e junta com os dados de categoria correspondentes
+    $stmt = $db->prepare("
+        SELECT c.id, c.title, c.description, c.thumbnail_url, c.type, c.price, c.category_id, cat.slug as category_slug, cat.name as category_name
+        FROM courses c
+        LEFT JOIN categories cat ON c.category_id = cat.id
+        WHERE c.status = 'active'
+        ORDER BY c.id ASC
+    ");
     $stmt->execute();
     $courses = $stmt->fetchAll();
+
+    // Busca todas as categorias ordenadas por sort_order
+    $catStmt = $db->prepare("SELECT id, name, slug FROM categories ORDER BY sort_order ASC, name ASC");
+    $catStmt->execute();
+    $categories = $catStmt->fetchAll();
 } catch (\PDOException $e) {
     $courses = [];
+    $categories = [];
 }
 ?>
 <!DOCTYPE html>
@@ -26,6 +39,8 @@ try {
     <meta content="width=device-width, initial-scale=1.0" name="viewport">
     <meta name="description" content="GT Cursos - Plataforma de Educação de Elite. Treinamento híbrido avançado, segurança operacional, tecnologia e desenvolvimento estratégico.">
     <title>GT Cursos — Educação Híbrida de Elite</title>
+    <!-- Favicon Real -->
+    <link rel="icon" type="image/x-icon" href="assets/images/favicon.ico">
     <!-- Fonts -->
     <link href="https://api.fontshare.com/v2/css?f[]=clash-display@600;700&f[]=satoshi@400;500;700;900&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
@@ -98,10 +113,8 @@ try {
     <header class="w-full border-b border-solid border-border-color px-6 md:px-16 py-4 glass-panel sticky top-0 z-50 transition-all duration-300">
         <div class="max-w-[1440px] mx-auto flex items-center justify-between">
             <div class="flex items-center gap-3 text-text-main">
-                <div class="h-10 w-10 bg-primary/10 rounded border border-primary/20 flex items-center justify-center">
-                    <span class="material-symbols-outlined text-primary text-glow font-bold" style="font-size: 24px;">shield</span>
-                </div>
-                <span class="font-heading text-2xl font-bold tracking-wider uppercase">
+                <img src="assets/images/logo.png" alt="Logo GT Cursos" class="h-10 w-auto object-contain">
+                <span class="font-heading text-2xl font-bold tracking-wider uppercase hidden sm:inline">
                     GT <span class="text-primary text-glow">CURSOS</span>
                 </span>
             </div>
@@ -267,15 +280,42 @@ try {
                 <p class="text-muted text-base max-w-md">Escolha a sua especialização. Faça a sua matrícula online com opções facilitadas em PIX e Cartão com liberação imediata.</p>
             </div>
 
+            <!-- Abas de Filtros de Categorias (Obsidian Gold) -->
+            <?php if (!empty($categories)): ?>
+                <div class="flex flex-wrap items-center justify-center gap-3 mb-10 border-b border-white/5 pb-8">
+                    <button onclick="filterCategory('all', this)" class="px-5 py-2.5 rounded-full text-xs font-bold uppercase tracking-wider bg-primary text-background-dark shadow-glow-strong hover:bg-gold-light hover:shadow-glow transition-all duration-300 transform active:scale-95 tab-btn active-tab">
+                        Todos
+                    </button>
+                    <?php foreach ($categories as $cat): ?>
+                        <button onclick="filterCategory('<?php echo $cat['slug']; ?>', this)" class="px-5 py-2.5 rounded-full text-xs font-bold uppercase tracking-wider bg-white/5 text-muted hover:text-white hover:bg-white/10 transition-all duration-300 transform active:scale-95 border border-white/5 tab-btn">
+                            <?php echo htmlspecialchars($cat['name'], ENT_QUOTES, 'UTF-8'); ?>
+                        </button>
+                    <?php endforeach; ?>
+                </div>
+            <?php endif; ?>
+
             <!-- Grid de Cursos Dinâmicos -->
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8" id="coursesGridContainer">
                 <?php if (!empty($courses)): ?>
                     <?php foreach ($courses as $course): ?>
-                        <div class="glass-panel rounded-xl overflow-hidden flex flex-col justify-between group hover:border-primary/20 hover:shadow-glow transition-all duration-300">
+                        <div data-category-slug="<?php echo htmlspecialchars($course['category_slug'] ?? 'unassigned', ENT_QUOTES, 'UTF-8'); ?>" class="course-card glass-panel rounded-xl overflow-hidden flex flex-col justify-between group hover:border-primary/20 hover:shadow-glow transition-all duration-500 transform ease-in-out opacity-100 scale-100">
                             <!-- Thumbnail Area -->
                             <div class="relative aspect-video w-full overflow-hidden bg-cover bg-center border-b border-white/5" style="background-image: url('<?php echo $course['thumbnail_url'] ?? 'https://lh3.googleusercontent.com/aida-public/AB6AXuCOZxoS-KaOHz2AQP_l-4pCnAOU55dDkFGrPU1UWvoYfvguKBjWVSTpGWkrosgpc5tAulMSWltO9FEY_pPGWgXIfJSk3nDGa5Sln93zKm49t0cfx3Rt41EpQmF0oZA7nVtIAsObChnhjSwTCqnSr2bGJfedSqdorO8A6LPiwU6Bzh57MN4fFHkKkFqbp5n1YBlJoOQrhpxl6yUFhz_gymvmJPCHnFCBE487_7b-yyGcSpGHu_NNTksWusxyIRG87m9YbpHDk5klzSnG'; ?>');">
                                 <div class="absolute inset-0 bg-gradient-to-t from-background-dark/95 to-transparent opacity-60"></div>
-                                <div class="absolute top-4 right-4 bg-primary text-background-dark text-[10px] font-bold px-2.5 py-1 rounded shadow-glow uppercase tracking-widest font-heading">
+                                
+                                <!-- Tag de Categoria (Canto Superior Esquerdo) -->
+                                <?php if (!empty($course['category_name'])): ?>
+                                    <div class="absolute top-4 left-4 bg-black/75 backdrop-blur-md border border-primary/10 text-primary text-[9px] font-bold px-2.5 py-1 rounded shadow-md uppercase tracking-wider font-heading z-10">
+                                        <?php echo htmlspecialchars($course['category_name'], ENT_QUOTES, 'UTF-8'); ?>
+                                    </div>
+                                <?php else: ?>
+                                    <div class="absolute top-4 left-4 bg-black/75 backdrop-blur-md border border-white/10 text-muted text-[9px] font-bold px-2.5 py-1 rounded shadow-md uppercase tracking-wider font-heading z-10">
+                                        Sem Categoria
+                                    </div>
+                                <?php endif; ?>
+
+                                <!-- Tag de Tipo (Canto Superior Direito) -->
+                                <div class="absolute top-4 right-4 bg-primary text-background-dark text-[9px] font-bold px-2.5 py-1 rounded shadow-glow uppercase tracking-wider font-heading z-10">
                                     <?php echo strtoupper($course['type']); ?>
                                 </div>
                             </div>
@@ -557,7 +597,7 @@ try {
         </div>
     </footer>
 
-    <!-- FAQ Accordion JS Script -->
+    <!-- FAQ Accordion & Category Filter JS Script -->
     <script>
         function toggleFaq(button) {
             const content = button.nextElementSibling;
@@ -579,6 +619,49 @@ try {
                 icon.style.transform = 'rotate(180deg)';
                 button.parentElement.classList.add('border-primary/20');
             }
+        }
+
+        // Função Premium de Filtragem Dinâmica e Animada de Categorias (Obsidian Gold)
+        function filterCategory(categorySlug, button) {
+            // 1. Atualiza o estado visual das abas
+            const buttons = document.querySelectorAll('.tab-btn');
+            buttons.forEach(btn => {
+                btn.classList.remove('bg-primary', 'text-background-dark', 'shadow-glow-strong', 'active-tab', 'hover:bg-gold-light');
+                btn.classList.add('bg-white/5', 'text-muted', 'border-white/5');
+            });
+            
+            button.classList.remove('bg-white/5', 'text-muted', 'border-white/5');
+            button.classList.add('bg-primary', 'text-background-dark', 'shadow-glow-strong', 'active-tab', 'hover:bg-gold-light');
+
+            // 2. Filtra os cards com efeitos de fade-in e scale
+            const cards = document.querySelectorAll('.course-card');
+            
+            cards.forEach(card => {
+                const cardCategory = card.getAttribute('data-category-slug');
+                const isMatch = (categorySlug === 'all' || cardCategory === categorySlug);
+                
+                if (isMatch) {
+                    // Destrava display flex antes de iniciar a transição
+                    card.style.display = 'flex';
+                    
+                    // Dá um pequeno timeout para o navegador recalcular os estilos e disparar a animação
+                    setTimeout(() => {
+                        card.classList.remove('opacity-0', 'scale-95');
+                        card.classList.add('opacity-100', 'scale-100');
+                    }, 50);
+                } else {
+                    // Dispara animação de saída (fade out + encolhimento leve)
+                    card.classList.remove('opacity-100', 'scale-100');
+                    card.classList.add('opacity-0', 'scale-95');
+                    
+                    // Oculta da tela após a transição completar (500ms)
+                    setTimeout(() => {
+                        if (card.classList.contains('opacity-0')) {
+                            card.style.display = 'none';
+                        }
+                    }, 500);
+                }
+            });
         }
     </script>
 </body>

@@ -30,7 +30,7 @@ if ($method === 'GET') {
     try {
         if ($courseId) {
             // Retorna a árvore completa (Pensando no Editor de Grade/Syllabus do Admin)
-            $courseQuery = "SELECT id, title, description, price, type, status, thumbnail_url FROM courses WHERE id = :id LIMIT 1";
+            $courseQuery = "SELECT id, title, description, price, type, status, thumbnail_url, category_id FROM courses WHERE id = :id LIMIT 1";
             $cStmt = $db->prepare($courseQuery);
             $cStmt->execute([':id' => $courseId]);
             $course = $cStmt->fetch();
@@ -104,6 +104,7 @@ if ($method === 'GET') {
                     'type' => $course['type'],
                     'status' => $course['status'],
                     'thumbnail_url' => $course['thumbnail_url'],
+                    'category_id' => $course['category_id'] ? (int)$course['category_id'] : null,
                     'curriculum' => $curriculum
                 ]
             ]);
@@ -111,7 +112,7 @@ if ($method === 'GET') {
 
         } else {
             // Listagem geral de cursos para o Painel do Admin
-            $stmt = $db->prepare("SELECT id, title, description, price, type, status, thumbnail_url, created_at FROM courses ORDER BY created_at DESC");
+            $stmt = $db->prepare("SELECT c.id, c.title, c.description, c.price, c.type, c.status, c.thumbnail_url, c.category_id, c.created_at, cat.name as category_name FROM courses c LEFT JOIN categories cat ON c.category_id = cat.id ORDER BY c.created_at DESC");
             $stmt->execute();
             $courses = $stmt->fetchAll();
 
@@ -124,6 +125,8 @@ if ($method === 'GET') {
                     'type' => $c['type'],
                     'status' => $c['status'],
                     'thumbnail_url' => $c['thumbnail_url'],
+                    'category_id' => $c['category_id'] ? (int)$c['category_id'] : null,
+                    'category_name' => $c['category_name'] ? htmlspecialchars($c['category_name'], ENT_QUOTES, 'UTF-8') : 'Sem Categoria',
                     'created_at' => $c['created_at']
                 ];
             }, $courses);
@@ -159,6 +162,7 @@ if ($method === 'GET') {
                 $type = $input['type'] ?? 'hybrid'; // 'ead', 'presencial', 'hybrid'
                 $status = $input['status'] ?? 'active';
                 $thumbnailUrl = trim($input['thumbnail_url'] ?? '');
+                $categoryId = isset($input['category_id']) && $input['category_id'] !== '' ? (int)$input['category_id'] : null;
 
                 if (empty($title) || empty($description) || $price < 0) {
                     http_response_code(400);
@@ -166,14 +170,15 @@ if ($method === 'GET') {
                     exit;
                 }
 
-                $stmt = $db->prepare("INSERT INTO courses (title, description, price, type, status, thumbnail_url) VALUES (:title, :description, :price, :type, :status, :thumbnail_url)");
+                $stmt = $db->prepare("INSERT INTO courses (title, description, price, type, status, thumbnail_url, category_id) VALUES (:title, :description, :price, :type, :status, :thumbnail_url, :category_id)");
                 $stmt->execute([
                     ':title' => $title,
                     ':description' => $description,
                     ':price' => $price,
                     ':type' => $type,
                     ':status' => $status,
-                    ':thumbnail_url' => $thumbnailUrl
+                    ':thumbnail_url' => $thumbnailUrl,
+                    ':category_id' => $categoryId
                 ]);
 
                 $newId = $db->lastInsertId();
@@ -197,6 +202,7 @@ if ($method === 'GET') {
                 $type = $input['type'] ?? 'hybrid';
                 $status = $input['status'] ?? 'active';
                 $thumbnailUrl = trim($input['thumbnail_url'] ?? '');
+                $categoryId = isset($input['category_id']) && $input['category_id'] !== '' ? (int)$input['category_id'] : null;
 
                 if (!$courseId || empty($title) || empty($description) || $price < 0) {
                     http_response_code(400);
@@ -204,7 +210,7 @@ if ($method === 'GET') {
                     exit;
                 }
 
-                $stmt = $db->prepare("UPDATE courses SET title = :title, description = :description, price = :price, type = :type, status = :status, thumbnail_url = :thumbnail_url WHERE id = :id");
+                $stmt = $db->prepare("UPDATE courses SET title = :title, description = :description, price = :price, type = :type, status = :status, thumbnail_url = :thumbnail_url, category_id = :category_id WHERE id = :id");
                 $stmt->execute([
                     ':title' => $title,
                     ':description' => $description,
@@ -212,6 +218,7 @@ if ($method === 'GET') {
                     ':type' => $type,
                     ':status' => $status,
                     ':thumbnail_url' => $thumbnailUrl,
+                    ':category_id' => $categoryId,
                     ':id' => $courseId
                 ]);
 

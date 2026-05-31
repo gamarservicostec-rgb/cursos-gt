@@ -218,6 +218,10 @@ $adminName = $_SESSION['user_name'];
             <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">school</span>
             <span class="font-label-sm text-label-sm">Cursos</span>
         </a>
+        <a class="flex items-center gap-4 px-4 py-3 rounded-lg text-on-surface-variant hover:text-white hover:bg-white/5 transition-all duration-200" href="categories.php">
+            <span class="material-symbols-outlined">category</span>
+            <span class="font-label-sm text-label-sm">Categorias</span>
+        </a>
         <a class="flex items-center gap-4 px-4 py-3 rounded-lg text-on-surface-variant hover:text-white hover:bg-white/5 transition-all duration-200" href="students.php">
             <span class="material-symbols-outlined">person</span>
             <span class="font-label-sm text-label-sm">Alunos</span>
@@ -370,13 +374,20 @@ $adminName = $_SESSION['user_name'];
                                 </div>
                             </div>
 
-                            <div>
-                                <label class="block text-[10px] font-bold uppercase tracking-widest text-primary mb-2">Status</label>
-                                <select id="courseStatusField" class="w-full px-4 py-3 rounded-lg input-glass text-xs">
-                                    <option value="active">Ativo (Publicado)</option>
-                                    <option value="inactive">Rascunho (Inativo)</option>
-                                </select>
-                            </div>
+                                       <div>
+                                 <label class="block text-[10px] font-bold uppercase tracking-widest text-primary mb-2">Categoria</label>
+                                 <select id="courseCategoryField" class="w-full px-4 py-3 rounded-lg input-glass text-xs">
+                                     <option value="">Sem Categoria</option>
+                                 </select>
+                             </div>
+
+                             <div>
+                                 <label class="block text-[10px] font-bold uppercase tracking-widest text-primary mb-2">Status</label>
+                                 <select id="courseStatusField" class="w-full px-4 py-3 rounded-lg input-glass text-xs">
+                                     <option value="active">Ativo (Publicado)</option>
+                                     <option value="inactive">Rascunho (Inativo)</option>
+                                 </select>
+                             </div>                        </div>
 
                             <div class="pt-4 border-t border-white/5 flex gap-3">
                                 <button type="submit" class="w-full bg-primary py-3 rounded-lg text-on-primary font-bold text-xs uppercase tracking-wider shadow-[0_0_20px_rgba(242,201,76,0.2)] hover:shadow-[0_0_35px_rgba(242,201,76,0.35)] transition-all">Salvar Registro</button>
@@ -653,11 +664,29 @@ $adminName = $_SESSION['user_name'];
 
 <script>
     let currentCourseId = null;
-
+    let categoriesList = [];
+ 
     // 1. CARREGAR CURSOS AO ABRIR A TELA
     document.addEventListener('DOMContentLoaded', () => {
         loadCourses();
+        loadCategoriesSelect();
     });
+
+    async function loadCategoriesSelect() {
+        try {
+            const response = await fetch('../api/admin/categories.php');
+            const data = await response.json();
+            if (data.success) {
+                categoriesList = data.categories;
+                const select = document.getElementById('courseCategoryField');
+                select.innerHTML = '<option value="">Sem Categoria</option>' + categoriesList.map(cat => `
+                    <option value="${cat.id}">${cat.name}</option>
+                `).join('');
+            }
+        } catch (err) {
+            console.error('Erro ao carregar categorias para o select:', err);
+        }
+    }
 
     async function loadCourses() {
         try {
@@ -689,6 +718,9 @@ $adminName = $_SESSION['user_name'];
                             <div class="absolute top-4 left-4 flex gap-2">
                                 <span class="text-[9px] font-bold border rounded-full px-2 py-0.5 uppercase tracking-wider backdrop-blur-md ${statusClass}">
                                     ${statusLabel}
+                                </span>
+                                <span class="text-[9px] font-bold text-primary bg-black/60 backdrop-blur-md border border-primary/10 rounded-full px-2 py-0.5 uppercase tracking-wider">
+                                    ${c.category_name || 'Sem Categoria'}
                                 </span>
                             </div>
                             <div class="absolute top-4 right-4">
@@ -753,6 +785,7 @@ $adminName = $_SESSION['user_name'];
             document.getElementById('courseDescField').value = course.description;
             document.getElementById('coursePriceField').value = course.price;
             document.getElementById('courseTypeField').value = course.type;
+            document.getElementById('courseCategoryField').value = course.category_id || '';
             document.getElementById('courseStatusField').value = course.status;
             document.getElementById('courseThumbnailField').value = course.thumbnail_url || '';
             updateThumbnailPreview(course.thumbnail_url || '');
@@ -933,6 +966,7 @@ $adminName = $_SESSION['user_name'];
             description: document.getElementById('courseDescField').value,
             price: parseFloat(document.getElementById('coursePriceField').value),
             type: document.getElementById('courseTypeField').value,
+            category_id: document.getElementById('courseCategoryField').value ? parseInt(document.getElementById('courseCategoryField').value) : null,
             status: document.getElementById('courseStatusField').value,
             thumbnail_url: document.getElementById('courseThumbnailField').value
         };
