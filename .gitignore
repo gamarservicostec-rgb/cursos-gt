@@ -1,6 +1,10 @@
 # Proteção contra vazamento de segredos
 .env
 
+# Arquivo de rotas do servidor — NUNCA enviar via Git
+# O .htaccess no servidor é configurado manualmente pela equipe de infra
+.htaccess
+
 # Arquivos do Sistema Operacional
 .DS_Store
 Thumbs.db
