@@ -27,7 +27,7 @@ $db = $dbInstance->getConnection();
 
 try {
     // Busca dados do curso
-    $courseStmt = $db->prepare("SELECT id, title, description, price, thumbnail_url, type FROM courses WHERE id = :id AND status = 'active' LIMIT 1");
+    $courseStmt = $db->prepare("SELECT id, title, description, price, thumbnail_url, type, available_hours FROM courses WHERE id = :id AND status = 'active' LIMIT 1");
     $courseStmt->execute([':id' => $courseId]);
     $course = $courseStmt->fetch();
 
@@ -298,6 +298,31 @@ $courseImage = !empty($course['thumbnail_url']) ? $course['thumbnail_url'] : 'ht
                     <input type="hidden" name="payment_method" id="selectedMethod" value="pix">
                     <input type="hidden" name="coupon" id="selectedCoupon" value="">
 
+                    <?php if ($course['type'] === 'hybrid'): ?>
+                        <!-- Seletor Premium de Horário Presencial (Obsidian Gold) -->
+                        <div class="p-6 rounded-xl bg-gradient-to-br from-primary/10 to-transparent border border-border-gold flex flex-col gap-4">
+                            <div class="flex items-center gap-2">
+                                <span class="material-symbols-outlined text-primary text-xl">schedule</span>
+                                <h3 class="text-sm font-bold text-white uppercase tracking-wider">Agendamento Presencial</h3>
+                            </div>
+                            <p class="text-[11px] text-muted leading-relaxed">
+                                Este treinamento é da modalidade **Híbrida**. Por favor, selecione abaixo o seu horário disponível para as instruções práticas presenciais que serão realizadas na nossa unidade física:
+                            </p>
+                            <div>
+                                <select name="schedule_time" id="scheduleTimeSelect" required class="w-full bg-[#0a0a0a] border border-white/10 rounded-xl py-3.5 px-4 text-white text-xs font-semibold focus:border-primary outline-none cursor-pointer transition-all">
+                                    <option value="" disabled selected>-- Selecione seu Horário de Aula --</option>
+                                    <?php 
+                                    $hoursList = !empty($course['available_hours']) ? explode(',', $course['available_hours']) : ['08:00 às 10:00', '10:00 às 12:00', '14:00 às 16:00', '19:00 às 21:00'];
+                                    foreach ($hoursList as $hour) {
+                                        $hourTrimmed = htmlspecialchars(trim($hour), ENT_QUOTES, 'UTF-8');
+                                        echo "<option value=\"{$hourTrimmed}\">{$hourTrimmed}</option>";
+                                    }
+                                    ?>
+                                </select>
+                            </div>
+                        </div>
+                    <?php endif; ?>
+
                     <!-- PIX Form View -->
                     <div class="space-y-4" id="form-pix">
                         <div class="p-4 bg-primary/5 border border-primary/20 rounded-lg flex items-start gap-3">
@@ -522,11 +547,13 @@ $courseImage = !empty($course['thumbnail_url']) ? $course['thumbnail_url'] : 'ht
             btnText.textContent = 'Processando Pagamento Seguro...';
             loadingSpinner.classList.remove('hidden');
 
+            const scheduleSelect = document.getElementById('scheduleTimeSelect');
             let payload = {
                 course_id: <?php echo $courseId; ?>,
                 payment_method: method,
                 payment_method_id: method === 'pix' ? 'pix' : (method === 'boleto' ? 'bolbradesco' : 'visa'),
                 coupon: activeCoupon,
+                schedule_time: scheduleSelect ? scheduleSelect.value : null,
                 csrf_token: "<?php echo $csrfToken; ?>"
             };
 

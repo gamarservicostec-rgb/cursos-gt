@@ -30,7 +30,7 @@ if ($method === 'GET') {
     try {
         if ($courseId) {
             // Retorna a árvore completa (Pensando no Editor de Grade/Syllabus do Admin)
-            $courseQuery = "SELECT id, title, description, price, type, status, thumbnail_url, category_id FROM courses WHERE id = :id LIMIT 1";
+            $courseQuery = "SELECT id, title, description, price, type, status, thumbnail_url, category_id, duration_days, weekdays_only, available_hours FROM courses WHERE id = :id LIMIT 1";
             $cStmt = $db->prepare($courseQuery);
             $cStmt->execute([':id' => $courseId]);
             $course = $cStmt->fetch();
@@ -105,6 +105,9 @@ if ($method === 'GET') {
                     'status' => $course['status'],
                     'thumbnail_url' => $course['thumbnail_url'],
                     'category_id' => $course['category_id'] ? (int)$course['category_id'] : null,
+                    'duration_days' => $course['duration_days'] ? (int)$course['duration_days'] : null,
+                    'weekdays_only' => $course['weekdays_only'] !== null ? (int)$course['weekdays_only'] : 1,
+                    'available_hours' => $course['available_hours'] ? htmlspecialchars($course['available_hours'], ENT_QUOTES, 'UTF-8') : null,
                     'curriculum' => $curriculum
                 ]
             ]);
@@ -163,6 +166,11 @@ if ($method === 'GET') {
                 $status = $input['status'] ?? 'active';
                 $thumbnailUrl = trim($input['thumbnail_url'] ?? '');
                 $categoryId = isset($input['category_id']) && $input['category_id'] !== '' ? (int)$input['category_id'] : null;
+                
+                // Propriedades do modelo híbrido
+                $durationDays = isset($input['duration_days']) && $input['duration_days'] !== '' ? (int)$input['duration_days'] : null;
+                $weekdaysOnly = isset($input['weekdays_only']) ? (int)$input['weekdays_only'] : 1;
+                $availableHours = isset($input['available_hours']) ? trim($input['available_hours']) : null;
 
                 if (empty($title) || empty($description) || $price < 0) {
                     http_response_code(400);
@@ -170,7 +178,7 @@ if ($method === 'GET') {
                     exit;
                 }
 
-                $stmt = $db->prepare("INSERT INTO courses (title, description, price, type, status, thumbnail_url, category_id) VALUES (:title, :description, :price, :type, :status, :thumbnail_url, :category_id)");
+                $stmt = $db->prepare("INSERT INTO courses (title, description, price, type, status, thumbnail_url, category_id, duration_days, weekdays_only, available_hours) VALUES (:title, :description, :price, :type, :status, :thumbnail_url, :category_id, :duration_days, :weekdays_only, :available_hours)");
                 $stmt->execute([
                     ':title' => $title,
                     ':description' => $description,
@@ -178,7 +186,10 @@ if ($method === 'GET') {
                     ':type' => $type,
                     ':status' => $status,
                     ':thumbnail_url' => $thumbnailUrl,
-                    ':category_id' => $categoryId
+                    ':category_id' => $categoryId,
+                    ':duration_days' => $durationDays,
+                    ':weekdays_only' => $weekdaysOnly,
+                    ':available_hours' => $availableHours
                 ]);
 
                 $newId = $db->lastInsertId();
@@ -203,6 +214,11 @@ if ($method === 'GET') {
                 $status = $input['status'] ?? 'active';
                 $thumbnailUrl = trim($input['thumbnail_url'] ?? '');
                 $categoryId = isset($input['category_id']) && $input['category_id'] !== '' ? (int)$input['category_id'] : null;
+                
+                // Propriedades do modelo híbrido
+                $durationDays = isset($input['duration_days']) && $input['duration_days'] !== '' ? (int)$input['duration_days'] : null;
+                $weekdaysOnly = isset($input['weekdays_only']) ? (int)$input['weekdays_only'] : 1;
+                $availableHours = isset($input['available_hours']) ? trim($input['available_hours']) : null;
 
                 if (!$courseId || empty($title) || empty($description) || $price < 0) {
                     http_response_code(400);
@@ -210,7 +226,7 @@ if ($method === 'GET') {
                     exit;
                 }
 
-                $stmt = $db->prepare("UPDATE courses SET title = :title, description = :description, price = :price, type = :type, status = :status, thumbnail_url = :thumbnail_url, category_id = :category_id WHERE id = :id");
+                $stmt = $db->prepare("UPDATE courses SET title = :title, description = :description, price = :price, type = :type, status = :status, thumbnail_url = :thumbnail_url, category_id = :category_id, duration_days = :duration_days, weekdays_only = :weekdays_only, available_hours = :available_hours WHERE id = :id");
                 $stmt->execute([
                     ':title' => $title,
                     ':description' => $description,
@@ -219,6 +235,9 @@ if ($method === 'GET') {
                     ':status' => $status,
                     ':thumbnail_url' => $thumbnailUrl,
                     ':category_id' => $categoryId,
+                    ':duration_days' => $durationDays,
+                    ':weekdays_only' => $weekdaysOnly,
+                    ':available_hours' => $availableHours,
                     ':id' => $courseId
                 ]);
 

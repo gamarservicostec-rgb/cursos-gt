@@ -41,6 +41,9 @@ CREATE TABLE `courses` (
   `type` ENUM('ead', 'presencial', 'hybrid') DEFAULT 'hybrid',
   `price` DECIMAL(10,2) NOT NULL DEFAULT 0.00,
   `status` ENUM('active', 'inactive') DEFAULT 'active',
+  `duration_days` INT DEFAULT NULL,
+  `weekdays_only` TINYINT(1) DEFAULT 1,
+  `available_hours` VARCHAR(255) DEFAULT NULL,
   `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
   INDEX `idx_courses_status` (`status`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -99,6 +102,7 @@ CREATE TABLE `enrollments` (
   `user_id` INT NOT NULL,
   `course_id` INT NOT NULL,
   `status` ENUM('active', 'completed', 'suspended') DEFAULT 'active',
+  `schedule_time` VARCHAR(50) DEFAULT NULL,
   `enrolled_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
   FOREIGN KEY (`course_id`) REFERENCES `courses` (`id`) ON DELETE CASCADE,
@@ -134,6 +138,7 @@ CREATE TABLE `physical_attendance` (
   `user_id` INT NOT NULL,
   `course_id` INT NOT NULL,
   `date` DATE NOT NULL,
+  `time_slot` VARCHAR(50) DEFAULT NULL,
   `attended` TINYINT(1) DEFAULT 1,
   FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
   FOREIGN KEY (`course_id`) REFERENCES `courses` (`id`) ON DELETE CASCADE,

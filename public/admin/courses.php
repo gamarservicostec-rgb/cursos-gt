@@ -397,7 +397,29 @@ $adminName = $_SESSION['user_name'];
                                      <option value="active">Ativo (Publicado)</option>
                                      <option value="inactive">Rascunho (Inativo)</option>
                                  </select>
-                             </div>                        </div>
+                             </div>
+
+                             <!-- Campos Premium de Modalidade Híbrida -->
+                             <div id="hybridFields" class="hidden space-y-4 border-t border-white/5 pt-4 mt-2">
+                                 <div class="grid grid-cols-2 gap-4">
+                                     <div>
+                                         <label class="block text-[10px] font-bold uppercase tracking-widest text-primary mb-2">Duração (Dias)</label>
+                                         <input type="number" id="courseDurationField" placeholder="ex: 10" class="w-full px-4 py-3 rounded-lg input-glass text-xs">
+                                     </div>
+                                     <div>
+                                         <label class="block text-[10px] font-bold uppercase tracking-widest text-primary mb-2">Semana Operacional</label>
+                                         <select id="courseWeekdaysField" class="w-full px-4 py-3 rounded-lg input-glass text-xs">
+                                             <option value="1">Segunda a Sexta (Dias Úteis)</option>
+                                             <option value="0">Todos os Dias (Inclusivo FDS)</option>
+                                         </select>
+                                     </div>
+                                 </div>
+                                 <div>
+                                     <label class="block text-[10px] font-bold uppercase tracking-widest text-primary mb-2">Horários Disponíveis (Separados por vírgula)</label>
+                                     <input type="text" id="courseAvailableHoursField" placeholder="ex: 08:00, 10:00, 14:00, 19:00" class="w-full px-4 py-3 rounded-lg input-glass text-xs">
+                                 </div>
+                             </div>
+                         </div>
 
                             <div class="pt-4 border-t border-white/5 flex gap-3">
                                 <button type="submit" class="w-full bg-primary py-3 rounded-lg text-on-primary font-bold text-xs uppercase tracking-wider shadow-[0_0_20px_rgba(242,201,76,0.2)] hover:shadow-[0_0_35px_rgba(242,201,76,0.35)] transition-all">Salvar Registro</button>
@@ -680,7 +702,23 @@ $adminName = $_SESSION['user_name'];
     document.addEventListener('DOMContentLoaded', () => {
         loadCourses();
         loadCategoriesSelect();
+        
+        // Listener para modalidade híbrida
+        const typeSelect = document.getElementById('courseTypeField');
+        if (typeSelect) {
+            typeSelect.addEventListener('change', toggleHybridFields);
+        }
     });
+
+    function toggleHybridFields() {
+        const type = document.getElementById('courseTypeField').value;
+        const hybridFields = document.getElementById('hybridFields');
+        if (type === 'hybrid') {
+            hybridFields.classList.remove('hidden');
+        } else {
+            hybridFields.classList.add('hidden');
+        }
+    }
 
     async function loadCategoriesSelect() {
         try {
@@ -798,6 +836,13 @@ $adminName = $_SESSION['user_name'];
             document.getElementById('courseCategoryField').value = course.category_id || '';
             document.getElementById('courseStatusField').value = course.status;
             document.getElementById('courseThumbnailField').value = course.thumbnail_url || '';
+            
+            // Preenche dados do modelo híbrido
+            document.getElementById('courseDurationField').value = course.duration_days || '';
+            document.getElementById('courseWeekdaysField').value = course.weekdays_only !== undefined ? course.weekdays_only : '1';
+            document.getElementById('courseAvailableHoursField').value = course.available_hours || '';
+            toggleHybridFields();
+
             updateThumbnailPreview(course.thumbnail_url || '');
             
             document.getElementById('coursePanelHeader').innerText = 'Editar Registro de Treinamento';
@@ -988,6 +1033,8 @@ $adminName = $_SESSION['user_name'];
         document.getElementById('coursePanelHeader').innerText = 'Cadastrar Novo Treinamento';
         document.getElementById('activeEditingCourseTitle').innerText = 'Novo Curso';
         
+        toggleHybridFields();
+
         // Bloqueia coluna direita (módulos, aulas, quizzes)
         document.getElementById('pedagogicLockPanel').classList.remove('hidden');
         document.getElementById('pedagogicContentPanel').classList.add('hidden');
@@ -1024,7 +1071,10 @@ $adminName = $_SESSION['user_name'];
             type: document.getElementById('courseTypeField').value,
             category_id: document.getElementById('courseCategoryField').value ? parseInt(document.getElementById('courseCategoryField').value) : null,
             status: document.getElementById('courseStatusField').value,
-            thumbnail_url: document.getElementById('courseThumbnailField').value
+            thumbnail_url: document.getElementById('courseThumbnailField').value,
+            duration_days: document.getElementById('courseDurationField').value ? parseInt(document.getElementById('courseDurationField').value) : null,
+            weekdays_only: parseInt(document.getElementById('courseWeekdaysField').value),
+            available_hours: document.getElementById('courseAvailableHoursField').value
         };
         
         try {

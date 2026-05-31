@@ -357,7 +357,9 @@ $adminName = $_SESSION['user_name'];
                         <tr class="border-b border-white/5 text-on-surface-variant font-bold uppercase tracking-wider pb-3">
                             <th class="pb-3">Aluno</th>
                             <th class="pb-3">E-mail</th>
-                            <th class="pb-3 text-right">Presença Física</th>
+                            <th class="pb-3">Horário Agendado (Checkout)</th>
+                            <th class="pb-3">Horário da Aula/Liberação</th>
+                            <th class="pb-3 text-right">Presença / Liberar Aula</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-white/5 text-white" id="studentsListTable">
@@ -424,7 +426,7 @@ $adminName = $_SESSION['user_name'];
 
         placeholder.classList.add('hidden');
         card.classList.remove('hidden');
-        table.innerHTML = `<tr><td colspan="3" class="text-center py-8 text-on-surface-variant text-xs font-bold uppercase tracking-wider">Carregando lista...</td></tr>`;
+        table.innerHTML = `<tr><td colspan="5" class="text-center py-8 text-on-surface-variant text-xs font-bold uppercase tracking-wider">Carregando lista...</td></tr>`;
 
         try {
             const response = await fetch(`../api/admin/attendance.php?course_id=${courseId}&date=${date}`);
@@ -436,18 +438,41 @@ $adminName = $_SESSION['user_name'];
             table.innerHTML = '';
 
             if (res.students.length === 0) {
-                table.innerHTML = `<tr><td colspan="3" class="text-center py-8 text-on-surface-variant font-bold tracking-wider italic">Nenhum aluno com matrícula ativa neste treinamento.</td></tr>`;
+                table.innerHTML = `<tr><td colspan="5" class="text-center py-8 text-on-surface-variant font-bold tracking-wider italic">Nenhum aluno com matrícula ativa neste treinamento.</td></tr>`;
                 return;
             }
 
             res.students.forEach(s => {
+                // Tenta extrair um horário padrão para o input de time_slot
+                let defaultTime = s.time_slot || '';
+                if (!defaultTime && s.schedule_time && s.schedule_time !== 'Não agendado') {
+                    // Se for do tipo "08:00 às 10:00", tenta pegar o "08:00"
+                    const match = s.schedule_time.match(/(\d{2}:\d{2})/);
+                    if (match) {
+                        defaultTime = match[1];
+                    }
+                }
+                if (!defaultTime) {
+                    const now = new Date();
+                    defaultTime = now.toTimeString().substring(0, 5); // ex: "08:30"
+                }
+
                 table.innerHTML += `
-                    <tr class="hover:bg-white/[0.01] transition-all">
+                    <tr class="hover:bg-white/[0.01] transition-all border-b border-white/5">
                         <td class="py-4 font-bold text-white">${s.student_name}</td>
                         <td class="py-4 text-on-surface-variant">${s.student_email}</td>
+                        <td class="py-4">
+                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-primary/10 text-primary border border-primary/20">
+                                <span class="material-symbols-outlined text-xs">schedule</span>
+                                ${s.schedule_time}
+                            </span>
+                        </td>
+                        <td class="py-4">
+                            <input type="time" id="time_slot_${s.student_id}" value="${defaultTime}" class="px-2.5 py-1.5 rounded bg-black/40 border border-white/10 text-white text-xs outline-none focus:border-primary/50 transition-all" style="color-scheme: dark;">
+                        </td>
                         <td class="py-4 text-right">
                             <label class="switch">
-                                <input type="checkbox" ${s.attended ? 'checked' : ''} onchange="toggleAttendance(this, ${s.student_id})">
+                                <input type="checkbox" ${s.attended ? 'checked' : ''} onchange="toggleAttendance(this, ${s.student_id}, 'time_slot_${s.student_id}')">
                                 <span class="slider"></span>
                             </label>
                         </td>
@@ -457,20 +482,21 @@ $adminName = $_SESSION['user_name'];
 
         } catch (err) {
             showToast(err.message, 'error');
-            table.innerHTML = `<tr><td colspan="3" class="text-center py-8 text-error font-bold tracking-wider">Erro ao processar chamada.</td></tr>`;
+            table.innerHTML = `<tr><td colspan="5" class="text-center py-8 text-error font-bold tracking-wider">Erro ao processar chamada.</td></tr>`;
         }
     }
 
-    // 3. ATUALIZAR PRESENÇA EM TEMPO REAL
-    async function toggleAttendance(checkbox, studentId) {
+    async function toggleAttendance(checkbox, studentId, timeInputId = null) {
         const courseId = document.getElementById('courseSelect').value;
         const date = document.getElementById('dateSelect').value;
         const attended = checkbox.checked;
+        const timeSlot = timeInputId ? document.getElementById(timeInputId).value : null;
 
         const payload = {
             course_id: parseInt(courseId),
             student_id: studentId,
             date: date,
+            time_slot: timeSlot,
             attended: attended
         };
 

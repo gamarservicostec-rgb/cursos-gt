@@ -101,6 +101,48 @@ class Database {
                 $db->exec("UPDATE `courses` SET `category_id` = 2 WHERE `id` = 2");
             }
 
+            // Novas colunas na tabela courses para suporte híbrido
+            $columnsStmt = $db->query("DESCRIBE `courses`");
+            $columns = [];
+            while ($row = $columnsStmt->fetch(\PDO::FETCH_ASSOC)) {
+                $columns[] = $row['Field'] ?? $row['field'] ?? '';
+            }
+            $columns = array_filter($columns);
+
+            if (!in_array('duration_days', $columns)) {
+                $db->exec("ALTER TABLE `courses` ADD COLUMN `duration_days` INT DEFAULT NULL");
+            }
+            if (!in_array('weekdays_only', $columns)) {
+                $db->exec("ALTER TABLE `courses` ADD COLUMN `weekdays_only` TINYINT(1) DEFAULT 1");
+            }
+            if (!in_array('available_hours', $columns)) {
+                $db->exec("ALTER TABLE `courses` ADD COLUMN `available_hours` VARCHAR(255) DEFAULT NULL");
+            }
+
+            // Novas colunas na tabela enrollments para suporte híbrido (horário do aluno)
+            $columnsEnrollStmt = $db->query("DESCRIBE `enrollments`");
+            $columnsEnroll = [];
+            while ($row = $columnsEnrollStmt->fetch(\PDO::FETCH_ASSOC)) {
+                $columnsEnroll[] = $row['Field'] ?? $row['field'] ?? '';
+            }
+            $columnsEnroll = array_filter($columnsEnroll);
+
+            if (!in_array('schedule_time', $columnsEnroll)) {
+                $db->exec("ALTER TABLE `enrollments` ADD COLUMN `schedule_time` VARCHAR(50) DEFAULT NULL");
+            }
+
+            // Novas colunas na tabela physical_attendance para suporte híbrido (time_slot da chamada)
+            $columnsAttStmt = $db->query("DESCRIBE `physical_attendance`");
+            $columnsAtt = [];
+            while ($row = $columnsAttStmt->fetch(\PDO::FETCH_ASSOC)) {
+                $columnsAtt[] = $row['Field'] ?? $row['field'] ?? '';
+            }
+            $columnsAtt = array_filter($columnsAtt);
+
+            if (!in_array('time_slot', $columnsAtt)) {
+                $db->exec("ALTER TABLE `physical_attendance` ADD COLUMN `time_slot` VARCHAR(50) DEFAULT NULL");
+            }
+
             // 2. Sistema de Avaliações Técnicas
             $db->exec("
                 CREATE TABLE IF NOT EXISTS `quizzes` (

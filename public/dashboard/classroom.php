@@ -9,6 +9,57 @@ require_once __DIR__ . '/../../src/Middleware/AuthMiddleware.php';
 // Requer que o aluno esteja logado
 \Middleware\AuthMiddleware::requireStudent();
 
+/**
+ * Retorna o embed do YouTube caso o link seja do YouTube, caso contrário retorna string vazia
+ */
+function getYouTubeEmbedUrl($url) {
+    if (empty($url)) return '';
+    
+    // Verifica se é uma URL do YouTube
+    if (preg_match('/(youtube\.com|youtu\.be)/i', $url)) {
+        $videoId = '';
+        // Padrão do youtu.be
+        if (preg_match('/youtu\.be\/([a-zA-Z0-9_-]+)/i', $url, $matches)) {
+            $videoId = $matches[1];
+        }
+        // Padrão do youtube.com/watch
+        elseif (preg_match('/v=([a-zA-Z0-9_-]+)/i', $url, $matches)) {
+            $videoId = $matches[1];
+        }
+        // Padrão do youtube.com/embed
+        elseif (preg_match('/embed\/([a-zA-Z0-9_-]+)/i', $url, $matches)) {
+            $videoId = $matches[1];
+        }
+        
+        if ($videoId) {
+            return "https://www.youtube.com/embed/" . $videoId . "?autoplay=1&rel=0";
+        }
+    }
+    return '';
+}
+
+/**
+ * Calcula a expiração do curso considerando dias úteis (segunda a sexta) ou corridos
+ */
+function getExpirationDate($startDate, $days, $weekdaysOnly = true) {
+    if (!$days) return null;
+    $currentDate = new DateTime($startDate);
+    if (!$weekdaysOnly) {
+        $currentDate->modify("+$days days");
+        return $currentDate;
+    }
+    
+    $addedDays = 0;
+    while ($addedDays < $days) {
+        $currentDate->modify('+1 day');
+        $dayOfWeek = (int)$currentDate->format('N'); // 1 = segunda, 7 = domingo
+        if ($dayOfWeek < 6) { // 1 a 5 são dias úteis
+            $addedDays++;
+        }
+    }
+    return $currentDate;
+}
+
 $userId = $_SESSION['user_id'];
 $userName = $_SESSION['user_name'];
 $lessonId = isset($_GET['lesson_id']) ? filter_var($_GET['lesson_id'], FILTER_VALIDATE_INT) : null;
@@ -19,7 +70,7 @@ $db = $dbInstance->getConnection();
 try {
     // 1. Identifica o curso ativo do aluno para carregar a barra lateral e verificar a modalidade
     $enrollStmt = $db->prepare("
-        SELECT e.course_id, c.type as course_type 
+        SELECT e.course_id, e.enrolled_at, e.schedule_time, c.type as course_type, c.duration_days, c.weekdays_only 
         FROM enrollments e 
         JOIN courses c ON e.course_id = c.id 
         WHERE e.user_id = :user_id AND e.status = 'active' 
@@ -34,11 +85,30 @@ try {
         die("<h1>Acesso restrito</h1><p>Você precisa possuir uma matrícula ativa em um curso para acessar a sala de aula.</p><a href='../index.php'>Voltar</a>");
     }
 
+    // Cálculo Inteligente de Expiração por Dias Úteis
+    $enrolledAt = $enroll['enrolled_at'] ?? null;
+    $durationDays = $enroll['duration_days'] ?? null;
+    $weekdaysOnly = isset($enroll['weekdays_only']) ? (bool)$enroll['weekdays_only'] : true;
+    
+    $isExpired = false;
+    $expirationDate = null;
+    if ($enrolledAt && $durationDays) {
+        $expirationDateTime = getExpirationDate($enrolledAt, $durationDays, $weekdaysOnly);
+        if ($expirationDateTime) {
+            $expirationDate = $expirationDateTime->format('d/m/Y');
+            $now = new DateTime();
+            if ($now > $expirationDateTime) {
+                $isExpired = true;
+            }
+        }
+    }
+
     // Verifica restrição de presença física para cursos híbridos
     $isLocked = false;
+    $todayPresenceSlot = null;
     if ($courseType === 'hybrid') {
         $presenceStmt = $db->prepare("
-            SELECT 1 FROM physical_attendance 
+            SELECT time_slot FROM physical_attendance 
             WHERE user_id = :user_id AND course_id = :course_id AND date = CURDATE() AND attended = 1 
             LIMIT 1
         ");
@@ -46,8 +116,12 @@ try {
             ':user_id' => $userId,
             ':course_id' => $courseId
         ]);
-        $hasPresenceToday = (bool)$presenceStmt->fetchColumn();
-        if (!$hasPresenceToday) {
+        $presenceData = $presenceStmt->fetch();
+        $hasPresenceToday = (bool)$presenceData;
+        
+        if ($hasPresenceToday) {
+            $todayPresenceSlot = $presenceData['time_slot'] ? htmlspecialchars($presenceData['time_slot'], ENT_QUOTES, 'UTF-8') : date('H:i');
+        } else {
             $isLocked = true;
         }
     }
@@ -432,11 +506,25 @@ try {
         <main class="flex-1 flex flex-col h-full overflow-y-auto custom-scrollbar bg-background">
             <!-- Video Player Section -->
             <section class="w-full bg-black">
-                <div class="max-w-6xl mx-auto px-6 py-8">
-                    <div class="video-aspect-ratio relative bg-surface rounded-2xl overflow-hidden border border-white/5 shadow-2xl">
-                        <?php if ($isLocked): ?>
+                             <div class="video-aspect-ratio relative bg-surface rounded-2xl overflow-hidden border border-white/5 shadow-2xl">
+                        <?php if ($isExpired): ?>
+                            <!-- Painel Premium de Bloqueio por Expiração de Dias Úteis -->
+                            <div class="flex flex-col items-center justify-center p-12 text-center h-full bg-surface/80 backdrop-blur-md rounded-2xl border border-red-500/20 relative z-10">
+                                <span class="material-symbols-outlined text-red-500 text-6xl mb-4 animate-bounce">hourglass_empty</span>
+                                <h3 class="text-xl font-display font-bold text-red-500 tracking-wide uppercase">Acesso Expirado</h3>
+                                <p class="text-sm text-text mt-3 max-w-lg leading-relaxed">
+                                    O seu período de acesso de **<?php echo $durationDays; ?> dias úteis** contratados para este treinamento híbrido expirou em **<?php echo $expirationDate; ?>** (calculado de segunda a sexta, excluindo finais de semana).
+                                </p>
+                                <div class="mt-6 inline-flex items-center gap-2 px-4 py-2.5 rounded-full bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-bold uppercase tracking-wider">
+                                    Matrícula ativa finalizada
+                                </div>
+                                <p class="text-xs text-muted mt-4">
+                                    Para renovar seu treinamento ou contratar dias adicionais, entre em contato com a secretaria pedagógica da GT Cursos.
+                                </p>
+                            </div>
+                        <?php elseif ($isLocked): ?>
                             <!-- Painel Premium de Bloqueio de Aula Híbrida -->
-                            <div class="flex flex-col items-center justify-center p-12 text-center h-full bg-surface-container/50 backdrop-blur-md rounded-2xl border border-primary/15 relative z-10">
+                            <div class="flex flex-col items-center justify-center p-12 text-center h-full bg-surface/80 backdrop-blur-md rounded-2xl border border-primary/15 relative z-10">
                                 <span class="material-symbols-outlined text-primary text-6xl mb-4 animate-pulse">lock</span>
                                 <h3 class="text-xl font-display font-bold text-primary tracking-wide uppercase">Ambiente Híbrido Presencial</h3>
                                 <p class="text-sm text-text mt-3 max-w-lg leading-relaxed">
@@ -452,19 +540,26 @@ try {
                             </div>
                         <?php else: ?>
                             <?php if ($lesson['video_url']): ?>
-                                <div style="position:relative;width:100%;height:100%;" class="w-full h-full">
-                                    <iframe src="<?php echo AppConfig::$BUNNY_STREAM_BASE_URL . $lesson['video_url']; ?>?autoplay=true" loading="lazy" style="border:0;position:absolute;top:0;left:0;width:100%;height:100%;" allow="accelerometer;gyroscope;autoplay;encrypted-media;picture-in-picture;" allowfullscreen="true" id="bunnyPlayer"></iframe>
+                                <?php 
+                                $youtubeUrl = getYouTubeEmbedUrl($lesson['video_url']);
+                                ?>
+                                <div style="position:relative;width:100%;height:100%;" class="w-full h-full bg-black">
+                                    <?php if ($youtubeUrl): ?>
+                                        <iframe src="<?php echo $youtubeUrl; ?>" loading="lazy" style="border:0;position:absolute;top:0;left:0;width:100%;height:100%;" allow="accelerometer;gyroscope;autoplay;encrypted-media;picture-in-picture;" allowfullscreen="true" id="youtubePlayer"></iframe>
+                                    <?php else: ?>
+                                        <iframe src="<?php echo AppConfig::$BUNNY_STREAM_BASE_URL . $lesson['video_url']; ?>?autoplay=true" loading="lazy" style="border:0;position:absolute;top:0;left:0;width:100%;height:100%;" allow="accelerometer;gyroscope;autoplay;encrypted-media;picture-in-picture;" allowfullscreen="true" id="bunnyPlayer"></iframe>
+                                    <?php endif; ?>
                                 </div>
                             <?php else: ?>
-                                <div class="text-center p-12">
+                                <div class="text-center p-12 flex flex-col items-center justify-center h-full">
                                     <span class="material-symbols-outlined text-muted text-6xl mb-3">video_camera_back</span>
                                     <h3 class="text-base font-bold text-text">Transmissão Offline</h3>
-                                    <p class="text-xs text-muted mt-2">Esta aula não possui vídeo indexado no Bunny.net no momento.</p>
+                                    <p class="text-xs text-muted mt-2">Esta aula não possui vídeo indexado no momento.</p>
                                 </div>
                             <?php endif; ?>
                         <?php endif; ?>
                     </div>
-
+ 
                     <!-- Lesson Actions -->
                     <div class="mt-8 flex flex-wrap items-center justify-between gap-6">
                         <div class="flex gap-3">
@@ -477,7 +572,7 @@ try {
                                 <span class="material-symbols-outlined text-lg">chevron_right</span>
                             </button>
                         </div>
-                        <button class="flex items-center gap-2 px-10 py-3 rounded-full bg-primary text-background text-sm font-bold uppercase tracking-widest hover:bg-secondary transition-all gold-glow <?php echo $isLocked ? 'opacity-50 cursor-not-allowed' : ''; ?>" id="btnCompleteClass" <?php echo $isLocked ? 'disabled' : 'onclick="markCurrentLessonCompleted()"'; ?>>
+                        <button class="flex items-center gap-2 px-10 py-3 rounded-full bg-primary text-background text-sm font-bold uppercase tracking-widest hover:bg-secondary transition-all gold-glow <?php echo ($isLocked || $isExpired) ? 'opacity-50 cursor-not-allowed' : ''; ?>" id="btnCompleteClass" <?php echo ($isLocked || $isExpired) ? 'disabled' : 'onclick="markCurrentLessonCompleted()"'; ?>>
                             <span class="material-symbols-outlined text-lg" id="completeIcon">check_circle</span>
                             <span id="completeText">Concluir Aula</span>
                         </button>

@@ -34,6 +34,7 @@ $paymentMethodId = $input['payment_method_id'] ?? ''; // 'visa', 'master', 'pix'
 $token = $input['token'] ?? ''; // Token do cartão de crédito do MercadoPago JS SDK
 $installments = filter_var($input['installments'] ?? 1, FILTER_VALIDATE_INT);
 $coupon = isset($input['coupon']) ? strtoupper(trim($input['coupon'])) : '';
+$scheduleTime = isset($input['schedule_time']) ? trim($input['schedule_time']) : null;
 
 if (!$courseId || empty($paymentMethod)) {
     http_response_code(400);
@@ -167,13 +168,14 @@ try {
     if ($status === 'approved') {
         // Cria a matrícula ativa do aluno
         $enrollStmt = $db->prepare("
-            INSERT INTO enrollments (user_id, course_id, status) 
-            VALUES (:user_id, :course_id, 'active')
-            ON DUPLICATE KEY UPDATE status = 'active'
+            INSERT INTO enrollments (user_id, course_id, schedule_time, status) 
+            VALUES (:user_id, :course_id, :schedule_time, 'active')
+            ON DUPLICATE KEY UPDATE status = 'active', schedule_time = VALUES(schedule_time)
         ");
         $enrollStmt->execute([
             ':user_id' => $userId,
-            ':course_id' => $courseId
+            ':course_id' => $courseId,
+            ':schedule_time' => $scheduleTime
         ]);
 
         // Cria log de auditoria
