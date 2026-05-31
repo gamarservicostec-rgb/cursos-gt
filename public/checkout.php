@@ -1,19 +1,19 @@
 <?php
 use Config\Database;
 use Config\AppConfig;
-use Middleware\AuthMiddleware;
 use Middleware\SecurityHeaders;
 
 require_once __DIR__ . '/../src/Config/Database.php';
-require_once __DIR__ . '/../src/Middleware/AuthMiddleware.php';
 require_once __DIR__ . '/../src/Middleware/SecurityHeaders.php';
 
-// Requer que o aluno esteja autenticado
-\Middleware\AuthMiddleware::requireStudent();
+// Inicia sessão sem exigir login — checkout aceita visitantes
+AppConfig::startSession();
 
-$userId = $_SESSION['user_id'];
-$userName = $_SESSION['user_name'];
-$userEmail = $_SESSION['user_email'];
+// Detecta se já está logado
+$isLoggedIn = isset($_SESSION['user_id']) && !empty($_SESSION['user_id']);
+$userId    = $isLoggedIn ? $_SESSION['user_id'] : null;
+$userName  = $isLoggedIn ? ($_SESSION['user_name'] ?? '')  : '';
+$userEmail = $isLoggedIn ? ($_SESSION['user_email'] ?? '') : '';
 
 $courseId = isset($_GET['id']) ? filter_var($_GET['id'], FILTER_VALIDATE_INT) : null;
 
@@ -26,24 +26,23 @@ $dbInstance = Database::getInstance();
 $db = $dbInstance->getConnection();
 
 try {
-    // Busca dados do curso
+    // Busca dados do curso (available_hours migrado automaticamente)
     $courseStmt = $db->prepare("SELECT id, title, description, price, thumbnail_url, type, available_hours FROM courses WHERE id = :id AND status = 'active' LIMIT 1");
     $courseStmt->execute([':id' => $courseId]);
     $course = $courseStmt->fetch();
 
     if (!$course) {
-        die("<h1>Curso indisponível</h1><p>O treinamento solicitado não está ativo ou não foi localizado.</p><a href='index.php'>Voltar</a>");
+        die("<h1>Curso indisponível</h1><p>O treinamento solicitado não está ativo.</p><a href='index.php'>Voltar</a>");
     }
 
-    // Verifica se já está matriculado
-    $enrollStmt = $db->prepare("SELECT id FROM enrollments WHERE user_id = :user_id AND course_id = :course_id AND status = 'active' LIMIT 1");
-    $enrollStmt->execute([
-        ':user_id' => $userId,
-        ':course_id' => $courseId
-    ]);
-    if ($enrollStmt->fetch()) {
-        header("Location: dashboard/classroom.php?course_id=" . $courseId);
-        exit;
+    // Se já logado, verifica matrícula ativa
+    if ($isLoggedIn) {
+        $enrollStmt = $db->prepare("SELECT id FROM enrollments WHERE user_id = :user_id AND course_id = :course_id AND status = 'active' LIMIT 1");
+        $enrollStmt->execute([':user_id' => $userId, ':course_id' => $courseId]);
+        if ($enrollStmt->fetch()) {
+            header("Location: dashboard/classroom.php");
+            exit;
+        }
     }
 
 } catch (\PDOException $e) {
@@ -51,8 +50,6 @@ try {
 }
 
 $csrfToken = \Middleware\SecurityHeaders::generateCSRFToken();
-
-// Se não houver thumbnail cadastrada, usa a imagem tática padrão do Stitch
 $courseImage = !empty($course['thumbnail_url']) ? $course['thumbnail_url'] : 'https://images.unsplash.com/photo-1563986768609-322da13575f3?q=80&w=1470&auto=format&fit=crop';
 ?>
 <!DOCTYPE html>
@@ -297,6 +294,40 @@ $courseImage = !empty($course['thumbnail_url']) ? $course['thumbnail_url'] : 'ht
                     <input type="hidden" name="course_id" value="<?php echo $courseId; ?>">
                     <input type="hidden" name="payment_method" id="selectedMethod" value="pix">
                     <input type="hidden" name="coupon" id="selectedCoupon" value="">
+
+                    <?php if (!$isLoggedIn): ?>
+                    <!-- Seção: Dados Pessoais para Criar Conta + Comprar em 1 Passo -->
+                    <div class="p-6 rounded-xl border border-primary/20 bg-primary/5 flex flex-col gap-4">
+                        <div class="flex items-center gap-2 mb-1">
+                            <span class="material-symbols-outlined text-primary text-xl">person_add</span>
+                            <h3 class="text-sm font-bold text-white uppercase tracking-wider">Seus Dados de Acesso</h3>
+                        </div>
+                        <p class="text-[11px] text-muted -mt-2 leading-relaxed">Preencha abaixo para criar sua conta e finalizar a compra em um único passo. Você usará estes dados para acessar as aulas.</p>
+                        <div class="floating-input-container">
+                            <input class="floating-input" id="guestName" name="guest_name" placeholder="Seu Nome Completo" type="text" required autocomplete="name">
+                            <label class="floating-label" for="guestName">Nome Completo</label>
+                        </div>
+                        <div class="floating-input-container">
+                            <input class="floating-input" id="guestEmail" name="guest_email" placeholder="seu@email.com" type="email" required autocomplete="email">
+                            <label class="floating-label" for="guestEmail">E-mail</label>
+                        </div>
+                        <div class="floating-input-container">
+                            <input class="floating-input" id="guestPassword" name="guest_password" placeholder="Mínimo 6 caracteres" type="password" required autocomplete="new-password" minlength="6">
+                            <label class="floating-label" for="guestPassword">Crie sua Senha</label>
+                        </div>
+                        <p class="text-[10px] text-muted">Já tem conta? <a href="login.php" class="text-primary underline hover:text-yellow-300 transition-colors">Faça login aqui</a> e volte para comprar.</p>
+                    </div>
+                    <?php else: ?>
+                    <!-- Usuário logado: exibe boas vindas -->
+                    <div class="p-4 rounded-xl border border-white/10 bg-white/[0.03] flex items-center gap-3">
+                        <span class="material-symbols-outlined text-primary text-2xl" style="font-variation-settings:'FILL' 1">account_circle</span>
+                        <div>
+                            <p class="text-xs font-bold text-white"><?php echo htmlspecialchars($userName, ENT_QUOTES, 'UTF-8'); ?></p>
+                            <p class="text-[10px] text-muted"><?php echo htmlspecialchars($userEmail, ENT_QUOTES, 'UTF-8'); ?></p>
+                        </div>
+                        <a href="logout.php" class="ml-auto text-[10px] text-muted hover:text-primary uppercase tracking-widest font-bold transition-colors">Sair</a>
+                    </div>
+                    <?php endif; ?>
 
                     <?php if ($course['type'] === 'hybrid'): ?>
                         <!-- Seletor Premium de Horário Presencial (Obsidian Gold) -->
@@ -556,6 +587,23 @@ $courseImage = !empty($course['thumbnail_url']) ? $course['thumbnail_url'] : 'ht
                 schedule_time: scheduleSelect ? scheduleSelect.value : null,
                 csrf_token: "<?php echo $csrfToken; ?>"
             };
+
+            // Se visitante (não logado): inclui dados de registro no payload
+            const guestName     = document.getElementById('guestName');
+            const guestEmail    = document.getElementById('guestEmail');
+            const guestPassword = document.getElementById('guestPassword');
+            if (guestName && guestEmail && guestPassword) {
+                if (!guestName.value.trim() || !guestEmail.value.trim() || !guestPassword.value.trim()) {
+                    alert('Preencha seu nome, e-mail e senha para continuar.');
+                    submitBtn.disabled = false;
+                    btnText.textContent = 'Finalizar Compra Segura';
+                    loadingSpinner.classList.add('hidden');
+                    return;
+                }
+                payload.guest_name     = guestName.value.trim();
+                payload.guest_email    = guestEmail.value.trim();
+                payload.guest_password = guestPassword.value.trim();
+            }
 
             if (method === 'credit_card') {
                 payload.token = 'mock_mercado_pago_card_token_992211';

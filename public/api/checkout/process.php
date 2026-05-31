@@ -6,19 +6,14 @@ header("Access-Control-Allow-Methods: POST");
 use Config\Database;
 use Config\AppConfig;
 use Middleware\SecurityHeaders;
-use Middleware\AuthMiddleware;
 
 require_once __DIR__ . '/../../../src/Config/Database.php';
 require_once __DIR__ . '/../../../src/Middleware/SecurityHeaders.php';
-require_once __DIR__ . '/../../../src/Middleware/AuthMiddleware.php';
 
-// Aplica cabeçalhos de segurança HTTP
+// Inicia sessão sem exigir login (guest checkout)
+AppConfig::startSession();
+
 \Middleware\SecurityHeaders::applyHeaders();
-
-// Inicia sessão e requer login do aluno
-\Middleware\AuthMiddleware::requireStudent();
-
-$userId = $_SESSION['user_id'];
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
@@ -28,13 +23,18 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 
 $input = json_decode(file_get_contents('php://input'), true) ?? $_POST;
 
-$courseId = filter_var($input['course_id'] ?? 0, FILTER_VALIDATE_INT);
-$paymentMethod = $input['payment_method'] ?? ''; // 'pix', 'credit_card', 'boleto'
-$paymentMethodId = $input['payment_method_id'] ?? ''; // 'visa', 'master', 'pix', 'bolbradesco'
-$token = $input['token'] ?? ''; // Token do cartão de crédito do MercadoPago JS SDK
-$installments = filter_var($input['installments'] ?? 1, FILTER_VALIDATE_INT);
-$coupon = isset($input['coupon']) ? strtoupper(trim($input['coupon'])) : '';
-$scheduleTime = isset($input['schedule_time']) ? trim($input['schedule_time']) : null;
+$courseId       = filter_var($input['course_id'] ?? 0, FILTER_VALIDATE_INT);
+$paymentMethod  = $input['payment_method'] ?? '';
+$paymentMethodId = $input['payment_method_id'] ?? '';
+$token          = $input['token'] ?? '';
+$installments   = filter_var($input['installments'] ?? 1, FILTER_VALIDATE_INT);
+$coupon         = isset($input['coupon']) ? strtoupper(trim($input['coupon'])) : '';
+$scheduleTime   = isset($input['schedule_time']) ? trim($input['schedule_time']) : null;
+
+// Dados do visitante (guest checkout)
+$guestName     = isset($input['guest_name'])     ? trim($input['guest_name'])     : null;
+$guestEmail    = isset($input['guest_email'])    ? strtolower(trim($input['guest_email'])) : null;
+$guestPassword = isset($input['guest_password']) ? $input['guest_password']       : null;
 
 if (!$courseId || empty($paymentMethod)) {
     http_response_code(400);
@@ -43,7 +43,73 @@ if (!$courseId || empty($paymentMethod)) {
 }
 
 $dbInstance = Database::getInstance();
-$db = $dbInstance->getConnection();
+$db         = $dbInstance->getConnection();
+
+// ============================================================
+// RESOLUÇÃO DE IDENTIDADE: usuário logado ou visitante?
+// ============================================================
+$userId = $_SESSION['user_id'] ?? null;
+
+if (!$userId) {
+    // Visitante: precisa de dados para criar/localizar conta
+    if (empty($guestName) || empty($guestEmail) || empty($guestPassword)) {
+        http_response_code(400);
+        echo json_encode(['error' => 'Preencha seu nome, e-mail e senha para continuar.']);
+        exit;
+    }
+
+    if (!filter_var($guestEmail, FILTER_VALIDATE_EMAIL)) {
+        http_response_code(400);
+        echo json_encode(['error' => 'E-mail inválido. Verifique e tente novamente.']);
+        exit;
+    }
+
+    if (strlen($guestPassword) < 6) {
+        http_response_code(400);
+        echo json_encode(['error' => 'A senha deve ter no mínimo 6 caracteres.']);
+        exit;
+    }
+
+    try {
+        // Verifica se o e-mail já está cadastrado
+        $existingStmt = $db->prepare("SELECT id, name, password FROM users WHERE email = :email LIMIT 1");
+        $existingStmt->execute([':email' => $guestEmail]);
+        $existingUser = $existingStmt->fetch();
+
+        if ($existingUser) {
+            // E-mail já existe: valida a senha
+            if (!password_verify($guestPassword, $existingUser['password'])) {
+                http_response_code(401);
+                echo json_encode(['error' => 'Este e-mail já possui cadastro. A senha informada está incorreta. Faça login ou use "Esqueci minha senha".']);
+                exit;
+            }
+            $userId = (int)$existingUser['id'];
+            $_SESSION['user_id']   = $userId;
+            $_SESSION['user_name'] = $existingUser['name'];
+            $_SESSION['user_email'] = $guestEmail;
+            $_SESSION['user_role'] = 'student';
+        } else {
+            // E-mail novo: cria a conta automaticamente
+            $hashedPass = password_hash($guestPassword, PASSWORD_BCRYPT);
+            $createStmt = $db->prepare("INSERT INTO users (name, email, password, role, status) VALUES (:name, :email, :pass, 'student', 'active')");
+            $createStmt->execute([
+                ':name'  => $guestName,
+                ':email' => $guestEmail,
+                ':pass'  => $hashedPass
+            ]);
+            $userId = (int)$db->lastInsertId();
+            $_SESSION['user_id']    = $userId;
+            $_SESSION['user_name']  = $guestName;
+            $_SESSION['user_email'] = $guestEmail;
+            $_SESSION['user_role']  = 'student';
+        }
+    } catch (\PDOException $e) {
+        http_response_code(500);
+        echo json_encode(['error' => 'Erro ao processar dados do usuário: ' . $e->getMessage()]);
+        exit;
+    }
+}
+
 
 try {
     // 1. Verifica se o curso existe e busca o valor (preço)

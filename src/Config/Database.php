@@ -39,18 +39,75 @@ class Database {
     }
 
     /**
-     * Auto-migração silenciosa: detecta a ausência de tabelas cruciais e as sincroniza de forma transparente.
+     * Auto-migração silenciosa: sempre verifica e adiciona colunas faltantes.
+     * Também cria tabelas novas quando necessário.
      */
     private function autoMigrate() {
+        // SEMPRE roda as migrações de colunas (fix: available_hours, schedule_time, time_slot)
+        $this->runColumnMigrations();
+
         try {
-            // Verifica se a tabela categories e support_tickets existem. Se não existirem, dispara exceção de PDO e roda a migração.
+            // Verifica se tabelas base existem. Se não, cria tudo do zero.
             $this->connection->query("SELECT 1 FROM `categories` LIMIT 1");
             $this->connection->query("SELECT 1 FROM `support_tickets` LIMIT 1");
         } catch (\PDOException $e) {
-            // Executa a reestruturação e população das sementes de forma transparente
             $this->runSilently();
         }
     }
+
+    /**
+     * Migração de colunas que SEMPRE roda — independente do estado do banco.
+     * Garante que novas colunas existam sem quebrar instalações existentes.
+     */
+    private function runColumnMigrations() {
+        try {
+            $db = $this->connection;
+
+            // Verifica se a tabela courses existe antes de tentar alterar
+            $check = $db->query("SHOW TABLES LIKE 'courses'");
+            if ($check->rowCount() === 0) return;
+
+            // --- Tabela: courses ---
+            $cols = array_column($db->query("DESCRIBE `courses`")->fetchAll(\PDO::FETCH_ASSOC), 'Field');
+
+            if (!in_array('duration_days', $cols))
+                $db->exec("ALTER TABLE `courses` ADD COLUMN `duration_days` INT DEFAULT NULL");
+            if (!in_array('weekdays_only', $cols))
+                $db->exec("ALTER TABLE `courses` ADD COLUMN `weekdays_only` TINYINT(1) DEFAULT 1");
+            if (!in_array('available_hours', $cols))
+                $db->exec("ALTER TABLE `courses` ADD COLUMN `available_hours` VARCHAR(255) DEFAULT NULL");
+            if (!in_array('thumbnail_url', $cols))
+                $db->exec("ALTER TABLE `courses` ADD COLUMN `thumbnail_url` VARCHAR(500) DEFAULT NULL");
+
+            // --- Tabela: enrollments ---
+            $enrollCheck = $db->query("SHOW TABLES LIKE 'enrollments'");
+            if ($enrollCheck->rowCount() > 0) {
+                $eCols = array_column($db->query("DESCRIBE `enrollments`")->fetchAll(\PDO::FETCH_ASSOC), 'Field');
+                if (!in_array('schedule_time', $eCols))
+                    $db->exec("ALTER TABLE `enrollments` ADD COLUMN `schedule_time` VARCHAR(50) DEFAULT NULL");
+            }
+
+            // --- Tabela: physical_attendance ---
+            $attCheck = $db->query("SHOW TABLES LIKE 'physical_attendance'");
+            if ($attCheck->rowCount() > 0) {
+                $aCols = array_column($db->query("DESCRIBE `physical_attendance`")->fetchAll(\PDO::FETCH_ASSOC), 'Field');
+                if (!in_array('time_slot', $aCols))
+                    $db->exec("ALTER TABLE `physical_attendance` ADD COLUMN `time_slot` VARCHAR(50) DEFAULT NULL");
+            }
+
+            // --- Tabela: transactions ---
+            $transCheck = $db->query("SHOW TABLES LIKE 'transactions'");
+            if ($transCheck->rowCount() > 0) {
+                $tCols = array_column($db->query("DESCRIBE `transactions`")->fetchAll(\PDO::FETCH_ASSOC), 'Field');
+                if (!in_array('updated_at', $tCols))
+                    $db->exec("ALTER TABLE `transactions` ADD COLUMN `updated_at` DATETIME DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP");
+            }
+
+        } catch (\PDOException $e) {
+            // Falha silenciosa — não quebra a aplicação se a migração falhar
+        }
+    }
+
 
     /**
      * Cria todas as tabelas necessárias e garante o hash BCRYPT do Administrador padrão.
