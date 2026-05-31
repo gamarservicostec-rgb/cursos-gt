@@ -20,6 +20,7 @@ class AppConfig {
     // Credenciais de API - Mercado Pago (Checkout Transparente)
     public static $MERCADO_PAGO_PUBLIC_KEY = 'TEST-a6ef53bf-mock-public-key-1234';
     public static $MERCADO_PAGO_ACCESS_TOKEN = 'TEST-5730248593457221-mock-access-token-9988';
+    public static $MERCADO_PAGO_WEBHOOK_SECRET = ''; // Segredo do Webhook para validar assinatura HMAC-SHA256
     
     // Credenciais de API - Gmail (PHPMailer SMTP)
     public static $SMTP_HOST = 'smtp.gmail.com';
