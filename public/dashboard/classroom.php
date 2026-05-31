@@ -255,8 +255,9 @@ try {
     <!-- Header -->
     <header class="h-16 w-full border-b border-white/5 flex items-center justify-between px-6 shrink-0 z-50 bg-background/50 backdrop-blur-md">
         <div class="flex items-center gap-8">
-            <a href="index.php" class="font-display text-xl tracking-wider text-white hover:text-primary transition-colors">
-                CURSOS <span class="text-primary">GT</span>
+            <a href="index.php" class="flex items-center gap-3 font-display text-xl tracking-wider text-white hover:text-primary transition-all">
+                <img src="../assets/images/logo.png" alt="Logo GT Cursos" onerror="this.style.display='none'" class="h-9 w-auto object-contain bg-black/45 p-1 rounded border border-white/10 shadow-[0_0_10px_rgba(242,201,76,0.15)]">
+                <span class="hidden sm:inline">CURSOS <span class="text-primary">GT</span></span>
             </a>
             <div class="h-6 w-[1px] bg-white/10"></div>
             <h1 class="text-xs font-semibold tracking-wide text-text/80 uppercase truncate max-w-xs md:max-w-md">
@@ -531,7 +532,7 @@ try {
                             </div>
                             <h4 class="text-lg font-display mb-2">Suporte Prioritário</h4>
                             <p class="text-sm text-muted mb-4 leading-relaxed">Teve alguma dúvida técnica complexa? Fale diretamente com nossos instrutores no canal exclusivo.</p>
-                            <a href="../admin/support.php" class="w-full py-3 rounded-xl bg-background border border-gold-border text-[11px] font-bold uppercase tracking-widest text-primary hover:bg-primary hover:text-background transition-all block text-center">Abrir Ticket de Suporte</a>
+                            <a href="support.php" class="w-full py-3 rounded-xl bg-background border border-gold-border text-[11px] font-bold uppercase tracking-widest text-primary hover:bg-primary hover:text-background transition-all block text-center">Abrir Ticket de Suporte</a>
                         </div>
                     </div>
                 </div>
