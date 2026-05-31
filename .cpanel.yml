@@ -2,3 +2,5 @@
 deployment:
   tasks:
     - /bin/rsync -av --exclude='.git' --exclude='.cpanel.yml' --exclude='.env' /home1/jairop59/repositories/cursos-gt-novo/ /home1/jairop59/cursos.gtservtec.com.br/
+    - /bin/find /home1/jairop59/cursos.gtservtec.com.br/ -type d -exec chmod 755 {} +
+    - /bin/find /home1/jairop59/cursos.gtservtec.com.br/ -type f -exec chmod 644 {} +
