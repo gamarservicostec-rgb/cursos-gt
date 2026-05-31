@@ -345,19 +345,29 @@ $adminName = $_SESSION['user_name'];
                                 <textarea id="courseDescField" required rows="4" placeholder="Descreva os objetivos principais..." class="w-full px-4 py-3 rounded-lg input-glass text-xs resize-none"></textarea>
                             </div>
 
-                            <div>
-                                <label class="block text-[10px] font-bold uppercase tracking-widest text-primary mb-2">URL da Thumbnail (Imagem do Curso)</label>
-                                <input type="url" id="courseThumbnailField" placeholder="https://exemplo.com/imagem.jpg" class="w-full px-4 py-3 rounded-lg input-glass text-xs" oninput="updateThumbnailPreview(this.value)">
-                                
-                                <!-- Preview amplo panorâmico -->
-                                <div class="mt-3 relative aspect-video rounded-lg overflow-hidden border border-white/10 bg-black/40 flex items-center justify-center">
-                                    <img id="courseThumbnailPreview" src="" alt="Preview da Thumbnail" class="absolute inset-0 w-full h-full object-cover hidden" onload="this.classList.remove('hidden'); document.getElementById('courseThumbnailFallback').classList.add('hidden');" onerror="this.classList.add('hidden'); document.getElementById('courseThumbnailFallback').classList.remove('hidden');">
-                                    <div id="courseThumbnailFallback" class="flex flex-col items-center justify-center text-on-surface-variant opacity-60">
-                                        <span class="material-symbols-outlined text-3xl">image</span>
-                                        <span class="text-[9px] font-bold uppercase tracking-wider mt-1">Pré-visualização do Card</span>
-                                    </div>
-                                </div>
-                            </div>
+                             <div>
+                                 <label class="block text-[10px] font-bold uppercase tracking-widest text-primary mb-2">URL da Thumbnail (Imagem do Curso)</label>
+                                 <input type="url" id="courseThumbnailField" placeholder="https://exemplo.com/imagem.jpg" class="w-full px-4 py-3 rounded-lg input-glass text-xs" oninput="updateThumbnailPreview(this.value)">
+                                 
+                                 <!-- Botão de Upload com ícone de Download (conforme pedido) -->
+                                 <div class="flex items-center gap-2 mt-2">
+                                     <button type="button" onclick="document.getElementById('courseThumbnailUpload').click()" class="flex items-center justify-center rounded border border-primary/40 text-primary text-[10px] font-bold px-4 py-2.5 uppercase tracking-wider hover:bg-primary hover:text-background-deep transition-all duration-300">
+                                         <span class="material-symbols-outlined mr-1.5 text-xs">download</span>
+                                         Upload de Imagem (Download)
+                                     </button>
+                                     <span id="uploadStatusText" class="text-[10px] text-on-surface-variant italic"></span>
+                                 </div>
+                                 <input type="file" id="courseThumbnailUpload" accept="image/*" class="hidden" onchange="uploadThumbnailFile(this)">
+                                 
+                                 <!-- Preview amplo panorâmico -->
+                                 <div class="mt-3 relative aspect-video rounded-lg overflow-hidden border border-white/10 bg-black/40 flex items-center justify-center">
+                                     <img id="courseThumbnailPreview" src="" alt="Preview da Thumbnail" class="absolute inset-0 w-full h-full object-cover hidden" onload="this.classList.remove('hidden'); document.getElementById('courseThumbnailFallback').classList.add('hidden');" onerror="this.classList.add('hidden'); document.getElementById('courseThumbnailFallback').classList.remove('hidden');">
+                                     <div id="courseThumbnailFallback" class="flex flex-col items-center justify-center text-on-surface-variant opacity-60">
+                                         <span class="material-symbols-outlined text-3xl">image</span>
+                                         <span class="text-[9px] font-bold uppercase tracking-wider mt-1">Pré-visualização do Card</span>
+                                     </div>
+                                 </div>
+                             </div>
 
                             <div class="grid grid-cols-2 gap-4">
                                 <div>
@@ -920,7 +930,53 @@ $adminName = $_SESSION['user_name'];
             fallback.classList.remove('hidden');
         }
     }
-    
+
+    // Função para Fazer Upload do arquivo de Thumbnail (Download)
+    function uploadThumbnailFile(input) {
+        if (!input.files || input.files.length === 0) return;
+        
+        const file = input.files[0];
+        const statusText = document.getElementById('uploadStatusText');
+        
+        statusText.innerText = 'Enviando...';
+        statusText.classList.remove('text-red-400');
+        statusText.classList.add('text-on-surface-variant');
+        
+        const formData = new FormData();
+        formData.append('file', file);
+        
+        fetch('../api/admin/upload.php', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => {
+            if (!response.ok) {
+                return response.json().then(data => {
+                    throw new Error(data.error || 'Falha no upload.');
+                });
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                // Preenche o input URL com o caminho do arquivo
+                const fullUrl = data.url;
+                document.getElementById('courseThumbnailField').value = fullUrl;
+                updateThumbnailPreview(fullUrl);
+                statusText.innerText = 'Concluído!';
+                showToast('Imagem carregada com sucesso!', 'success');
+            } else {
+                throw new Error(data.error || 'Erro desconhecido.');
+            }
+        })
+        .catch(err => {
+            statusText.innerText = 'Erro no envio.';
+            statusText.classList.remove('text-on-surface-variant');
+            statusText.classList.add('text-red-400');
+            showToast(err.message, 'error');
+        });
+    }
+
     // 3. OPERAÇÕES DE CURSO (CRUD)
     function openCreateCoursePanel() {
         // Limpa o formulário de identidade do curso

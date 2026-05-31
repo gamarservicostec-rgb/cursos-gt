@@ -17,13 +17,39 @@ $dbInstance = Database::getInstance();
 $db = $dbInstance->getConnection();
 
 try {
-    // 1. Identifica o curso ativo do aluno para carregar a barra lateral
-    $enrollStmt = $db->prepare("SELECT course_id FROM enrollments WHERE user_id = :user_id AND status = 'active' LIMIT 1");
+    // 1. Identifica o curso ativo do aluno para carregar a barra lateral e verificar a modalidade
+    $enrollStmt = $db->prepare("
+        SELECT e.course_id, c.type as course_type 
+        FROM enrollments e 
+        JOIN courses c ON e.course_id = c.id 
+        WHERE e.user_id = :user_id AND e.status = 'active' 
+        LIMIT 1
+    ");
     $enrollStmt->execute([':user_id' => $userId]);
-    $courseId = $enrollStmt->fetchColumn();
+    $enroll = $enrollStmt->fetch();
+    $courseId = $enroll['course_id'] ?? null;
+    $courseType = $enroll['course_type'] ?? null;
 
     if (!$courseId) {
         die("<h1>Acesso restrito</h1><p>Você precisa possuir uma matrícula ativa em um curso para acessar a sala de aula.</p><a href='../index.php'>Voltar</a>");
+    }
+
+    // Verifica restrição de presença física para cursos híbridos
+    $isLocked = false;
+    if ($courseType === 'hybrid') {
+        $presenceStmt = $db->prepare("
+            SELECT 1 FROM physical_attendance 
+            WHERE user_id = :user_id AND course_id = :course_id AND date = CURDATE() AND attended = 1 
+            LIMIT 1
+        ");
+        $presenceStmt->execute([
+            ':user_id' => $userId,
+            ':course_id' => $courseId
+        ]);
+        $hasPresenceToday = (bool)$presenceStmt->fetchColumn();
+        if (!$hasPresenceToday) {
+            $isLocked = true;
+        }
     }
 
     // 2. Se não houver lesson_id, redireciona para a primeira aula ordenada do curso
@@ -408,16 +434,34 @@ try {
             <section class="w-full bg-black">
                 <div class="max-w-6xl mx-auto px-6 py-8">
                     <div class="video-aspect-ratio relative bg-surface rounded-2xl overflow-hidden border border-white/5 shadow-2xl">
-                        <?php if ($lesson['video_url']): ?>
-                            <div style="position:relative;width:100%;height:100%;" class="w-full h-full">
-                                <iframe src="<?php echo AppConfig::$BUNNY_STREAM_BASE_URL . $lesson['video_url']; ?>?autoplay=true" loading="lazy" style="border:0;position:absolute;top:0;left:0;width:100%;height:100%;" allow="accelerometer;gyroscope;autoplay;encrypted-media;picture-in-picture;" allowfullscreen="true" id="bunnyPlayer"></iframe>
+                        <?php if ($isLocked): ?>
+                            <!-- Painel Premium de Bloqueio de Aula Híbrida -->
+                            <div class="flex flex-col items-center justify-center p-12 text-center h-full bg-surface-container/50 backdrop-blur-md rounded-2xl border border-primary/15 relative z-10">
+                                <span class="material-symbols-outlined text-primary text-6xl mb-4 animate-pulse">lock</span>
+                                <h3 class="text-xl font-display font-bold text-primary tracking-wide uppercase">Ambiente Híbrido Presencial</h3>
+                                <p class="text-sm text-text mt-3 max-w-lg leading-relaxed">
+                                    Este treinamento pertence à modalidade **Híbrida**. Por diretrizes de instrução de elite, a visualização das vídeo-aulas é restrita e liberada apenas presencialmente nas dependências da escola física durante os dias de aula.
+                                </p>
+                                <div class="mt-6 inline-flex items-center gap-2 px-4 py-2.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-bold uppercase tracking-wider">
+                                    <span class="w-2 h-2 rounded-full bg-red-500 animate-ping"></span>
+                                    Presença Física não registrada para hoje (<?php echo date('d/m/Y'); ?>)
+                                </div>
+                                <p class="text-xs text-muted mt-4">
+                                    Seu acesso será liberado automaticamente assim que sua presença for computada no terminal do instrutor.
+                                </p>
                             </div>
                         <?php else: ?>
-                            <div class="text-center p-12">
-                                <span class="material-symbols-outlined text-muted text-6xl mb-3">video_camera_back</span>
-                                <h3 class="text-base font-bold text-text">Transmissão Offline</h3>
-                                <p class="text-xs text-muted mt-2">Esta aula não possui vídeo indexado no Bunny.net no momento.</p>
-                            </div>
+                            <?php if ($lesson['video_url']): ?>
+                                <div style="position:relative;width:100%;height:100%;" class="w-full h-full">
+                                    <iframe src="<?php echo AppConfig::$BUNNY_STREAM_BASE_URL . $lesson['video_url']; ?>?autoplay=true" loading="lazy" style="border:0;position:absolute;top:0;left:0;width:100%;height:100%;" allow="accelerometer;gyroscope;autoplay;encrypted-media;picture-in-picture;" allowfullscreen="true" id="bunnyPlayer"></iframe>
+                                </div>
+                            <?php else: ?>
+                                <div class="text-center p-12">
+                                    <span class="material-symbols-outlined text-muted text-6xl mb-3">video_camera_back</span>
+                                    <h3 class="text-base font-bold text-text">Transmissão Offline</h3>
+                                    <p class="text-xs text-muted mt-2">Esta aula não possui vídeo indexado no Bunny.net no momento.</p>
+                                </div>
+                            <?php endif; ?>
                         <?php endif; ?>
                     </div>
 
@@ -433,7 +477,7 @@ try {
                                 <span class="material-symbols-outlined text-lg">chevron_right</span>
                             </button>
                         </div>
-                        <button class="flex items-center gap-2 px-10 py-3 rounded-full bg-primary text-background text-sm font-bold uppercase tracking-widest hover:bg-secondary transition-all gold-glow" id="btnCompleteClass" onclick="markCurrentLessonCompleted()">
+                        <button class="flex items-center gap-2 px-10 py-3 rounded-full bg-primary text-background text-sm font-bold uppercase tracking-widest hover:bg-secondary transition-all gold-glow <?php echo $isLocked ? 'opacity-50 cursor-not-allowed' : ''; ?>" id="btnCompleteClass" <?php echo $isLocked ? 'disabled' : 'onclick="markCurrentLessonCompleted()"'; ?>>
                             <span class="material-symbols-outlined text-lg" id="completeIcon">check_circle</span>
                             <span id="completeText">Concluir Aula</span>
                         </button>
