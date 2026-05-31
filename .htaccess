@@ -1,5 +1,15 @@
 # ====================================================
-# CONFIGURAÇÃO DE SEGURANÇA — GT CURSOS (.htaccess)
+# CONFIGURAÇÃO DE ROTAS E REDIRECIONAMENTO — GT CURSOS
 # ====================================================
-# Este arquivo é mantido intencionalmente sem regras ativas de reescrita
-# para garantir compatibilidade total e evitar erros 403/500 na HostGator.
+
+RewriteEngine On
+
+# 1. Bloqueia acesso direto a pastas confidenciais e arquivos de regras
+RewriteRule ^(src|storage|logs|database|\.rules|\.workflows) - [F,L]
+
+# 2. Redirecionamento transparente da raiz para a pasta /public/
+RewriteRule ^$ public/index.php [L]
+
+# 3. Redirecionamento transparente de todas as demais requisições para a pasta /public/
+RewriteCond %{REQUEST_URI} !^/public/
+RewriteRule ^((?!public/).*)$ public/$1 [L]
