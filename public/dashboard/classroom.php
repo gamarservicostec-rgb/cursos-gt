@@ -142,6 +142,18 @@ try {
         die("<h1>Aula não encontrada</h1><p>A aula solicitada não foi encontrada no catálogo.</p><a href='index.php'>Voltar ao Painel</a>");
     }
 
+    // Busca o modulo_id e subject_id da aula atual para manter acordeões abertos
+    $currentIDsStmt = $db->prepare("
+        SELECT s.module_id, l.subject_id 
+        FROM lessons l
+        JOIN subjects s ON l.subject_id = s.id
+        WHERE l.id = :lesson_id LIMIT 1
+    ");
+    $currentIDsStmt->execute([':lesson_id' => $lessonId]);
+    $currentIDs = $currentIDsStmt->fetch();
+    $currentModuleId = (int)($currentIDs['module_id'] ?? 0);
+    $currentSubjectId = (int)($currentIDs['subject_id'] ?? 0);
+
     // 4. Busca os módulos e aulas do curso para renderizar a barra lateral
     $modQuery = "SELECT id, title FROM modules WHERE course_id = :course_id ORDER BY sort_order ASC";
     $mStmt = $db->prepare($modQuery);
@@ -427,59 +439,74 @@ try {
                 <?php 
                 $modNum = 1;
                 foreach ($sidebarSyllabus as $mod): 
+                    $modIsActive = ($mod['id'] === $currentModuleId);
                 ?>
                 <div class="border-b border-white/5">
-                    <button class="w-full p-6 flex items-center justify-between group hover:bg-white/[0.02] transition-colors">
+                    <button onclick="toggleModule(<?php echo $mod['id']; ?>)" class="w-full p-6 flex items-center justify-between group hover:bg-white/[0.02] transition-colors">
                         <div class="text-left">
                             <span class="text-[10px] font-bold text-primary uppercase tracking-[0.2em] mb-1 block">Módulo <?php echo $modNum++; ?></span>
                             <span class="text-sm font-semibold group-hover:text-primary transition-colors"><?php echo $mod['title']; ?></span>
                         </div>
-                        <span class="material-symbols-outlined text-muted text-xl transition-transform group-hover:rotate-180">expand_more</span>
+                        <span id="module-icon-<?php echo $mod['id']; ?>" class="material-symbols-outlined text-muted text-xl transition-transform <?php echo $modIsActive ? 'rotate-180' : ''; ?>">expand_more</span>
                     </button>
-                    <div class="px-3 pb-4 space-y-1">
-                        <?php foreach ($mod['subjects'] as $sub): ?>
-                            <?php foreach ($sub['lessons'] as $less): ?>
-                                <?php 
-                                $isActive = ($less['id'] === $lessonId);
-                                $isCompleted = $less['completed'];
+                    
+                    <div id="module-content-<?php echo $mod['id']; ?>" class="px-3 pb-4 <?php echo $modIsActive ? '' : 'hidden'; ?>">
+                        <?php foreach ($mod['subjects'] as $sub): 
+                            $subIsActive = ($sub['id'] === $currentSubjectId);
+                        ?>
+                            <!-- Materia Header -->
+                            <button onclick="toggleSubject(<?php echo $sub['id']; ?>)" class="w-full py-2 px-3 rounded-lg flex items-center justify-between hover:bg-white/[0.03] text-left transition-colors border border-white/5 hover:border-primary/20 bg-white/[0.01] mt-2 mb-1">
+                                <div class="flex items-center gap-2">
+                                    <span class="material-symbols-outlined text-primary text-[14px]">folder_open</span>
+                                    <span class="text-xs font-bold text-[#EAEAEA] uppercase tracking-wide"><?php echo $sub['title']; ?></span>
+                                </div>
+                                <span id="sub-icon-<?php echo $sub['id']; ?>" class="material-symbols-outlined text-muted text-sm transition-transform <?php echo $subIsActive ? 'rotate-180' : ''; ?>">expand_more</span>
+                            </button>
+
+                            <!-- Aulas da Materia -->
+                            <div id="subject-content-<?php echo $sub['id']; ?>" class="<?php echo $subIsActive ? '' : 'hidden'; ?> pl-2 pr-1 py-1 space-y-1">
+                                <?php foreach ($sub['lessons'] as $less): 
+                                    $isActive = ($less['id'] === $lessonId);
+                                    $isCompleted = $less['completed'];
                                 ?>
-                                <?php if ($isActive): ?>
-                                    <!-- Lesson Active -->
-                                    <div class="flex items-center gap-3 p-4 rounded-xl bg-surface border border-gold-border group cursor-pointer relative overflow-hidden">
-                                        <div class="absolute left-0 top-0 bottom-0 w-1 bg-primary"></div>
-                                        <div class="text-primary">
-                                            <span class="material-symbols-outlined fill-1 text-xl">play_circle</span>
+                                    <?php if ($isActive): ?>
+                                        <!-- Lesson Active -->
+                                        <div class="flex items-center gap-3 p-4 rounded-xl bg-surface border border-gold-border group cursor-pointer relative overflow-hidden">
+                                            <div class="absolute left-0 top-0 bottom-0 w-1 bg-primary"></div>
+                                            <div class="text-primary">
+                                                <span class="material-symbols-outlined fill-1 text-xl">play_circle</span>
+                                            </div>
+                                            <div class="flex-1">
+                                                <p class="text-xs font-bold text-primary leading-none mb-1">REPRODUZINDO</p>
+                                                <p class="text-sm font-medium text-white"><?php echo $less['title']; ?></p>
+                                            </div>
+                                            <span class="text-[10px] font-mono text-muted"><?php echo floor($less['duration'] / 60); ?>m</span>
                                         </div>
-                                        <div class="flex-1">
-                                            <p class="text-xs font-bold text-primary">REPRODUZINDO</p>
-                                            <p class="text-sm font-medium"><?php echo $less['title']; ?></p>
-                                        </div>
-                                        <span class="text-[10px] font-mono text-muted"><?php echo floor($less['duration'] / 60); ?>m</span>
-                                    </div>
-                                <?php elseif ($isCompleted): ?>
-                                    <!-- Lesson Completed -->
-                                    <a href="classroom.php?lesson_id=<?php echo $less['id']; ?>" class="flex items-center gap-3 p-4 rounded-xl hover:bg-white/[0.03] transition-colors group cursor-pointer">
-                                        <div class="text-green-500">
-                                            <span class="material-symbols-outlined fill-1 text-xl">check_circle</span>
-                                        </div>
-                                        <div class="flex-1">
-                                            <p class="text-sm font-medium group-hover:text-primary transition-colors"><?php echo $less['title']; ?></p>
-                                        </div>
-                                        <span class="text-[10px] font-mono text-muted"><?php echo floor($less['duration'] / 60); ?>m</span>
-                                    </a>
-                                <?php else: ?>
-                                    <!-- Lesson Locked/Upcoming -->
-                                    <a href="classroom.php?lesson_id=<?php echo $less['id']; ?>" class="flex items-center gap-3 p-4 rounded-xl hover:bg-white/[0.03] transition-colors group cursor-pointer">
-                                        <div class="text-muted/40">
-                                            <span class="material-symbols-outlined text-xl">play_circle</span>
-                                        </div>
-                                        <div class="flex-1 opacity-50">
-                                            <p class="text-sm font-medium group-hover:text-primary transition-colors"><?php echo $less['title']; ?></p>
-                                        </div>
-                                        <span class="text-[10px] font-mono text-muted"><?php echo floor($less['duration'] / 60); ?>m</span>
-                                    </a>
-                                <?php endif; ?>
-                            <?php endforeach; ?>
+                                    <?php elseif ($isCompleted): ?>
+                                        <!-- Lesson Completed -->
+                                        <a href="classroom.php?lesson_id=<?php echo $less['id']; ?>" class="flex items-center gap-3 p-4 rounded-xl hover:bg-white/[0.03] transition-colors group cursor-pointer">
+                                            <div class="text-green-500">
+                                                <span class="material-symbols-outlined fill-1 text-xl">check_circle</span>
+                                            </div>
+                                            <div class="flex-1">
+                                                <p class="text-sm font-medium text-text group-hover:text-primary transition-colors"><?php echo $less['title']; ?></p>
+                                            </div>
+                                            <span class="text-[10px] font-mono text-muted"><?php echo floor($less['duration'] / 60); ?>m</span>
+                                        </a>
+                                    <?php else: ?>
+                                        <!-- Lesson Locked/Upcoming -->
+                                        <a href="classroom.php?lesson_id=<?php echo $less['id']; ?>" class="flex items-center gap-3 p-4 rounded-xl hover:bg-white/[0.03] transition-colors group cursor-pointer">
+                                            <div class="text-muted/40">
+                                                <span class="material-symbols-outlined text-xl">play_circle</span>
+                                            </div>
+                                            <div class="flex-1 opacity-50">
+                                                <p class="text-sm font-medium text-text group-hover:text-primary transition-colors"><?php echo $less['title']; ?></p>
+                                            </div>
+                                            <span class="text-[10px] font-mono text-muted"><?php echo floor($less['duration'] / 60); ?>m</span>
+                                        </a>
+                                    <?php endif; ?>
+                                <?php endforeach; ?>
+                            </div>
                         <?php endforeach; ?>
                     </div>
                 </div>
@@ -665,6 +692,31 @@ try {
 
     <!-- Scripts de Integração e Bunny.net API -->
     <script>
+        // --- CONTROLE DE ACORDEÕES MULTINÍVEL DE MÓDULOS E MATÉRIAS ---
+        function toggleModule(modId) {
+            const content = document.getElementById(`module-content-${modId}`);
+            const icon = document.getElementById(`module-icon-${modId}`);
+            if (content.classList.contains('hidden')) {
+                content.classList.remove('hidden');
+                icon.classList.add('rotate-180');
+            } else {
+                content.classList.add('hidden');
+                icon.classList.remove('rotate-180');
+            }
+        }
+
+        function toggleSubject(subId) {
+            const content = document.getElementById(`subject-content-${subId}`);
+            const icon = document.getElementById(`sub-icon-${subId}`);
+            if (content.classList.contains('hidden')) {
+                content.classList.remove('hidden');
+                icon.classList.add('rotate-180');
+            } else {
+                content.classList.add('hidden');
+                icon.classList.remove('rotate-180');
+            }
+        }
+
         const lessonId = <?php echo $lessonId; ?>;
         const totalDuration = <?php echo $lesson['duration']; ?>;
         let currentTime = 0;
