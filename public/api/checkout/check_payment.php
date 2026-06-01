@@ -5,6 +5,7 @@ use Config\Database;
 use Config\AppConfig;
 
 require_once __DIR__ . '/../../../src/Config/Database.php';
+require_once __DIR__ . '/../../../src/Config/AppConfig.php';
 
 // Inicia sessão
 AppConfig::startSession();

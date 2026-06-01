@@ -15,25 +15,10 @@ require_once __DIR__ . '/../../src/Middleware/AuthMiddleware.php';
 function getYouTubeEmbedUrl($url) {
     if (empty($url)) return '';
     
-    // Verifica se é uma URL do YouTube
-    if (preg_match('/(youtube\.com|youtu\.be)/i', $url)) {
-        $videoId = '';
-        // Padrão do youtu.be
-        if (preg_match('/youtu\.be\/([a-zA-Z0-9_-]+)/i', $url, $matches)) {
-            $videoId = $matches[1];
-        }
-        // Padrão do youtube.com/watch
-        elseif (preg_match('/v=([a-zA-Z0-9_-]+)/i', $url, $matches)) {
-            $videoId = $matches[1];
-        }
-        // Padrão do youtube.com/embed
-        elseif (preg_match('/embed\/([a-zA-Z0-9_-]+)/i', $url, $matches)) {
-            $videoId = $matches[1];
-        }
-        
-        if ($videoId) {
-            return "https://www.youtube.com/embed/" . $videoId . "?autoplay=1&rel=0";
-        }
+    // Regex universal de alta precisão para capturar o ID de 11 caracteres do YouTube
+    $pattern = '/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/ ]{11})/i';
+    if (preg_match($pattern, $url, $matches)) {
+        return "https://www.youtube.com/embed/" . $matches[1] . "?autoplay=1&rel=0";
     }
     return '';
 }
@@ -577,7 +562,6 @@ try {
                             <span id="completeText">Concluir Aula</span>
                         </button>
                     </div>
-                </div>
             </section>
 
             <!-- Content Area (Tabs & Info) -->
