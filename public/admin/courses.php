@@ -347,7 +347,7 @@ $adminName = $_SESSION['user_name'];
 
                              <div>
                                  <label class="block text-[10px] font-bold uppercase tracking-widest text-primary mb-2">URL da Thumbnail (Imagem do Curso)</label>
-                                 <input type="url" id="courseThumbnailField" placeholder="https://exemplo.com/imagem.jpg" class="w-full px-4 py-3 rounded-lg input-glass text-xs" oninput="updateThumbnailPreview(this.value)">
+                                 <input type="text" id="courseThumbnailField" placeholder="https://exemplo.com/imagem.jpg ou assets/images/uploads/imagem.jpg" class="w-full px-4 py-3 rounded-lg input-glass text-xs" oninput="updateThumbnailPreview(this.value)">
                                  
                                  <!-- Botão de Upload com ícone de Download (conforme pedido) -->
                                  <div class="flex items-center gap-2 mt-2">
@@ -755,7 +755,10 @@ $adminName = $_SESSION['user_name'];
                 const typeLabel = c.type === 'hybrid' ? 'Híbrido' : (c.type === 'ead' ? 'Online EAD' : 'Presencial');
                 const statusClass = c.status === 'active' ? 'bg-primary/10 text-primary border-primary/20' : 'bg-white/5 text-on-surface-variant border-white/10';
                 const statusLabel = c.status === 'active' ? 'Ativo' : 'Rascunho';
-                const thumbnail = c.thumbnail_url ? c.thumbnail_url : 'https://images.unsplash.com/photo-1563986768609-322da13575f3?q=80&w=1470&auto=format&fit=crop';
+                let thumbnail = c.thumbnail_url ? c.thumbnail_url : 'https://images.unsplash.com/photo-1563986768609-322da13575f3?q=80&w=1470&auto=format&fit=crop';
+                if (thumbnail && !thumbnail.startsWith('http://') && !thumbnail.startsWith('https://') && !thumbnail.startsWith('/')) {
+                    thumbnail = '../' + thumbnail;
+                }
 
                 grid.innerHTML += `
                     <div class="glass-card rounded-xl overflow-hidden flex flex-col justify-between hover:border-primary/20 transition-all cursor-pointer group" onclick="selectCourse(${c.id})">
@@ -966,7 +969,11 @@ $adminName = $_SESSION['user_name'];
         const preview = document.getElementById('courseThumbnailPreview');
         const fallback = document.getElementById('courseThumbnailFallback');
         if (url && url.trim() !== '') {
-            preview.src = url;
+            let finalUrl = url;
+            if (!url.startsWith('http://') && !url.startsWith('https://') && !url.startsWith('/')) {
+                finalUrl = '../' + url;
+            }
+            preview.src = finalUrl;
             preview.classList.remove('hidden');
             fallback.classList.add('hidden');
         } else {
