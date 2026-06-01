@@ -900,10 +900,11 @@ $adminName = $_SESSION['user_name'];
                             subjectsHtml += `
                                 <div class="p-3 bg-black/20 border border-white/5 rounded-lg space-y-2 mt-3">
                                     <div class="flex items-center justify-between border-b border-white/5 pb-2">
-                                        <div class="flex items-center gap-2">
+                                        <div class="flex-1 flex items-center gap-2 cursor-pointer select-none" onclick="toggleCollapse('subject-body-${s.id}', 'subject-icon-${s.id}')">
+                                            <span class="material-symbols-outlined text-primary text-[18px] transition-transform duration-300 mr-1" id="subject-icon-${s.id}">expand_less</span>
                                             <span class="material-symbols-outlined text-primary text-[16px]">topic</span>
                                             <span class="text-xs font-bold text-white uppercase tracking-wider">${s.title}</span>
-                                            <div class="flex items-center gap-1">
+                                            <div class="flex items-center gap-1" onclick="event.stopPropagation()">
                                                 <button onclick="editSubject(${s.id}, ${m.id}, '${s.title.replace(/'/g, "\\'")}', ${s.sort_order || 1})" class="p-1 text-on-surface-variant hover:text-primary transition-colors" title="Editar Matéria">
                                                     <span class="material-symbols-outlined text-[12px]">edit</span>
                                                 </button>
@@ -917,7 +918,9 @@ $adminName = $_SESSION['user_name'];
                                             Adicionar Aula
                                         </button>
                                     </div>
-                                    ${lessonsHtml}
+                                    <div id="subject-body-${s.id}" class="transition-all duration-300">
+                                        ${lessonsHtml}
+                                    </div>
                                 </div>
                             `;
                         });
@@ -926,19 +929,22 @@ $adminName = $_SESSION['user_name'];
                     accordion.innerHTML += `
                         <div class="glass-card rounded-lg p-4 bg-black/30 border border-white/5">
                             <div class="flex items-center justify-between pb-3 border-b border-white/5">
-                                <div class="flex-1">
-                                    <div class="flex items-center gap-3">
-                                        <h4 class="text-xs font-bold uppercase text-white tracking-wider font-display">${m.title}</h4>
-                                        <div class="flex items-center gap-1">
-                                            <button onclick="editModule(${m.id}, '${m.title.replace(/'/g, "\\'")}', '${(m.description || '').replace(/'/g, "\\'")}', ${m.sort_order})" class="p-1 text-on-surface-variant hover:text-primary transition-colors" title="Editar Módulo">
-                                                <span class="material-symbols-outlined text-[14px]">edit</span>
-                                            </button>
-                                            <button onclick="deleteModule(${m.id})" class="p-1 text-on-surface-variant hover:text-red-500 transition-colors" title="Excluir Módulo">
-                                                <span class="material-symbols-outlined text-[14px]">delete</span>
-                                            </button>
+                                <div class="flex-1 flex items-center gap-3 cursor-pointer select-none" onclick="toggleCollapse('module-body-${m.id}', 'module-icon-${m.id}')">
+                                    <span class="material-symbols-outlined text-primary text-[20px] transition-transform duration-300" id="module-icon-${m.id}">expand_less</span>
+                                    <div>
+                                        <div class="flex items-center gap-3">
+                                            <h4 class="text-xs font-bold uppercase text-white tracking-wider font-display">${m.title}</h4>
+                                            <div class="flex items-center gap-1" onclick="event.stopPropagation()">
+                                                <button onclick="editModule(${m.id}, '${m.title.replace(/'/g, "\\'")}', '${(m.description || '').replace(/'/g, "\\'")}', ${m.sort_order})" class="p-1 text-on-surface-variant hover:text-primary transition-colors" title="Editar Módulo">
+                                                    <span class="material-symbols-outlined text-[14px]">edit</span>
+                                                </button>
+                                                <button onclick="deleteModule(${m.id})" class="p-1 text-on-surface-variant hover:text-red-500 transition-colors" title="Excluir Módulo">
+                                                    <span class="material-symbols-outlined text-[14px]">delete</span>
+                                                </button>
+                                            </div>
                                         </div>
+                                        <p class="text-[10px] text-on-surface-variant mt-0.5">${m.description || 'Sem descrição cadastrada.'}</p>
                                     </div>
-                                    <p class="text-[10px] text-on-surface-variant mt-0.5">${m.description || 'Sem descrição cadastrada.'}</p>
                                 </div>
                                 <div class="flex gap-2">
                                     <button onclick="openSubjectModal(${m.id})" class="border border-primary/20 bg-primary/5 hover:bg-primary/10 text-primary flex items-center gap-1.5 px-3 py-1.5 rounded text-[10px] font-bold uppercase tracking-wider transition-all">
@@ -947,7 +953,7 @@ $adminName = $_SESSION['user_name'];
                                     </button>
                                 </div>
                             </div>
-                            <div class="mt-3">
+                            <div class="mt-3 transition-all duration-300" id="module-body-${m.id}">
                                 <span class="text-[9px] font-bold text-on-surface-variant uppercase tracking-widest block mb-1">Matérias e Disciplinas:</span>
                                 ${subjectsHtml}
                             </div>
@@ -1704,6 +1710,18 @@ $adminName = $_SESSION['user_name'];
             loadCourseQuiz(currentCourseId);
         } catch (err) {
             showToast(err.message, 'error');
+        }
+    }
+
+    function toggleCollapse(bodyId, iconId) {
+        const body = document.getElementById(bodyId);
+        const icon = document.getElementById(iconId);
+        if (body.classList.contains('hidden')) {
+            body.classList.remove('hidden');
+            icon.innerText = 'expand_less';
+        } else {
+            body.classList.add('hidden');
+            icon.innerText = 'expand_more';
         }
     }
 
