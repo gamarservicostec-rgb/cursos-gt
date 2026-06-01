@@ -227,12 +227,25 @@ try {
         }
     }
 
+    $paymentDetailsJson = null;
+    if ($paymentMethod === 'pix') {
+        $paymentDetailsJson = json_encode([
+            'qr_code' => $qrCode,
+            'qr_code_base64' => $qrCodeBase64
+        ]);
+    } elseif ($paymentMethod === 'boleto') {
+        $paymentDetailsJson = json_encode([
+            'barcode' => $barCode,
+            'ticket_url' => $result['transaction_details']['external_resource_url'] ?? null
+        ]);
+    }
+
     // 2. Grava a transação financeira no banco de dados MySQL
     $db->beginTransaction();
 
     $transStmt = $db->prepare("
-        INSERT INTO transactions (user_id, course_id, payment_id, amount, payment_method, status) 
-        VALUES (:user_id, :course_id, :payment_id, :amount, :payment_method, :status)
+        INSERT INTO transactions (user_id, course_id, payment_id, amount, payment_method, status, payment_details) 
+        VALUES (:user_id, :course_id, :payment_id, :amount, :payment_method, :status, :payment_details)
     ");
     $transStmt->execute([
         ':user_id' => $userId,
@@ -240,7 +253,8 @@ try {
         ':payment_id' => $paymentId,
         ':amount' => $amount,
         ':payment_method' => $paymentMethod,
-        ':status' => $status
+        ':status' => $status,
+        ':payment_details' => $paymentDetailsJson
     ]);
 
     // 3. Se o pagamento foi aprovado de imediato (Cartão aprovado ou simulação Pix/Cartão)

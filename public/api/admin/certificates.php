@@ -47,6 +47,29 @@ if ($method === 'GET') {
         }
     }
 
+    // 1.5. LEITURA (GET) - LISTAR MODELOS DE CERTIFICADOS CRIADOS (Design Templates)
+    if (isset($_GET['action']) && $_GET['action'] === 'list_templates') {
+        try {
+            $query = "SELECT t.course_id, t.background_url, t.logo_url, t.signature_url, t.custom_text, co.title as course_title 
+                      FROM certificate_templates t 
+                      JOIN courses co ON t.course_id = co.id 
+                      ORDER BY co.title ASC";
+            $stmt = $db->prepare($query);
+            $stmt->execute();
+            $templates = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+            echo json_encode([
+                'success' => true,
+                'templates' => $templates
+            ]);
+            exit;
+        } catch (\PDOException $e) {
+            http_response_code(500);
+            echo json_encode(['error' => 'Erro ao obter lista de modelos: ' . $e->getMessage()]);
+            exit;
+        }
+    }
+
     // 2. LEITURA (GET) - OBTER TEMPLATE DE UM CURSO (Editor Visual)
     $courseId = isset($_GET['course_id']) ? filter_var($_GET['course_id'], FILTER_VALIDATE_INT) : null;
 
@@ -282,6 +305,37 @@ if ($method === 'GET') {
         } catch (\PDOException $e) {
             http_response_code(500);
             echo json_encode(['error' => 'Erro ao revogar certificado: ' . $e->getMessage()]);
+            exit;
+        }
+    }
+
+    // --- SUB-AÇÃO: EXCLUIR TEMPLATE DE CERTIFICADO (CRUD Design) ---
+    if (isset($input['action']) && $input['action'] === 'delete_template') {
+        $courseId = filter_var($input['course_id'] ?? null, FILTER_VALIDATE_INT);
+
+        if (!$courseId) {
+            http_response_code(400);
+            echo json_encode(['error' => 'ID do curso inválido para exclusão.']);
+            exit;
+        }
+
+        try {
+            $stmt = $db->prepare("DELETE FROM certificate_templates WHERE course_id = :course_id");
+            $stmt->execute([':course_id' => $courseId]);
+
+            // Grava log de atividade
+            $logStmt = $db->prepare("INSERT INTO admin_activity (admin_id, action, affected_resource, details) VALUES (:admin, 'excluir_template_certificado', :resource, :details)");
+            $logStmt->execute([
+                ':admin' => $_SESSION['user_id'],
+                ':resource' => "certificates/templates/{$courseId}",
+                ':details' => "Template de certificado do curso ID {$courseId} excluído permanentemente do banco"
+            ]);
+
+            echo json_encode(['success' => true, 'message' => 'Modelo de certificado excluído com sucesso!']);
+            exit;
+        } catch (\PDOException $e) {
+            http_response_code(500);
+            echo json_encode(['error' => 'Erro ao excluir modelo de certificado: ' . $e->getMessage()]);
             exit;
         }
     }

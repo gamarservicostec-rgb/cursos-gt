@@ -24,7 +24,7 @@ $db = $dbInstance->getConnection();
 try {
     // Busca dados da transação
     $transStmt = $db->prepare("
-        SELECT t.amount, t.payment_method, c.title as course_title, l.id as first_lesson_id
+        SELECT t.amount, t.payment_method, t.payment_details, c.title as course_title, l.id as first_lesson_id
         FROM transactions t
         JOIN courses c ON t.course_id = c.id
         LEFT JOIN modules m ON m.course_id = c.id
@@ -43,6 +43,8 @@ try {
     if (!$transaction) {
         die("<h1>Pedido não localizado</h1><p>A transação solicitada não pertence a este usuário ou não existe.</p><a href='dashboard/index.php'>Ir ao Painel</a>");
     }
+
+    $paymentDetails = !empty($transaction['payment_details']) ? json_decode($transaction['payment_details'], true) : [];
 
 } catch (\PDOException $e) {
     die("Erro interno ao carregar confirmação: " . $e->getMessage());
@@ -132,6 +134,19 @@ try {
             box-shadow: 0 0 30px rgba(241, 200, 75, 0.25);
             border: 2px solid #f1c84b;
         }
+
+        .custom-input {
+            background-color: #050505 !important;
+            border: 1px solid rgba(255, 255, 255, 0.08) !important;
+            color: #ffffff !important;
+            padding: 10px 14px !important;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+        .custom-input:focus {
+            border-color: #f1c84b !important;
+            box-shadow: 0 0 10px rgba(241, 200, 75, 0.15);
+        }
     </style>
 </head>
 <body class="antialiased bg-radial-glow min-h-screen flex items-center justify-center py-12 select-none">
@@ -201,17 +216,21 @@ try {
                         
                         <!-- Simulated QR Code visual -->
                         <div class="w-36 h-36 bg-white rounded-lg p-2 mx-auto flex items-center justify-center border-2 border-primary/20 shadow-2xl">
-                            <!-- QR Code Placeholder simulation -->
-                            <div class="w-full h-full bg-slate-900 flex items-center justify-center text-primary">
-                                <span class="material-symbols-outlined text-5xl">qr_code_2</span>
-                            </div>
+                            <?php if (!empty($paymentDetails['qr_code_base64'])): ?>
+                                <img src="data:image/png;base64,<?php echo $paymentDetails['qr_code_base64']; ?>" class="w-full h-full object-contain" alt="QR Code Pix">
+                            <?php else: ?>
+                                <!-- Fallback se não tiver base64 -->
+                                <div class="w-full h-full bg-slate-900 flex items-center justify-center text-primary">
+                                    <span class="material-symbols-outlined text-5xl">qr_code_2</span>
+                                </div>
+                            <?php endif; ?>
                         </div>
 
                         <!-- Pix Key Copy Paste -->
                         <div class="space-y-2">
                             <label class="block text-[9px] font-bold text-primary uppercase tracking-widest text-left">Chave Pix Copia e Cola</label>
                             <div class="flex gap-2">
-                                <input type="text" readonly class="custom-input flex-grow rounded text-xs select-all text-ellipsis overflow-hidden" id="pixKey" value="00020101021226870014br.gov.bcb.pix2565pix.mercado-pago.com.br/qr/v2/mock-pix-gt-cursos-payment-key-992211">
+                                <input type="text" readonly class="custom-input flex-grow rounded text-xs select-all text-ellipsis overflow-hidden" id="pixKey" value="<?php echo htmlspecialchars($paymentDetails['qr_code'] ?? 'Não gerado.', ENT_QUOTES, 'UTF-8'); ?>">
                                 <button class="btn-secondary px-4 py-2 rounded text-[10px] uppercase font-bold" onclick="copyPixKey()">Copiar</button>
                             </div>
                         </div>
@@ -227,10 +246,19 @@ try {
                         <div class="space-y-2">
                             <label class="block text-[9px] font-bold text-primary uppercase tracking-widest text-left">Linha Digitável do Boleto</label>
                             <div class="flex gap-2">
-                                <input type="text" readonly class="custom-input flex-grow rounded text-xs select-all" id="boletoCode" value="34191.79001 01043.513184 91020.150008 7 999900000<?php echo round($transaction['amount'] * 100); ?>">
+                                <input type="text" readonly class="custom-input flex-grow rounded text-xs select-all" id="boletoCode" value="<?php echo htmlspecialchars($paymentDetails['barcode'] ?? 'Não gerado.', ENT_QUOTES, 'UTF-8'); ?>">
                                 <button class="btn-secondary px-4 py-2 rounded text-[10px] uppercase font-bold" onclick="copyBoletoCode()">Copiar</button>
                             </div>
                         </div>
+
+                        <?php if (!empty($paymentDetails['ticket_url'])): ?>
+                            <div class="pt-2">
+                                <a href="<?php echo htmlspecialchars($paymentDetails['ticket_url'], ENT_QUOTES, 'UTF-8'); ?>" target="_blank" class="w-full btn-secondary font-bold py-3.5 rounded-lg uppercase tracking-wider text-[10px] flex items-center justify-center gap-2 transition-all">
+                                    <span>Visualizar / Baixar Boleto PDF</span>
+                                    <span class="material-symbols-outlined text-sm">picture_as_pdf</span>
+                                </a>
+                            </div>
+                        <?php endif; ?>
                     </div>
                 <?php endif; ?>
 

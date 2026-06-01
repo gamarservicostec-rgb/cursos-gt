@@ -27,7 +27,7 @@ $db = $dbInstance->getConnection();
 
 try {
     // Busca dados do curso (available_hours migrado automaticamente)
-    $courseStmt = $db->prepare("SELECT id, title, description, price, thumbnail_url, type, available_hours FROM courses WHERE id = :id AND status = 'active' LIMIT 1");
+    $courseStmt = $db->prepare("SELECT id, title, description, price, thumbnail_url, type, available_hours, access_type, certificate_info FROM courses WHERE id = :id AND status = 'active' LIMIT 1");
     $courseStmt->execute([':id' => $courseId]);
     $course = $courseStmt->fetch();
 
@@ -123,6 +123,16 @@ $courseImage = !empty($course['thumbnail_url']) ? $course['thumbnail_url'] : 'ht
             font-size: 15px; 
             transition: all 0.2s ease; 
         } 
+         /* Combate ao autofill do Chrome - Força fundo escuro e cor de fonte branca */
+         .floating-input:-webkit-autofill,
+         .floating-input:-webkit-autofill:hover, 
+         .floating-input:-webkit-autofill:focus, 
+         .floating-input:-webkit-autofill:active {
+             -webkit-text-fill-color: #ffffff !important;
+             -webkit-box-shadow: 0 0 0 30px #0a0a0a inset !important;
+             box-shadow: 0 0 0 30px #0a0a0a inset !important;
+             transition: background-color 5000s ease-in-out 0s;
+         }
         .floating-input::placeholder { 
             color: #4d4635; 
         } 
@@ -217,16 +227,27 @@ $courseImage = !empty($course['thumbnail_url']) ? $course['thumbnail_url'] : 'ht
                     <?php echo htmlspecialchars($course['description'], ENT_QUOTES, 'UTF-8'); ?>
                 </p>
             </div>
-            <div class="grid grid-cols-2 gap-4 mt-4">
+            <?php 
+            $hasAccessBadge = !empty($course['access_type']);
+            $hasCertBadge = !empty($course['certificate_info']);
+            if ($hasAccessBadge || $hasCertBadge): 
+                $gridCols = ($hasAccessBadge && $hasCertBadge) ? 'grid-cols-2' : 'grid-cols-1';
+            ?>
+            <div class="grid <?php echo $gridCols; ?> gap-4 mt-4">
+                <?php if ($hasAccessBadge): ?>
                 <div class="glass-panel p-4 rounded-lg flex items-center gap-3">
                     <span class="material-symbols-outlined text-primary">verified_user</span>
-                    <span class="text-sm font-medium">Acesso Vitalício</span>
+                    <span class="text-sm font-medium"><?php echo htmlspecialchars($course['access_type'], ENT_QUOTES, 'UTF-8'); ?></span>
                 </div>
+                <?php endif; ?>
+                <?php if ($hasCertBadge): ?>
                 <div class="glass-panel p-4 rounded-lg flex items-center gap-3">
                     <span class="material-symbols-outlined text-primary">workspace_premium</span>
-                    <span class="text-sm font-medium">Certificado GT</span>
+                    <span class="text-sm font-medium"><?php echo htmlspecialchars($course['certificate_info'], ENT_QUOTES, 'UTF-8'); ?></span>
                 </div>
+                <?php endif; ?>
             </div>
+            <?php endif; ?>
         </div>
 
         <!-- RIGHT COLUMN: Payment Flow (7 cols) -->

@@ -334,40 +334,74 @@ try {
                 </div>
             </div>
 
-            <!-- Seção de Certificados Emitidos (Controle Acadêmico) -->
-            <div class="glass-card rounded-xl p-6 space-y-6">
-                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/5 pb-4">
-                    <div>
-                        <h2 class="text-sm font-bold text-white uppercase tracking-widest font-display flex items-center gap-2">
-                            <span class="material-symbols-outlined text-primary text-[20px]">workspace_premium</span>
-                            Certificados Emitidos (Controle Acadêmico)
-                        </h2>
-                        <p class="text-[10px] text-on-surface-variant font-bold uppercase tracking-wider mt-1">Gerencie, revogue ou emita manualmente certificados para seus alunos</p>
+            <!-- Seção do CRUD de Certificados (Modelos Criados vs Certificados Emitidos) -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <!-- COLUNA A: Modelos de Certificados Criados (CRUD) -->
+                <div class="glass-card rounded-xl p-6 space-y-6">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/5 pb-4">
+                        <div>
+                            <h2 class="text-sm font-bold text-white uppercase tracking-widest font-display flex items-center gap-2">
+                                <span class="material-symbols-outlined text-primary text-[20px]">palette</span>
+                                Modelos de Certificados Criados
+                            </h2>
+                            <p class="text-[10px] text-on-surface-variant font-bold uppercase tracking-wider mt-1">Gerencie, altere ou exclua os designs de certificados configurados</p>
+                        </div>
                     </div>
-                    <button onclick="openEmitModal()" class="btn-primary font-bold px-4 py-2.5 rounded text-[10px] uppercase tracking-widest flex items-center gap-1.5 shadow-[0_0_15px_rgba(242,201,76,0.15)] hover:scale-[1.02] active:scale-[0.98] transition-transform">
-                        <span class="material-symbols-outlined text-sm">add</span>
-                        Emitir Manualmente
-                    </button>
+
+                    <!-- Tabela de Modelos Criados -->
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs border-collapse">
+                            <thead>
+                                <tr class="border-b border-white/5 text-primary uppercase font-bold text-[9px] tracking-widest">
+                                    <th class="py-3 px-4">Treinamento / Curso</th>
+                                    <th class="py-3 px-4">Modificado Em</th>
+                                    <th class="py-3 px-4 text-center">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="createdTemplatesTable" class="divide-y divide-white/5 font-medium text-white/80">
+                                <tr>
+                                    <td colspan="3" class="text-center py-6 text-on-surface-variant text-[10px] font-bold uppercase tracking-widest">Carregando modelos de certificados...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
 
-                <!-- Tabela de Certificados -->
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left text-xs border-collapse">
-                        <thead>
-                            <tr class="border-b border-white/5 text-primary uppercase font-bold text-[9px] tracking-widest">
-                                <th class="py-3 px-4">Aluno</th>
-                                <th class="py-3 px-4">Curso</th>
-                                <th class="py-3 px-4">Código Autenticidade</th>
-                                <th class="py-3 px-4">Data Emissão</th>
-                                <th class="py-3 px-4 text-center">Ações</th>
-                            </tr>
-                        </thead>
-                        <tbody id="emittedCertificatesTable" class="divide-y divide-white/5 font-medium text-white/80">
-                            <tr>
-                                <td colspan="5" class="text-center py-6 text-on-surface-variant text-[10px] font-bold uppercase tracking-widest">Carregando certificados emitidos...</td>
-                            </tr>
-                        </tbody>
-                    </table>
+                <!-- COLUNA B: Certificados Emitidos (Controle Acadêmico) -->
+                <div class="glass-card rounded-xl p-6 space-y-6">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/5 pb-4">
+                        <div>
+                            <h2 class="text-sm font-bold text-white uppercase tracking-widest font-display flex items-center gap-2">
+                                <span class="material-symbols-outlined text-primary text-[20px]">workspace_premium</span>
+                                Certificados Emitidos (Alunos)
+                            </h2>
+                            <p class="text-[10px] text-on-surface-variant font-bold uppercase tracking-wider mt-1">Gerencie, revogue ou emita manualmente certificados para seus alunos</p>
+                        </div>
+                        <button onclick="openEmitModal()" class="btn-primary font-bold px-4 py-2.5 rounded text-[10px] uppercase tracking-widest flex items-center gap-1.5 shadow-[0_0_15px_rgba(242,201,76,0.15)] hover:scale-[1.02] active:scale-[0.98] transition-transform">
+                            <span class="material-symbols-outlined text-sm">add</span>
+                            Emitir Manualmente
+                        </button>
+                    </div>
+
+                    <!-- Tabela de Certificados -->
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs border-collapse">
+                            <thead>
+                                <tr class="border-b border-white/5 text-primary uppercase font-bold text-[9px] tracking-widest">
+                                    <th class="py-3 px-4">Aluno</th>
+                                    <th class="py-3 px-4">Curso</th>
+                                    <th class="py-3 px-4">Código</th>
+                                    <th class="py-3 px-4">Data Emissão</th>
+                                    <th class="py-3 px-4 text-center">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="emittedCertificatesTable" class="divide-y divide-white/5 font-medium text-white/80">
+                                <tr>
+                                    <td colspan="5" class="text-center py-6 text-on-surface-variant text-[10px] font-bold uppercase tracking-widest">Carregando certificados emitidos...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
 
@@ -1267,6 +1301,7 @@ try {
                 if (!response.ok) throw new Error(res.error || 'Erro ao persistir o template.');
 
                 showToast(res.message, 'success');
+                loadCreatedTemplates();
             } catch (err) {
                 showToast(err.message, 'error');
             }
@@ -1460,9 +1495,93 @@ try {
             }
         });
 
-        // Inicializa o canvas com o plano de fundo e carrega os certificados emitidos
+        // --- FUNÇÕES DE MODELOS DE CERTIFICADOS CRIADOS (CRUD TEMPLATES) ---
+        async function loadCreatedTemplates() {
+            try {
+                const response = await fetch('../api/admin/certificates.php?action=list_templates');
+                const templates = await response.json();
+                
+                const tbody = document.getElementById('createdTemplatesTable');
+                tbody.innerHTML = '';
+                
+                if (templates.length === 0) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="3" class="text-center py-6 text-on-surface-variant text-[10px] font-bold uppercase tracking-widest">
+                                Nenhum design/template configurado ainda.
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
+                
+                templates.forEach(t => {
+                    const dateFormatted = new Date(t.created_at || Date.now()).toLocaleDateString('pt-BR');
+                    tbody.innerHTML += `
+                        <tr class="hover:bg-white/[0.02] transition-colors border-b border-white/5">
+                            <td class="py-3 px-4 font-bold text-white">${t.course_title}</td>
+                            <td class="py-3 px-4 text-text-muted text-[10px] font-semibold">${dateFormatted}</td>
+                            <td class="py-3 px-4 text-center">
+                                <div class="flex items-center justify-center gap-2">
+                                    <button onclick="editCreatedTemplate(${t.course_id})" class="p-1 text-primary hover:text-yellow-400 transition-colors flex items-center" title="Editar Modelo (Carregar no Canvas)">
+                                        <span class="material-symbols-outlined text-[16px]">edit</span>
+                                    </button>
+                                    <button onclick="deleteCreatedTemplate(${t.course_id}, '${t.course_title.replace(/'/g, "\\'")}')" class="p-1 text-on-surface-variant hover:text-red-500 transition-colors flex items-center" title="Excluir Modelo Permanentemente">
+                                        <span class="material-symbols-outlined text-[16px]">delete</span>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                });
+            } catch (err) {
+                showToast('Erro ao listar templates de certificados: ' + err.message, 'error');
+            }
+        }
+
+        function editCreatedTemplate(courseId) {
+            const courseSelect = document.getElementById('courseSelect');
+            courseSelect.value = courseId;
+            // Dispara o evento change para carregar o modelo no canvas
+            courseSelect.dispatchEvent(new Event('change'));
+            showToast('Template carregado no editor com sucesso!', 'success');
+        }
+
+        async function deleteCreatedTemplate(courseId, courseTitle) {
+            if (!confirm(`Deseja realmente excluir permanentemente a arte do certificado para o curso "${courseTitle}"? Esta ação é irreversível!`)) return;
+            
+            try {
+                const response = await fetch('../api/admin/certificates.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: 'delete_template',
+                        course_id: parseInt(courseId)
+                    })
+                });
+                const res = await response.json();
+                
+                if (!response.ok) throw new Error(res.error || 'Erro ao deletar o template.');
+                
+                showToast(res.message, 'success');
+                
+                // Se o curso atualmente selecionado for o que deletamos, limpa o canvas
+                const currentSelect = document.getElementById('courseSelect').value;
+                if (currentSelect && parseInt(currentSelect) === parseInt(courseId)) {
+                    document.getElementById('courseSelect').value = '';
+                    resetCanvas();
+                }
+                
+                loadCreatedTemplates();
+            } catch (err) {
+                showToast(err.message, 'error');
+            }
+        }
+
+        // Inicializa o canvas com o plano de fundo e carrega as listas no onload
         drawElements();
         loadEmittedCertificates();
+        loadCreatedTemplates();
     </script>
 </body>
 </html>

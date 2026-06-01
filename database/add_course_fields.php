@@ -21,6 +21,26 @@ try {
         $db->exec("ALTER TABLE `courses` ADD COLUMN `materials_included` TEXT DEFAULT NULL");
     }
 
+    // 4. Adiciona access_type se não existir
+    if (!in_array('access_type', $columns)) {
+        $db->exec("ALTER TABLE `courses` ADD COLUMN `access_type` VARCHAR(255) DEFAULT NULL");
+    }
+
+    // 5. Adiciona certificate_info se não existir
+    if (!in_array('certificate_info', $columns)) {
+        $db->exec("ALTER TABLE `courses` ADD COLUMN `certificate_info` VARCHAR(255) DEFAULT NULL");
+    }
+
+    // 6. Verifica as colunas da tabela transactions
+    $transStmt = $db->query("DESCRIBE `transactions`");
+    $transCols = $transStmt->fetchAll(\PDO::FETCH_COLUMN);
+
+    // 7. Adiciona payment_details se não existir
+    if (!in_array('payment_details', $transCols)) {
+        $db->exec("ALTER TABLE `transactions` ADD COLUMN `payment_details` LONGTEXT DEFAULT NULL");
+    }
+
 } catch (\Exception $e) {
-    error_log("Erro de migração de colunas adicionais em courses: " . $e->getMessage());
+    error_log("Erro de migração de colunas adicionais em courses/transactions: " . $e->getMessage());
 }
+

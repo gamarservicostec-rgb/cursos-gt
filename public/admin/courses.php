@@ -393,6 +393,18 @@ $adminName = $_SESSION['user_name'];
                                  </select>
                              </div>
 
+                              <!-- Selos do Checkout Opcionais (Obsidian Gold) -->
+                              <div class="grid grid-cols-2 gap-4 mt-2">
+                                  <div>
+                                      <label class="block text-[10px] font-bold uppercase tracking-widest text-primary mb-2">Selo Checkout: Tipo de Acesso</label>
+                                      <input type="text" id="courseAccessTypeField" placeholder="ex: Acesso Vitalício, Acesso por 1 ano..." class="w-full px-4 py-3 rounded-lg input-glass text-xs">
+                                  </div>
+                                  <div>
+                                      <label class="block text-[10px] font-bold uppercase tracking-widest text-primary mb-2">Selo Checkout: Certificado</label>
+                                      <input type="text" id="courseCertificateInfoField" placeholder="ex: Certificado GT, Certificado Incluso..." class="w-full px-4 py-3 rounded-lg input-glass text-xs">
+                                  </div>
+                              </div>
+
                              <div>
                                  <label class="block text-[10px] font-bold uppercase tracking-widest text-primary mb-2">Status</label>
                                  <select id="courseStatusField" class="w-full px-4 py-3 rounded-lg input-glass text-xs">
@@ -858,10 +870,11 @@ $adminName = $_SESSION['user_name'];
             document.getElementById('courseDurationField').value = course.duration_days || '';
             document.getElementById('courseWeekdaysField').value = course.weekdays_only !== undefined ? course.weekdays_only : '1';
             document.getElementById('courseAvailableHoursField').value = course.available_hours || '';
-            
             // Preenche novos campos táticos
             document.getElementById('courseWhatLearnField').value = course.what_learn || '';
             document.getElementById('courseMaterialsField').value = course.materials_included || '';
+            document.getElementById('courseAccessTypeField').value = course.access_type || '';
+            document.getElementById('courseCertificateInfoField').value = course.certificate_info || '';
             
             toggleHybridFields();
 
@@ -1108,7 +1121,9 @@ $adminName = $_SESSION['user_name'];
             weekdays_only: parseInt(document.getElementById('courseWeekdaysField').value),
             available_hours: document.getElementById('courseAvailableHoursField').value,
             what_learn: document.getElementById('courseWhatLearnField').value,
-            materials_included: document.getElementById('courseMaterialsField').value
+            materials_included: document.getElementById('courseMaterialsField').value,
+            access_type: document.getElementById('courseAccessTypeField').value,
+            certificate_info: document.getElementById('courseCertificateInfoField').value
         };
         
         try {

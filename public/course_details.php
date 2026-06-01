@@ -290,21 +290,17 @@ try {
                                     }
                                 }
                             }
-                            if (empty($materialItems)) {
-                                $materialItems = [
-                                    'Certificado de conclusão digital registrado',
-                                    'Acesso vitalício à plataforma'
-                                ];
-                            }
                             ?>
-                            <div class="flex flex-col gap-3 text-xs text-[#8F8F9D] pt-4 border-t border-[#2A2A35]">
-                                <?php foreach ($materialItems as $mat): ?>
-                                    <div class="flex items-center gap-3">
-                                        <span class="material-symbols-outlined text-[18px] text-white">check_circle</span>
-                                        <span><?php echo htmlspecialchars($mat, ENT_QUOTES, 'UTF-8'); ?></span>
-                                    </div>
-                                <?php endforeach; ?>
-                            </div>
+                            <?php if (!empty($materialItems)): ?>
+                                <div class="flex flex-col gap-3 text-xs text-[#8F8F9D] pt-4 border-t border-[#2A2A35]">
+                                    <?php foreach ($materialItems as $mat): ?>
+                                        <div class="flex items-center gap-3">
+                                            <span class="material-symbols-outlined text-[18px] text-white">check_circle</span>
+                                            <span><?php echo htmlspecialchars($mat, ENT_QUOTES, 'UTF-8'); ?></span>
+                                        </div>
+                                    <?php endforeach; ?>
+                                </div>
+                            <?php endif; ?>
                         </div>
 
                         <!-- Course Syllabus -->
