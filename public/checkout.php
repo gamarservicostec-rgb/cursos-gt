@@ -103,6 +103,21 @@ $courseImage = !empty($course['thumbnail_url']) ? $course['thumbnail_url'] : 'ht
         h1, h2, h3, h4 { 
             font-family: 'Space Grotesk', sans-serif; 
         } 
+        /* Regras gerais para combater redefinições do Tailwind Forms */
+        #checkoutForm input, 
+        #checkoutForm select, 
+        #couponInput {
+            background-color: #0a0a0a !important;
+            color: #ffffff !important;
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        }
+        #checkoutForm input:focus, 
+        #checkoutForm select:focus, 
+        #couponInput:focus {
+            border-color: #f2c94c !important;
+            box-shadow: 0 0 15px rgba(242, 201, 76, 0.15) !important;
+            outline: none !important;
+        }
         .glass-panel { 
             background-color: #0a0a0a; 
             backdrop-filter: blur(16px); 
@@ -113,15 +128,15 @@ $courseImage = !empty($course['thumbnail_url']) ? $course['thumbnail_url'] : 'ht
             position: relative; 
         } 
         .floating-input { 
-            width: 100%; 
-            height: 52px; 
-            background-color: #0a0a0a; 
-            border: 1px solid rgba(255, 255, 255, 0.1); 
-            border-radius: 0.75rem; 
-            color: #ffffff; 
-            padding: 20px 16px 4px 16px; 
-            font-size: 15px; 
-            transition: all 0.2s ease; 
+            width: 100% !important; 
+            height: 52px !important; 
+            background-color: #0a0a0a !important; 
+            border: 1px solid rgba(255, 255, 255, 0.1) !important; 
+            border-radius: 0.75rem !important; 
+            color: #ffffff !important; 
+            padding: 20px 16px 4px 16px !important; 
+            font-size: 15px !important; 
+            transition: all 0.2s ease !important; 
         } 
          /* Combate ao autofill do Chrome - Força fundo escuro e cor de fonte branca */
          .floating-input:-webkit-autofill,
@@ -134,13 +149,13 @@ $courseImage = !empty($course['thumbnail_url']) ? $course['thumbnail_url'] : 'ht
              transition: background-color 5000s ease-in-out 0s;
          }
         .floating-input::placeholder { 
-            color: #4d4635; 
+            color: #4d4635 !important; 
         } 
         .floating-input:focus { 
-            outline: none; 
-            border-color: #f2c94c; 
-            background-color: #0d0d0d; 
-            box-shadow: 0 0 15px rgba(242, 201, 76, 0.15); 
+            outline: none !important; 
+            border-color: #f2c94c !important; 
+            background-color: #0d0d0d !important; 
+            box-shadow: 0 0 15px rgba(242, 201, 76, 0.15) !important; 
         } 
         .floating-label { 
             position: absolute; 

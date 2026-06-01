@@ -72,13 +72,13 @@ if (!$userId) {
 
     try {
         // Verifica se o e-mail já está cadastrado
-        $existingStmt = $db->prepare("SELECT id, name, password FROM users WHERE email = :email LIMIT 1");
+        $existingStmt = $db->prepare("SELECT id, name, password_hash FROM users WHERE email = :email LIMIT 1");
         $existingStmt->execute([':email' => $guestEmail]);
         $existingUser = $existingStmt->fetch();
 
         if ($existingUser) {
             // E-mail já existe: valida a senha
-            if (!password_verify($guestPassword, $existingUser['password'])) {
+            if (!password_verify($guestPassword, $existingUser['password_hash'])) {
                 http_response_code(401);
                 echo json_encode(['error' => 'Este e-mail já possui cadastro. A senha informada está incorreta. Faça login ou use "Esqueci minha senha".']);
                 exit;
@@ -91,7 +91,7 @@ if (!$userId) {
         } else {
             // E-mail novo: cria a conta automaticamente
             $hashedPass = password_hash($guestPassword, PASSWORD_BCRYPT);
-            $createStmt = $db->prepare("INSERT INTO users (name, email, password, role, status) VALUES (:name, :email, :pass, 'student', 'active')");
+            $createStmt = $db->prepare("INSERT INTO users (name, email, password_hash, role) VALUES (:name, :email, :pass, 'student')");
             $createStmt->execute([
                 ':name'  => $guestName,
                 ':email' => $guestEmail,

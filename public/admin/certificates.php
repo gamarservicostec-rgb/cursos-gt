@@ -1499,7 +1499,8 @@ try {
         async function loadCreatedTemplates() {
             try {
                 const response = await fetch('../api/admin/certificates.php?action=list_templates');
-                const templates = await response.json();
+                const data = await response.json();
+                const templates = data.templates || [];
                 
                 const tbody = document.getElementById('createdTemplatesTable');
                 tbody.innerHTML = '';
