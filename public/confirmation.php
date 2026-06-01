@@ -11,7 +11,6 @@ require_once __DIR__ . '/../src/Middleware/AuthMiddleware.php';
 
 $userId = $_SESSION['user_id'];
 $paymentId = $_GET['payment_id'] ?? '';
-$status = $_GET['status'] ?? 'pending';
 
 if (empty($paymentId)) {
     header("Location: dashboard/index.php");
@@ -22,9 +21,9 @@ $dbInstance = Database::getInstance();
 $db = $dbInstance->getConnection();
 
 try {
-    // Busca dados da transação
+    // Busca dados da transação (incluindo status real da transação no banco)
     $transStmt = $db->prepare("
-        SELECT t.amount, t.payment_method, t.payment_details, c.title as course_title, l.id as first_lesson_id
+        SELECT t.amount, t.payment_method, t.status as trans_status, t.payment_details, c.title as course_title, l.id as first_lesson_id
         FROM transactions t
         JOIN courses c ON t.course_id = c.id
         LEFT JOIN modules m ON m.course_id = c.id
@@ -44,6 +43,8 @@ try {
         die("<h1>Pedido não localizado</h1><p>A transação solicitada não pertence a este usuário ou não existe.</p><a href='dashboard/index.php'>Ir ao Painel</a>");
     }
 
+    // O status real vem da transação no banco de dados local
+    $status = $transaction['trans_status'] ?? 'pending';
     $paymentDetails = !empty($transaction['payment_details']) ? json_decode($transaction['payment_details'], true) : [];
 
 } catch (\PDOException $e) {
@@ -287,6 +288,25 @@ try {
             document.execCommand('copy');
             alert('Linha digitável copiada com sucesso!');
         }
+
+        <?php if ($status !== 'approved' && $status !== 'success'): ?>
+        // Mecanismo de Polling Inteligente e Redundante
+        const paymentId = "<?php echo htmlspecialchars($paymentId, ENT_QUOTES, 'UTF-8'); ?>";
+        const intervalId = setInterval(async () => {
+            try {
+                const response = await fetch('api/checkout/check_payment.php?payment_id=' + encodeURIComponent(paymentId));
+                const data = await response.json();
+                
+                if (response.ok && data.success && data.status === 'approved') {
+                    clearInterval(intervalId);
+                    // Redireciona para exibir a tela de Matrícula Confirmada instantaneamente
+                    window.location.href = 'confirmation.php?status=success&payment_id=' + encodeURIComponent(paymentId);
+                }
+            } catch (err) {
+                console.error("Erro no polling de pagamento:", err);
+            }
+        }, 3000); // Polling a cada 3 segundos
+        <?php endif; ?>
     </script>
 </body>
 </html>

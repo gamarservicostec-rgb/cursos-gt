@@ -32,13 +32,14 @@ $isMockSecret  = empty($webhookSecret) || $webhookSecret === 'COLE_SEU_SEGREDO_A
 $isMockToken   = strpos(AppConfig::$MERCADO_PAGO_ACCESS_TOKEN, 'mock') !== false;
 
 // Só valida assinatura quando o segredo real estiver configurado
+$signatureValid = true;
 if (!$isMockSecret && !$isMockToken) {
-    $xSignature = $_SERVER['HTTP_X_SIGNATURE'] ?? '';
-    $xRequestId = $_SERVER['HTTP_X_REQUEST_ID'] ?? '';
+    // Tenta ler cabeçalhos de forma resiliente (HTTP_X_SIGNATURE e getallheaders)
+    $headers = function_exists('getallheaders') ? array_change_key_case(getallheaders(), CASE_LOWER) : [];
+    $xSignature = $_SERVER['HTTP_X_SIGNATURE'] ?? ($headers['x-signature'] ?? '');
+    $xRequestId = $_SERVER['HTTP_X_REQUEST_ID'] ?? ($headers['x-request-id'] ?? '');
     $dataId     = $input['data']['id'] ?? ($_GET['data_id'] ?? '');
 
-    // Monta a string de assinatura conforme documentação oficial do Mercado Pago
-    // Formato: id:[data.id];request-id:[x-request-id];ts:[ts];
     $ts = '';
     $signatureParts = explode(',', $xSignature);
     $receivedHash = '';
@@ -55,10 +56,9 @@ if (!$isMockSecret && !$isMockToken) {
     $signatureTemplate = "id:{$dataId};request-id:{$xRequestId};ts:{$ts};";
     $expectedHash = hash_hmac('sha256', $signatureTemplate, $webhookSecret);
 
-    if (!hash_equals($expectedHash, $receivedHash)) {
-        http_response_code(401);
-        echo json_encode(['error' => 'Assinatura inválida. Notificação rejeitada por segurança.']);
-        exit;
+    if (empty($receivedHash) || !hash_equals($expectedHash, $receivedHash)) {
+        // A assinatura HMAC falhou. Ativamos a flag e validaremos via consulta direta à API
+        $signatureValid = false;
     }
 }
 
@@ -125,6 +125,15 @@ try {
                 echo json_encode(['error' => 'Não foi possível consultar a API Mercado Pago para o ID ' . $paymentId]);
                 exit;
             }
+        }
+
+        // SEGURANÇA: Se a assinatura do webhook falhar (por ex. cabeçalho X-Signature omitido/inválido),
+        // só permitimos prosseguir se a API oficial do Mercado Pago consultada via cURL certificar 
+        // com 100% de segurança que o pagamento de fato está 'approved'. Caso contrário, barramos a requisição.
+        if (!$signatureValid && $status !== 'approved') {
+            http_response_code(401);
+            echo json_encode(['error' => 'Assinatura do Webhook inválida e pagamento não aprovado oficialmente na API do Mercado Pago.']);
+            exit;
         }
 
         // Só processa se o status mudou para evitar operações duplicadas
