@@ -24,6 +24,11 @@ try {
     $coursesStmt->execute();
     $courses = $coursesStmt->fetchAll();
 
+    // Busca os alunos (usuários com role 'student')
+    $studentsStmt = $db->prepare("SELECT id, name, email FROM users WHERE role = 'student' ORDER BY name ASC");
+    $studentsStmt->execute();
+    $students = $studentsStmt->fetchAll();
+
 } catch (\PDOException $e) {
     die("Erro interno: " . $e->getMessage());
 }
@@ -329,6 +334,43 @@ try {
                 </div>
             </div>
 
+            <!-- Seção de Certificados Emitidos (Controle Acadêmico) -->
+            <div class="glass-card rounded-xl p-6 space-y-6">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/5 pb-4">
+                    <div>
+                        <h2 class="text-sm font-bold text-white uppercase tracking-widest font-display flex items-center gap-2">
+                            <span class="material-symbols-outlined text-primary text-[20px]">workspace_premium</span>
+                            Certificados Emitidos (Controle Acadêmico)
+                        </h2>
+                        <p class="text-[10px] text-on-surface-variant font-bold uppercase tracking-wider mt-1">Gerencie, revogue ou emita manualmente certificados para seus alunos</p>
+                    </div>
+                    <button onclick="openEmitModal()" class="btn-primary font-bold px-4 py-2.5 rounded text-[10px] uppercase tracking-widest flex items-center gap-1.5 shadow-[0_0_15px_rgba(242,201,76,0.15)] hover:scale-[1.02] active:scale-[0.98] transition-transform">
+                        <span class="material-symbols-outlined text-sm">add</span>
+                        Emitir Manualmente
+                    </button>
+                </div>
+
+                <!-- Tabela de Certificados -->
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs border-collapse">
+                        <thead>
+                            <tr class="border-b border-white/5 text-primary uppercase font-bold text-[9px] tracking-widest">
+                                <th class="py-3 px-4">Aluno</th>
+                                <th class="py-3 px-4">Curso</th>
+                                <th class="py-3 px-4">Código Autenticidade</th>
+                                <th class="py-3 px-4">Data Emissão</th>
+                                <th class="py-3 px-4 text-center">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="emittedCertificatesTable" class="divide-y divide-white/5 font-medium text-white/80">
+                            <tr>
+                                <td colspan="5" class="text-center py-6 text-on-surface-variant text-[10px] font-bold uppercase tracking-widest">Carregando certificados emitidos...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
             <!-- Editor Layout: Tools Panel + Canvas Box -->
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
                 
@@ -521,6 +563,46 @@ try {
 
         </section>
     </main>
+</div>
+
+<!-- MODAL DE EMISSÃO MANUAL DE CERTIFICADO -->
+<div id="emitModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm hidden">
+    <div class="glass-card w-full max-w-md rounded-xl overflow-hidden shadow-2xl relative flex flex-col max-h-[85vh]" style="border-color: rgba(242, 201, 76, 0.3);">
+        <div class="border-b border-white/5 px-6 py-4 flex items-center justify-between flex-shrink-0">
+            <h3 class="text-sm font-bold text-white uppercase tracking-widest">Emitir Certificado Manual</h3>
+            <button onclick="closeEmitModal()" class="text-on-surface-variant hover:text-white transition-colors">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+        <form id="emitForm" onsubmit="emitCertificateManual(event)" class="flex flex-col flex-1 overflow-hidden mb-0">
+            <div class="flex-1 overflow-y-auto px-6 py-4 space-y-4 custom-scrollbar">
+                <div>
+                    <label class="block text-[10px] font-bold uppercase tracking-widest text-primary mb-2">Selecionar Aluno</label>
+                    <select id="emitStudentSelect" required class="custom-select w-full rounded">
+                        <option value="">Selecione um Aluno...</option>
+                        <?php foreach ($students as $s): ?>
+                            <option value="<?php echo $s['id']; ?>"><?php echo htmlspecialchars($s['name'] . ' (' . $s['email'] . ')', ENT_QUOTES, 'UTF-8'); ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-[10px] font-bold uppercase tracking-widest text-primary mb-2">Selecionar Treinamento</label>
+                    <select id="emitCourseSelect" required class="custom-select w-full rounded">
+                        <option value="">Selecione um Curso...</option>
+                        <?php foreach ($courses as $c): ?>
+                            <option value="<?php echo $c['id']; ?>"><?php echo htmlspecialchars($c['title'], ENT_QUOTES, 'UTF-8'); ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+            </div>
+
+            <div class="px-6 py-4 flex items-center justify-end gap-3 border-t border-white/5 flex-shrink-0">
+                <button type="button" onclick="closeEmitModal()" class="px-4 py-2.5 rounded text-xs font-bold uppercase tracking-wider text-on-surface-variant hover:text-white transition-colors">Cancelar</button>
+                <button type="submit" class="bg-primary px-5 py-2.5 rounded text-on-primary font-bold text-label-sm shadow-[0_0_20px_rgba(242,201,76,0.2)]">Emitir Registro</button>
+            </div>
+        </form>
+    </div>
 </div>
 
     <!-- TOAST NOTIFICATION CONTAINER -->
@@ -1241,8 +1323,146 @@ try {
             }, 3000);
         }
 
-        // Inicializa o canvas com o plano de fundo
+        // --- FUNÇÕES DE CONTROLE ACADÊMICO DE CERTIFICADOS EMITIDOS (CRUD) ---
+        
+        // Carrega a listagem via AJAX
+        async function loadEmittedCertificates() {
+            try {
+                const response = await fetch('../api/admin/certificates.php?action=list_emitted');
+                if (!response.ok) throw new Error('Não foi possível obter os certificados.');
+                const res = await response.json();
+                
+                if (!res.success) throw new Error(res.error || 'Erro ao carregar lista.');
+
+                const tbody = document.getElementById('emittedCertificatesTable');
+                tbody.innerHTML = '';
+
+                if (res.certificates.length === 0) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="5" class="text-center py-8 text-on-surface-variant text-[10px] font-bold uppercase tracking-widest border border-dashed border-white/5 rounded-lg bg-black/10">Nenhum certificado emitido até o momento.</td>
+                        </tr>
+                    `;
+                    return;
+                }
+
+                res.certificates.forEach(c => {
+                    const issuedDate = new Date(c.issued_at).toLocaleString('pt-BR');
+                    tbody.innerHTML += `
+                        <tr class="hover:bg-white/[0.02] transition-colors border-b border-white/5">
+                            <td class="py-3.5 px-4">
+                                <div class="font-bold text-white">${c.student_name}</div>
+                                <div class="text-[10px] text-on-surface-variant">${c.student_email}</div>
+                            </td>
+                            <td class="py-3.5 px-4 font-semibold text-xs">${c.course_title}</td>
+                            <td class="py-3.5 px-4 font-mono text-primary font-bold flex items-center gap-1.5">
+                                <span class="select-all">${c.certificate_code}</span>
+                                <button onclick="copyToClipboard('${c.certificate_code}')" class="text-on-surface-variant hover:text-white transition-colors" title="Copiar Código">
+                                    <span class="material-symbols-outlined text-xs">content_copy</span>
+                                </button>
+                            </td>
+                            <td class="py-3.5 px-4 text-xs font-mono">${issuedDate}</td>
+                            <td class="py-3.5 px-4 text-center">
+                                <div class="flex items-center justify-center gap-2">
+                                    <a href="../generate_certificate.php?code=${c.certificate_code}" target="_blank" class="p-1 text-on-surface-variant hover:text-primary transition-colors flex items-center" title="Visualizar Certificado Real">
+                                        <span class="material-symbols-outlined text-[16px]">visibility</span>
+                                    </a>
+                                    <button onclick="deleteEmittedCertificate(${c.id}, '${c.certificate_code}')" class="p-1 text-on-surface-variant hover:text-red-500 transition-colors flex items-center" title="Revogar / Excluir Certificado">
+                                        <span class="material-symbols-outlined text-[16px]">delete</span>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                });
+            } catch (err) {
+                showToast('Erro ao listar certificados: ' + err.message, 'error');
+            }
+        }
+
+        // Copiar hash para a área de transferência
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                showToast('Código copiado com sucesso!', 'success');
+            }).catch(() => {
+                showToast('Falha ao copiar código.', 'error');
+            });
+        }
+
+        // Modais de Emissão Manual
+        function openEmitModal() {
+            document.getElementById('emitForm').reset();
+            document.getElementById('emitModal').classList.remove('hidden');
+        }
+
+        function closeEmitModal() {
+            document.getElementById('emitModal').classList.add('hidden');
+        }
+
+        // Submissão da Emissão Manual
+        async function emitCertificateManual(e) {
+            e.preventDefault();
+            const studentId = document.getElementById('emitStudentSelect').value;
+            const courseId = document.getElementById('emitCourseSelect').value;
+
+            if (!studentId || !courseId) return;
+
+            try {
+                const response = await fetch('../api/admin/certificates.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: 'create_emitted',
+                        user_id: parseInt(studentId),
+                        course_id: parseInt(courseId)
+                    })
+                });
+                const res = await response.json();
+
+                if (!response.ok) throw new Error(res.error || 'Erro ao emitir.');
+
+                showToast(res.message, 'success');
+                closeEmitModal();
+                loadEmittedCertificates();
+            } catch (err) {
+                showToast(err.message, 'error');
+            }
+        }
+
+        // Revogação de Certificado
+        async function deleteEmittedCertificate(id, code) {
+            if (!confirm(`Deseja realmente revogar e excluir o certificado ${code}? O aluno perderá acesso a esta credencial imediatamente e esta ação é irreversível.`)) return;
+
+            try {
+                const response = await fetch('../api/admin/certificates.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: 'delete_emitted',
+                        certificate_id: parseInt(id)
+                    })
+                });
+                const res = await response.json();
+
+                if (!response.ok) throw new Error(res.error || 'Erro ao revogar.');
+
+                showToast(res.message, 'success');
+                loadEmittedCertificates();
+            } catch (err) {
+                showToast(err.message, 'error');
+            }
+        }
+
+        // Adiciona fechamento com clique fora no emitModal
+        document.getElementById('emitModal').addEventListener('click', (e) => {
+            if (e.target === document.getElementById('emitModal')) {
+                closeEmitModal();
+            }
+        });
+
+        // Inicializa o canvas com o plano de fundo e carrega os certificados emitidos
         drawElements();
+        loadEmittedCertificates();
     </script>
 </body>
 </html>

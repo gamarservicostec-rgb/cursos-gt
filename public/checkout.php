@@ -491,44 +491,49 @@ $courseImage = !empty($course['thumbnail_url']) ? $course['thumbnail_url'] : 'ht
             });
         }
 
-        // Apply coupon promo logic
-        function applyCoupon() {
+        // Apply coupon promo logic (dynamic fetch integration)
+        async function applyCoupon() {
             const couponInput = document.getElementById('couponInput').value.toUpperCase().trim();
             if (couponInput === "") return;
 
-            let discount = 0;
-            if (couponInput === "PROMO500") {
-                discount = 500.00;
-            } else if (couponInput === "ELITE30") {
-                discount = coursePrice * 0.30;
-            } else {
-                alert("Cupom de desconto inválido.");
-                return;
-            }
+            try {
+                const response = await fetch(`api/checkout/validate_coupon.php?code=${couponInput}&course_id=<?php echo $courseId; ?>`);
+                const res = await response.json();
 
-            finalPrice = Math.max(0.00, coursePrice - discount);
-            activeCoupon = couponInput;
+                if (!response.ok || !res.success) {
+                    alert(res.error || "Cupom de desconto inválido ou expirado.");
+                    return;
+                }
 
-            // Update UI elements
-            document.getElementById('selectedCoupon').value = activeCoupon;
-            document.getElementById('couponCodeDisplay').innerText = activeCoupon;
-            document.getElementById('discountValue').innerText = "- R$ " + discount.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
-            document.getElementById('discountRow').classList.remove('hidden');
-            document.getElementById('discountRow').classList.add('flex');
-            
-            document.getElementById('totalPrice').innerText = "R$ " + finalPrice.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
-            document.getElementById('installmentPrice').innerText = "R$ " + (finalPrice / 12).toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+                const discount = res.discount;
+                finalPrice = res.final_price;
+                activeCoupon = res.code;
 
-            // Update installment select dropdown options dynamically
-            const select = document.getElementById('installmentsSelect');
-            if (select) {
-                select.innerHTML = `
-                    <option value="1">1x de R$ ${finalPrice.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} sem juros</option>
-                    <option value="2">2x de R$ ${(finalPrice / 2).toLocaleString('pt-BR', { minimumFractionDigits: 2 })} sem juros</option>
-                    <option value="3">3x de R$ ${(finalPrice / 3).toLocaleString('pt-BR', { minimumFractionDigits: 2 })} sem juros</option>
-                    <option value="6">6x de R$ ${(finalPrice / 6).toLocaleString('pt-BR', { minimumFractionDigits: 2 })} sem juros</option>
-                    <option value="12">12x de R$ ${(finalPrice / 12).toLocaleString('pt-BR', { minimumFractionDigits: 2 })} sem juros</option>
-                `;
+                // Update UI elements
+                document.getElementById('selectedCoupon').value = activeCoupon;
+                document.getElementById('couponCodeDisplay').innerText = activeCoupon;
+                document.getElementById('discountValue').innerText = "- R$ " + discount.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+                document.getElementById('discountRow').classList.remove('hidden');
+                document.getElementById('discountRow').classList.add('flex');
+                
+                document.getElementById('totalPrice').innerText = "R$ " + finalPrice.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+                document.getElementById('installmentPrice').innerText = "R$ " + (finalPrice / 12).toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+
+                // Update installment select dropdown options dynamically
+                const select = document.getElementById('installmentsSelect');
+                if (select) {
+                    select.innerHTML = `
+                        <option value="1">1x de R$ ${finalPrice.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} sem juros</option>
+                        <option value="2">2x de R$ ${(finalPrice / 2).toLocaleString('pt-BR', { minimumFractionDigits: 2 })} sem juros</option>
+                        <option value="3">3x de R$ ${(finalPrice / 3).toLocaleString('pt-BR', { minimumFractionDigits: 2 })} sem juros</option>
+                        <option value="6">6x de R$ ${(finalPrice / 6).toLocaleString('pt-BR', { minimumFractionDigits: 2 })} sem juros</option>
+                        <option value="12">12x de R$ ${(finalPrice / 12).toLocaleString('pt-BR', { minimumFractionDigits: 2 })} sem juros</option>
+                    `;
+                }
+                
+                alert("Cupom promocional aplicado com sucesso!");
+            } catch (err) {
+                alert("Erro ao validar cupom: " + err.message);
             }
         }
 

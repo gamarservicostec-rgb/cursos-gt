@@ -25,17 +25,8 @@ try {
 
     $db->exec($createTableSQL);
 
-    // 2. Insere cupons padrões para demonstração se a tabela estiver vazia
-    $countStmt = $db->query("SELECT COUNT(*) FROM `coupons`");
-    if ($countStmt->fetchColumn() == 0) {
-        $insertQuery = "
-            INSERT INTO `coupons` (`code`, `type`, `value`, `description`, `status`, `usage_count`, `expires_at`) VALUES 
-            ('PROMO500', 'fixed', 500.00, 'Desconto fixo de 500 reais em qualquer masterclass', 'active', 18, '2026-12-31'),
-            ('ELITE30', 'percentage', 30.00, '30% de desconto tático para novos alunos de elite', 'active', 42, '2026-08-30'),
-            ('BLACKFRIDAY', 'percentage', 50.00, 'Metade do preço em toda a plataforma GT Cursos', 'inactive', 120, '2025-11-30')
-        ";
-        $db->exec($insertQuery);
-    }
+    // 2. A inserção automática de cupons de demonstração foi desativada permanentemente
+    // para que cupons excluídos pelo administrador não retornem ao atualizar a página.
 
 } catch (\Exception $e) {
     error_log("Erro de migração da tabela de cupons: " . $e->getMessage());

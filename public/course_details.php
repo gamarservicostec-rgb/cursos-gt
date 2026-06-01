@@ -3,6 +3,8 @@ use Config\Database;
 use Config\AppConfig;
 
 require_once __DIR__ . '/../src/Config/Database.php';
+// Garante migração de campos adicionais
+require_once __DIR__ . '/../database/add_course_fields.php';
 
 AppConfig::startSession();
 
@@ -199,28 +201,45 @@ try {
                         </div>
                     </div>
 
-                    <!-- Details and features -->
+                    <!-- Details and features (Dynamic what_you_will_learn) -->
+                    <?php
+                    $learnItems = [];
+                    if (!empty($course['what_learn'])) {
+                        $lines = explode("\n", str_replace("\r", "", $course['what_learn']));
+                        foreach ($lines as $line) {
+                            $line = trim($line);
+                            if (empty($line)) continue;
+                            $parts = explode("|", $line);
+                            $title = trim($parts[0] ?? '');
+                            $desc = trim($parts[1] ?? '');
+                            if (!empty($title)) {
+                                $learnItems[] = ['title' => $title, 'desc' => $desc];
+                            }
+                        }
+                    }
+                    if (empty($learnItems)) {
+                        $learnItems = [
+                            ['title' => 'Métricas Avançadas', 'desc' => 'Definição de objetivos táticos com alta precisão e análise comportamental.'],
+                            ['title' => 'Garantia e Credibilidade', 'desc' => 'Certificados com registro criptográfico de validação imediata.']
+                        ];
+                    }
+                    ?>
                     <div class="space-y-6 pt-4">
                         <h3 class="text-xl font-bold text-white uppercase tracking-wider">O que você aprenderá</h3>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div class="glass-panel p-6 rounded-lg flex gap-4">
-                                <div class="shrink-0 text-primary">
-                                    <span class="material-symbols-outlined">insights</span>
+                            <?php foreach ($learnItems as $item): ?>
+                                <div class="glass-panel p-6 rounded-lg flex gap-4">
+                                    <div class="shrink-0 text-primary">
+                                        <span class="material-symbols-outlined">verified</span>
+                                    </div>
+                                    <div>
+                                        <h4 class="text-white font-bold mb-1"><?php echo htmlspecialchars($item['title'], ENT_QUOTES, 'UTF-8'); ?></h4>
+                                        <?php if (!empty($item['desc'])): ?>
+                                            <p class="text-sm text-[#8F8F9D]"><?php echo htmlspecialchars($item['desc'], ENT_QUOTES, 'UTF-8'); ?></p>
+                                        <?php endif; ?>
+                                    </div>
                                 </div>
-                                <div>
-                                    <h4 class="text-white font-bold mb-1">Métricas Avançadas</h4>
-                                    <p class="text-sm text-[#8F8F9D]">Definição de objetivos táticos com alta precisão e análise comportamental.</p>
-                                </div>
-                            </div>
-                            <div class="glass-panel p-6 rounded-lg flex gap-4">
-                                <div class="shrink-0 text-primary">
-                                    <span class="material-symbols-outlined">verified_user</span>
-                                </div>
-                                <div>
-                                    <h4 class="text-white font-bold mb-1">Garantia e Credibilidade</h4>
-                                    <p class="text-sm text-[#8F8F9D]">Certificados com registro criptográfico de validação imediata.</p>
-                                </div>
-                            </div>
+                            <?php endforeach; ?>
                         </div>
                     </div>
                 </div>
@@ -259,15 +278,32 @@ try {
                                 </a>
                             <?php endif; ?>
 
+                            <!-- Dynamic materials_included and resources -->
+                            <?php
+                            $materialItems = [];
+                            if (!empty($course['materials_included'])) {
+                                $lines = explode("\n", str_replace("\r", "", $course['materials_included']));
+                                foreach ($lines as $line) {
+                                    $line = trim($line);
+                                    if (!empty($line)) {
+                                        $materialItems[] = $line;
+                                    }
+                                }
+                            }
+                            if (empty($materialItems)) {
+                                $materialItems = [
+                                    'Certificado de conclusão digital registrado',
+                                    'Acesso vitalício à plataforma'
+                                ];
+                            }
+                            ?>
                             <div class="flex flex-col gap-3 text-xs text-[#8F8F9D] pt-4 border-t border-[#2A2A35]">
-                                <div class="flex items-center gap-3">
-                                    <span class="material-symbols-outlined text-[18px] text-white">workspace_premium</span>
-                                    <span>Certificado de conclusão digital registrado</span>
-                                </div>
-                                <div class="flex items-center gap-3">
-                                    <span class="material-symbols-outlined text-[18px] text-white">all_inclusive</span>
-                                    <span>Acesso vitalício à plataforma</span>
-                                </div>
+                                <?php foreach ($materialItems as $mat): ?>
+                                    <div class="flex items-center gap-3">
+                                        <span class="material-symbols-outlined text-[18px] text-white">check_circle</span>
+                                        <span><?php echo htmlspecialchars($mat, ENT_QUOTES, 'UTF-8'); ?></span>
+                                    </div>
+                                <?php endforeach; ?>
                             </div>
                         </div>
 
@@ -282,20 +318,32 @@ try {
                                 <?php if (!empty($modules)): ?>
                                     <?php foreach ($modules as $mIndex => $mod): ?>
                                         <div class="border border-[#2A2A35] rounded-lg bg-[#141417] overflow-hidden">
-                                            <div class="w-full flex items-center justify-between p-4 text-left">
+                                            <!-- Cabeçalho do Accordion interativo -->
+                                            <button onclick="toggleModuleSyllabus(<?php echo $mod['id']; ?>)" class="w-full flex items-center justify-between p-4 text-left focus:outline-none hover:bg-white/[0.02] transition-colors">
                                                 <div>
                                                     <span class="text-[10px] text-primary font-bold uppercase tracking-wider mb-1 block">Módulo <?php echo $mIndex + 1; ?></span>
-                                                    <h4 class="text-white font-bold text-sm"><?php echo htmlspecialchars($mod['title'], ENT_QUOTES, 'UTF-8'); ?></h4>
+                                                    <h4 class="text-white font-bold text-sm flex items-center gap-1.5">
+                                                        <?php echo htmlspecialchars($mod['title'], ENT_QUOTES, 'UTF-8'); ?>
+                                                        <?php if (!$isEnrolled): ?>
+                                                            <span class="material-symbols-outlined text-xs text-[#8F8F9D]" title="Conteúdo Restrito">lock</span>
+                                                        <?php endif; ?>
+                                                    </h4>
                                                 </div>
-                                            </div>
-                                            <div class="px-4 pb-4 pt-1 space-y-2 border-t border-[#2A2A35]/50 bg-[#0A0A0C]/50">
+                                                <span id="modArrow-<?php echo $mod['id']; ?>" class="material-symbols-outlined text-primary text-[20px] transition-transform duration-200 <?php echo ($mIndex === 0) ? 'rotate-180' : ''; ?>">expand_more</span>
+                                            </button>
+                                            <!-- Conteúdo do Módulo -->
+                                            <div id="modBody-<?php echo $mod['id']; ?>" class="px-4 pb-4 pt-1 space-y-2 border-t border-[#2A2A35]/50 bg-[#0A0A0C]/50 transition-all <?php echo ($mIndex === 0) ? '' : 'hidden'; ?>">
                                                 <?php if (!empty($mod['subjects'])): ?>
                                                     <?php foreach ($mod['subjects'] as $sub): ?>
                                                         <?php if (!empty($sub['lessons'])): ?>
                                                             <?php foreach ($sub['lessons'] as $les): ?>
                                                                 <div class="flex items-center justify-between py-1.5 text-xs">
                                                                     <div class="flex items-center gap-2 text-[#EAEAEA]">
-                                                                        <span class="material-symbols-outlined text-[16px] text-primary">play_circle</span>
+                                                                        <?php if ($isEnrolled): ?>
+                                                                            <span class="material-symbols-outlined text-[16px] text-primary">play_circle</span>
+                                                                        <?php else: ?>
+                                                                            <span class="material-symbols-outlined text-[16px] text-[#8F8F9D]" title="Matricule-se para desbloquear">lock</span>
+                                                                        <?php endif; ?>
                                                                         <span><?php echo htmlspecialchars($les['title'], ENT_QUOTES, 'UTF-8'); ?></span>
                                                                     </div>
                                                                     <span class="text-[#8F8F9D]"><?php echo floor($les['duration'] / 60); ?>m</span>
@@ -321,5 +369,19 @@ try {
             </div>
         </main>
     </div>
+
+    <!-- Script de Accordion -->
+    <script>
+        function toggleModuleSyllabus(modId) {
+            const body = document.getElementById(`modBody-${modId}`);
+            const arrow = document.getElementById(`modArrow-${modId}`);
+            if (body) {
+                body.classList.toggle('hidden');
+            }
+            if (arrow) {
+                arrow.classList.toggle('rotate-180');
+            }
+        }
+    </script>
 </body>
 </html>

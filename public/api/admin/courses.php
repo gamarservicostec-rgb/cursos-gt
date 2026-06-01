@@ -30,10 +30,10 @@ if ($method === 'GET') {
     try {
         if ($courseId) {
             // Retorna a árvore completa (Pensando no Editor de Grade/Syllabus do Admin)
-            $courseQuery = "SELECT id, title, description, price, type, status, thumbnail_url, category_id, duration_days, weekdays_only, available_hours FROM courses WHERE id = :id LIMIT 1";
+            $courseQuery = "SELECT id, title, description, price, type, status, thumbnail_url, category_id, duration_days, weekdays_only, available_hours, what_learn, materials_included FROM courses WHERE id = :id LIMIT 1";
             $cStmt = $db->prepare($courseQuery);
             $cStmt->execute([':id' => $courseId]);
-            $course = $cStmt->fetch();
+            $course = $cStmt->fetch(\PDO::FETCH_ASSOC);
 
             if (!$course) {
                 http_response_code(404);
@@ -171,6 +171,10 @@ if ($method === 'GET') {
                 $durationDays = isset($input['duration_days']) && $input['duration_days'] !== '' ? (int)$input['duration_days'] : null;
                 $weekdaysOnly = isset($input['weekdays_only']) ? (int)$input['weekdays_only'] : 1;
                 $availableHours = isset($input['available_hours']) ? trim($input['available_hours']) : null;
+                
+                // Novos campos táticos
+                $whatLearn = isset($input['what_learn']) ? trim($input['what_learn']) : null;
+                $materialsIncluded = isset($input['materials_included']) ? trim($input['materials_included']) : null;
 
                 if (empty($title) || empty($description) || $price < 0) {
                     http_response_code(400);
@@ -178,7 +182,7 @@ if ($method === 'GET') {
                     exit;
                 }
 
-                $stmt = $db->prepare("INSERT INTO courses (title, description, price, type, status, thumbnail_url, category_id, duration_days, weekdays_only, available_hours) VALUES (:title, :description, :price, :type, :status, :thumbnail_url, :category_id, :duration_days, :weekdays_only, :available_hours)");
+                $stmt = $db->prepare("INSERT INTO courses (title, description, price, type, status, thumbnail_url, category_id, duration_days, weekdays_only, available_hours, what_learn, materials_included) VALUES (:title, :description, :price, :type, :status, :thumbnail_url, :category_id, :duration_days, :weekdays_only, :available_hours, :what_learn, :materials_included)");
                 $stmt->execute([
                     ':title' => $title,
                     ':description' => $description,
@@ -189,7 +193,9 @@ if ($method === 'GET') {
                     ':category_id' => $categoryId,
                     ':duration_days' => $durationDays,
                     ':weekdays_only' => $weekdaysOnly,
-                    ':available_hours' => $availableHours
+                    ':available_hours' => $availableHours,
+                    ':what_learn' => $whatLearn,
+                    ':materials_included' => $materialsIncluded
                 ]);
 
                 $newId = $db->lastInsertId();
@@ -219,6 +225,10 @@ if ($method === 'GET') {
                 $durationDays = isset($input['duration_days']) && $input['duration_days'] !== '' ? (int)$input['duration_days'] : null;
                 $weekdaysOnly = isset($input['weekdays_only']) ? (int)$input['weekdays_only'] : 1;
                 $availableHours = isset($input['available_hours']) ? trim($input['available_hours']) : null;
+                
+                // Novos campos táticos
+                $whatLearn = isset($input['what_learn']) ? trim($input['what_learn']) : null;
+                $materialsIncluded = isset($input['materials_included']) ? trim($input['materials_included']) : null;
 
                 if (!$courseId || empty($title) || empty($description) || $price < 0) {
                     http_response_code(400);
@@ -226,7 +236,7 @@ if ($method === 'GET') {
                     exit;
                 }
 
-                $stmt = $db->prepare("UPDATE courses SET title = :title, description = :description, price = :price, type = :type, status = :status, thumbnail_url = :thumbnail_url, category_id = :category_id, duration_days = :duration_days, weekdays_only = :weekdays_only, available_hours = :available_hours WHERE id = :id");
+                $stmt = $db->prepare("UPDATE courses SET title = :title, description = :description, price = :price, type = :type, status = :status, thumbnail_url = :thumbnail_url, category_id = :category_id, duration_days = :duration_days, weekdays_only = :weekdays_only, available_hours = :available_hours, what_learn = :what_learn, materials_included = :materials_included WHERE id = :id");
                 $stmt->execute([
                     ':title' => $title,
                     ':description' => $description,
@@ -238,6 +248,8 @@ if ($method === 'GET') {
                     ':duration_days' => $durationDays,
                     ':weekdays_only' => $weekdaysOnly,
                     ':available_hours' => $availableHours,
+                    ':what_learn' => $whatLearn,
+                    ':materials_included' => $materialsIncluded,
                     ':id' => $courseId
                 ]);
 

@@ -125,12 +125,25 @@ try {
 
     $amount = (float)$course['price'];
     
-    // Aplicação de cupons reais de desconto no checkout
+    // Aplicação dinâmica e segura de cupons promocionais a partir do banco de dados
     $discount = 0.00;
-    if ($coupon === 'PROMO500') {
-        $discount = 500.00;
-    } elseif ($coupon === 'ELITE30') {
-        $discount = $amount * 0.30;
+    if (!empty($coupon)) {
+        $couponStmt = $db->prepare("SELECT * FROM coupons WHERE code = :code AND status = 'active' AND expires_at >= CURDATE() LIMIT 1");
+        $couponStmt->execute([':code' => $coupon]);
+        $c = $couponStmt->fetch(\PDO::FETCH_ASSOC);
+
+        if ($c) {
+            if ($c['type'] === 'fixed') {
+                $discount = (float)$c['value'];
+            } else {
+                // Porcentagem
+                $discount = $amount * ((float)$c['value'] / 100);
+            }
+        } else {
+            http_response_code(400);
+            echo json_encode(['error' => 'O cupom de desconto informado é inválido ou já expirou.']);
+            exit;
+        }
     }
     $amount = max(0.00, $amount - $discount);
 

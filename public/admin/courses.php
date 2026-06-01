@@ -10,6 +10,8 @@ require_once __DIR__ . '/../../src/Middleware/AuthMiddleware.php';
 
 // Executa migrações de banco de dados para quizzes e gamificação
 require_once __DIR__ . '/../../database/create_quiz_tables.php';
+// Executa migrações para campos adicionais de courses
+require_once __DIR__ . '/../../database/add_course_fields.php';
 
 $adminName = $_SESSION['user_name'];
 ?>
@@ -415,9 +417,21 @@ $adminName = $_SESSION['user_name'];
                                      </div>
                                  </div>
                                  <div>
-                                     <label class="block text-[10px] font-bold uppercase tracking-widest text-primary mb-2">Horários Disponíveis (Separados por vírgula)</label>
-                                     <input type="text" id="courseAvailableHoursField" placeholder="ex: 08:00, 10:00, 14:00, 19:00" class="w-full px-4 py-3 rounded-lg input-glass text-xs">
-                                 </div>
+                                      <label class="block text-[10px] font-bold uppercase tracking-widest text-primary mb-2">Horários Disponíveis (Separados por vírgula)</label>
+                                      <input type="text" id="courseAvailableHoursField" placeholder="ex: 08:00, 10:00, 14:00, 19:00" class="w-full px-4 py-3 rounded-lg input-glass text-xs">
+                                  </div>
+
+                                  <!-- O que você aprenderá (itens) -->
+                                  <div>
+                                      <label class="block text-[10px] font-bold uppercase tracking-widest text-primary mb-2">O que você aprenderá (um benefício por linha. Ex: Métricas Avançadas|Definição de objetivos...)</label>
+                                      <textarea id="courseWhatLearnField" rows="3" placeholder="Título|Descrição (uma por linha)" class="w-full px-4 py-3 rounded-lg input-glass text-xs resize-none"></textarea>
+                                  </div>
+
+                                  <!-- Material Didático / Recursos Inclusos -->
+                                  <div>
+                                      <label class="block text-[10px] font-bold uppercase tracking-widest text-primary mb-2">Material Didático e Recursos (um por linha. Ex: Certificado registrado...)</label>
+                                      <textarea id="courseMaterialsField" rows="3" placeholder="Recurso / Material Incluso (um por linha)" class="w-full px-4 py-3 rounded-lg input-glass text-xs resize-none"></textarea>
+                                  </div>
                              </div>
                          </div>
 
@@ -844,6 +858,11 @@ $adminName = $_SESSION['user_name'];
             document.getElementById('courseDurationField').value = course.duration_days || '';
             document.getElementById('courseWeekdaysField').value = course.weekdays_only !== undefined ? course.weekdays_only : '1';
             document.getElementById('courseAvailableHoursField').value = course.available_hours || '';
+            
+            // Preenche novos campos táticos
+            document.getElementById('courseWhatLearnField').value = course.what_learn || '';
+            document.getElementById('courseMaterialsField').value = course.materials_included || '';
+            
             toggleHybridFields();
 
             updateThumbnailPreview(course.thumbnail_url || '');
@@ -1087,7 +1106,9 @@ $adminName = $_SESSION['user_name'];
             thumbnail_url: document.getElementById('courseThumbnailField').value,
             duration_days: document.getElementById('courseDurationField').value ? parseInt(document.getElementById('courseDurationField').value) : null,
             weekdays_only: parseInt(document.getElementById('courseWeekdaysField').value),
-            available_hours: document.getElementById('courseAvailableHoursField').value
+            available_hours: document.getElementById('courseAvailableHoursField').value,
+            what_learn: document.getElementById('courseWhatLearnField').value,
+            materials_included: document.getElementById('courseMaterialsField').value
         };
         
         try {

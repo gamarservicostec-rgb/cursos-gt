@@ -23,7 +23,31 @@ $dbInstance = Database::getInstance();
 $db = $dbInstance->getConnection();
 
 if ($method === 'GET') {
-    // 1. LEITURA (GET) - OBTER TEMPLATE DE UM CURSO
+    // 1. LEITURA (GET) - LISTAR CERTIFICADOS EMITIDOS (Controle Acadêmico)
+    if (isset($_GET['action']) && $_GET['action'] === 'list_emitted') {
+        try {
+            $query = "SELECT c.id, c.certificate_code, c.issued_at, u.name as student_name, u.email as student_email, co.title as course_title 
+                      FROM certificates c 
+                      JOIN users u ON c.user_id = u.id 
+                      JOIN courses co ON c.course_id = co.id 
+                      ORDER BY c.issued_at DESC";
+            $stmt = $db->prepare($query);
+            $stmt->execute();
+            $certs = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+            echo json_encode([
+                'success' => true,
+                'certificates' => $certs
+            ]);
+            exit;
+        } catch (\PDOException $e) {
+            http_response_code(500);
+            echo json_encode(['error' => 'Erro ao obter lista de certificados: ' . $e->getMessage()]);
+            exit;
+        }
+    }
+
+    // 2. LEITURA (GET) - OBTER TEMPLATE DE UM CURSO (Editor Visual)
     $courseId = isset($_GET['course_id']) ? filter_var($_GET['course_id'], FILTER_VALIDATE_INT) : null;
 
     if (!$courseId) {
@@ -169,9 +193,100 @@ if ($method === 'GET') {
     }
 
 } elseif ($method === 'POST') {
-    // 2. ESCRITA (POST) - SALVAR OU ATUALIZAR TEMPLATE
+    // 2. ESCRITA (POST)
     $input = json_decode(file_get_contents('php://input'), true) ?? $_POST;
 
+    // --- SUB-AÇÃO: EMITIR CERTIFICADO MANUALMENTE ---
+    if (isset($input['action']) && $input['action'] === 'create_emitted') {
+        $userId = filter_var($input['user_id'] ?? null, FILTER_VALIDATE_INT);
+        $courseId = filter_var($input['course_id'] ?? null, FILTER_VALIDATE_INT);
+
+        if (!$userId || !$courseId) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Aluno ou Curso inválidos.']);
+            exit;
+        }
+
+        try {
+            // Verifica se o certificado já existe para esse aluno no respectivo curso
+            $checkStmt = $db->prepare("SELECT certificate_code FROM certificates WHERE user_id = :user_id AND course_id = :course_id LIMIT 1");
+            $checkStmt->execute([':user_id' => $userId, ':course_id' => $courseId]);
+            if ($checkStmt->fetch()) {
+                http_response_code(400);
+                echo json_encode(['error' => 'Este aluno já possui um certificado emitido para este treinamento.']);
+                exit;
+            }
+
+            // Gera código hash dinâmico exclusivo
+            $code = 'GT-' . strtoupper(bin2hex(random_bytes(6)));
+
+            $stmt = $db->prepare("INSERT INTO certificates (user_id, course_id, certificate_code) VALUES (:user_id, :course_id, :code)");
+            $stmt->execute([
+                ':user_id' => $userId,
+                ':course_id' => $courseId,
+                ':code' => $code
+            ]);
+
+            // Grava log de atividade do Admin
+            $logStmt = $db->prepare("INSERT INTO admin_activity (admin_id, action, affected_resource, details) VALUES (:admin, 'emitir_certificado_manual', :resource, :details)");
+            $logStmt->execute([
+                ':admin' => $_SESSION['user_id'],
+                ':resource' => "certificates/issued/{$code}",
+                ':details' => "Certificado {$code} emitido manualmente para o aluno ID {$userId} no curso ID {$courseId}"
+            ]);
+
+            echo json_encode(['success' => true, 'message' => 'Certificado emitido manualmente com sucesso! Código: ' . $code]);
+            exit;
+        } catch (\PDOException $e) {
+            http_response_code(500);
+            echo json_encode(['error' => 'Erro ao emitir certificado: ' . $e->getMessage()]);
+            exit;
+        }
+    }
+
+    // --- SUB-AÇÃO: REVOGAR / EXCLUIR CERTIFICADO ---
+    if (isset($input['action']) && $input['action'] === 'delete_emitted') {
+        $certId = filter_var($input['certificate_id'] ?? null, FILTER_VALIDATE_INT);
+
+        if (!$certId) {
+            http_response_code(400);
+            echo json_encode(['error' => 'ID do certificado inválido.']);
+            exit;
+        }
+
+        try {
+            // Busca o código antes de deletar para fins de auditoria
+            $codeStmt = $db->prepare("SELECT certificate_code FROM certificates WHERE id = :id LIMIT 1");
+            $codeStmt->execute([':id' => $certId]);
+            $code = $codeStmt->fetchColumn();
+
+            if (!$code) {
+                http_response_code(404);
+                echo json_encode(['error' => 'Certificado não localizado para exclusão.']);
+                exit;
+            }
+
+            $stmt = $db->prepare("DELETE FROM certificates WHERE id = :id");
+            $stmt->execute([':id' => $certId]);
+
+            // Grava log de atividade
+            $logStmt = $db->prepare("INSERT INTO admin_activity (admin_id, action, affected_resource, details) VALUES (:admin, 'revogar_certificado', :resource, :details)");
+            $logStmt->execute([
+                ':admin' => $_SESSION['user_id'],
+                ':resource' => "certificates/issued/{$code}",
+                ':details' => "Certificado {$code} revogado/excluído permanentemente pelo administrador"
+            ]);
+
+            echo json_encode(['success' => true, 'message' => 'Certificado acadêmico revogado com sucesso!']);
+            exit;
+        } catch (\PDOException $e) {
+            http_response_code(500);
+            echo json_encode(['error' => 'Erro ao revogar certificado: ' . $e->getMessage()]);
+            exit;
+        }
+    }
+
+    // --- AÇÃO PADRÃO: GRAVAÇÃO / SALVAMENTO DE TEMPLATE DO EDITOR ---
     $courseId = filter_var($input['course_id'] ?? null, FILTER_VALIDATE_INT);
     
     if (!$courseId) {
