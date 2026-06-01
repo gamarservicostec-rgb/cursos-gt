@@ -233,6 +233,65 @@ $adminName = $_SESSION['user_name'];
             background-color: #0d0d0f !important;
             color: #ffffff !important;
         }
+
+        /* Regras de Impressão de Alta Definição (Obsidian Gold A4 print) */
+        @media print {
+            body {
+                background: white !important;
+                color: black !important;
+                font-size: 12pt !important;
+            }
+            aside, header, main, #toastContainer, .print\:hidden {
+                display: none !important;
+                visibility: hidden !important;
+            }
+            .ml-sidebar-width {
+                margin-left: 0 !important;
+                padding: 0 !important;
+            }
+            #comprovanteModal {
+                display: block !important;
+                position: absolute !important;
+                left: 0 !important;
+                top: 0 !important;
+                width: 100% !important;
+                height: 100% !important;
+                background: white !important;
+                color: black !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                border: none !important;
+                box-shadow: none !important;
+                visibility: visible !important;
+                z-index: 9999 !important;
+            }
+            #comprovanteModal * {
+                visibility: visible !important;
+            }
+            #atestadoPrintArea {
+                border: 2px solid #ccc !important;
+                background: transparent !important;
+                padding: 40px !important;
+                color: black !important;
+                border-radius: 8px !important;
+            }
+            .text-primary {
+                color: black !important;
+            }
+            .text-text-muted {
+                color: #555 !important;
+            }
+            .text-white\/80 {
+                color: #222 !important;
+            }
+            .bg-black\/40 {
+                background: #f5f5f5 !important;
+                border: 1px solid #ddd !important;
+            }
+            .text-white {
+                color: black !important;
+            }
+        }
     </style>
 </head>
 <body class="bg-background-deep font-body-md text-on-background" style="background: linear-gradient(rgba(7, 7, 8, 0.95), rgba(7, 7, 8, 0.98)), url('https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&amp;w=2070&amp;auto=format&amp;fit=crop'); background-size: cover; background-attachment: fixed;">
@@ -331,23 +390,33 @@ $adminName = $_SESSION['user_name'];
         <!-- Header Operations -->
         <div class="glass-card rounded-xl p-6">
             <h1 class="text-xl font-bold tracking-tight text-white font-display">Controle de Frequência</h1>
-            <p class="text-on-surface-variant text-[10px] font-bold uppercase tracking-widest mt-1">Realize a chamada física de presença para turmas híbridas e presenciais</p>
+            <p class="text-on-surface-variant text-[10px] font-bold uppercase tracking-widest mt-1">Realize a chamada física de presença e gerencie comprovantes de aproveitamento prático</p>
             
+            <!-- Seletor de Abas Internas Premium (Obsidian Gold) -->
+            <div class="flex gap-2 border-b border-white/5 pb-1 mt-6">
+                <button onclick="switchTab('attendance')" id="tab-attendance" class="px-5 py-3 text-xs uppercase tracking-widest font-bold border-b-2 border-primary text-primary transition-all duration-300">
+                    Realizar Chamada Diária
+                </button>
+                <button onclick="switchTab('report')" id="tab-report" class="px-5 py-3 text-xs uppercase tracking-widest font-bold border-b-2 border-transparent text-on-surface-variant hover:text-white transition-all duration-300">
+                    Relatório de Aproveitamento
+                </button>
+            </div>
+
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-6">
                 <div>
                     <label class="block text-[9px] font-bold uppercase tracking-widest text-primary mb-2">Selecione o Treinamento</label>
-                    <select id="courseSelect" onchange="loadAttendanceList()" class="w-full px-4 py-3 rounded-lg input-glass text-xs">
+                    <select id="courseSelect" onchange="handleCourseChange()" class="w-full px-4 py-3 rounded-lg input-glass text-xs">
                         <option value="">Carregando treinamentos...</option>
                     </select>
                 </div>
-                <div>
+                <div id="dateFilterWrapper">
                     <label class="block text-[9px] font-bold uppercase tracking-widest text-primary mb-2">Data da Aula</label>
-                    <input type="date" id="dateSelect" onchange="loadAttendanceList()" value="<?php echo date('Y-m-d'); ?>" class="w-full px-4 py-3 rounded-lg input-glass text-xs" style="color-scheme: dark;">
+                    <input type="date" id="dateSelect" onchange="handleCourseChange()" value="<?php echo date('Y-m-d'); ?>" class="w-full px-4 py-3 rounded-lg input-glass text-xs" style="color-scheme: dark;">
                 </div>
             </div>
         </div>
 
-        <!-- Attendance List Card -->
+        <!-- TAB CONTENT A: Attendance List Card -->
         <div class="glass-card rounded-xl p-6 hidden" id="attendanceCard">
             <h3 class="text-xs font-bold text-white uppercase tracking-widest mb-6">Lista de Alunos Matriculados 📋</h3>
             
@@ -369,15 +438,111 @@ $adminName = $_SESSION['user_name'];
             </div>
         </div>
 
+        <!-- TAB CONTENT B: Relatório de Aproveitamento Card -->
+        <div class="glass-card rounded-xl p-6 hidden" id="reportCard">
+            <h3 class="text-xs font-bold text-white uppercase tracking-widest mb-6 font-display flex items-center gap-2">
+                <span class="material-symbols-outlined text-primary text-[18px]">analytics</span>
+                Relatório Consolidado de Presenças dos Alunos
+            </h3>
+            
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-xs">
+                    <thead>
+                        <tr class="border-b border-white/5 text-on-surface-variant font-bold uppercase tracking-wider pb-3">
+                            <th class="pb-3">Aluno</th>
+                            <th class="pb-3">E-mail</th>
+                            <th class="pb-3 text-center">Aulas Totais</th>
+                            <th class="pb-3 text-center">Presenças</th>
+                            <th class="pb-3 text-center">Faltas</th>
+                            <th class="pb-3 text-center">Aproveitamento</th>
+                            <th class="pb-3 text-center">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-white/5 text-white" id="reportListTable">
+                        <!-- Carregado via AJAX -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
         <!-- Selection Placeholder -->
         <div class="glass-card rounded-xl p-12 text-center text-on-surface-variant text-xs font-bold uppercase tracking-wider border border-dashed border-white/10" id="placeholderCard">
-            Selecione um treinamento acima para exibir a lista de presença física.
+            Selecione um treinamento acima para exibir as informações.
         </div>
     </main>
 </div>
 
 <!-- TOAST NOTIFICATION CONTAINER -->
 <div id="toastContainer" class="fixed bottom-6 right-6 z-50 space-y-3"></div>
+
+<!-- MODAL DE COMPROVANTE DE PRESENÇA (ATESTATO TIMBRADO) -->
+<div id="comprovanteModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm hidden print:relative print:bg-white print:backdrop-blur-none print:z-0">
+    <div class="glass-card rounded-xl w-full max-w-xl p-8 space-y-6 relative border border-primary/20 bg-[#0c0c0f] shadow-2xl print:shadow-none print:border-none print:bg-white print:text-black print:p-0 print:m-0">
+        
+        <!-- Botões do Topo (Escondidos na Impressão) -->
+        <div class="flex justify-end gap-3 print:hidden">
+            <button onclick="printCertificate()" class="btn-primary font-bold px-4 py-2.5 rounded text-[10px] uppercase tracking-widest flex items-center gap-1.5 shadow-[0_0_15px_rgba(242,201,76,0.15)] transition-transform hover:scale-[1.02]">
+                <span class="material-symbols-outlined text-sm">print</span>
+                Imprimir Documento
+            </button>
+            <button onclick="closeComprovanteModal()" class="px-4 py-2.5 bg-white/5 border border-white/10 text-white rounded text-[10px] uppercase font-bold hover:bg-white/10 transition-all">
+                Fechar
+            </button>
+        </div>
+
+        <!-- Conteúdo do Atestado (Timbrado) -->
+        <div id="atestadoPrintArea" class="border border-primary/20 bg-primary/[0.02] p-8 rounded-lg space-y-6 print:border-none print:bg-transparent print:p-0">
+            <!-- Cabeçalho Timbrado -->
+            <div class="text-center pb-6 border-b border-primary/10 space-y-2 print:border-neutral-200">
+                <h1 class="text-lg font-bold uppercase tracking-widest text-primary print:text-black font-display">Treinamentos de Elite GT</h1>
+                <p class="text-[9px] font-bold uppercase tracking-wider text-text-muted print:text-neutral-500">Comprovação de Desempenho e Frequência Prática</p>
+                <div class="text-[9px] font-mono text-primary print:text-black">AUTENTICIDADE: <span id="atestadoAuthCode" class="font-bold font-mono">GT-ATT-XXXXXX</span></div>
+            </div>
+
+            <!-- Corpo do Documento -->
+            <div class="space-y-4 text-xs leading-relaxed text-white/80 print:text-neutral-800">
+                <p>
+                    Atestamos para os devidos fins de comprovação e registro acadêmico que o(a) aluno(a) 
+                    <strong class="text-white print:text-black" id="atestadoStudentName">NOME DO ALUNO</strong>, 
+                    inscrito sob o e-mail <span class="font-mono text-primary print:text-neutral-600" id="atestadoStudentEmail">email@aluno.com</span>, 
+                    obteve a frequência prática registrada no treinamento 
+                    <strong class="text-white print:text-black" id="atestadoCourseTitle">TITULO DO CURSO</strong>.
+                </p>
+
+                <!-- Box de Aproveitamento -->
+                <div class="grid grid-cols-4 gap-4 p-4 rounded-lg bg-black/40 border border-white/5 text-center print:bg-neutral-50 print:border-neutral-200 print:text-black">
+                    <div>
+                        <div class="text-[8px] font-bold text-text-muted uppercase tracking-wider print:text-neutral-500">Aulas Totais</div>
+                        <div class="text-base font-bold text-white mt-1 print:text-black" id="atestadoTotalClasses">0</div>
+                    </div>
+                    <div>
+                        <div class="text-[8px] font-bold text-text-muted uppercase tracking-wider print:text-neutral-500">Presenças</div>
+                        <div class="text-base font-bold text-primary mt-1 print:text-black" id="atestadoTotalPresent">0</div>
+                    </div>
+                    <div>
+                        <div class="text-[8px] font-bold text-text-muted uppercase tracking-wider print:text-neutral-500">Faltas</div>
+                        <div class="text-base font-bold text-white mt-1 print:text-black" id="atestadoTotalAbsent">0</div>
+                    </div>
+                    <div>
+                        <div class="text-[8px] font-bold text-text-muted uppercase tracking-wider print:text-neutral-500">Aproveitamento</div>
+                        <div class="text-base font-bold text-primary mt-1 print:text-black" id="atestadoPercentage">0%</div>
+                    </div>
+                </div>
+
+                <p class="text-[10px] leading-relaxed">
+                    Com base no registro de chamadas diárias e controle presencial de horários práticos realizados, o aluno obteve o aproveitamento acadêmico final de **<span id="atestadoPercentageText">0%</span>**, estando em conformidade com as diretrizes educacionais estabelecidas para a entrega de credenciais e certificações de elite da nossa instituição.
+                </p>
+            </div>
+
+            <!-- Assinatura/Rodapé -->
+            <div class="pt-8 border-t border-primary/10 text-center space-y-1 print:border-neutral-200 print:text-black">
+                <p class="text-xs font-bold text-white print:text-black">GT CURSOS TECNOLÓGICOS</p>
+                <p class="text-[9px] text-text-muted uppercase tracking-wider print:text-neutral-500">Diretoria de Operações e Registro Acadêmico</p>
+                <p class="text-[8px] text-text-muted/60 print:text-neutral-400 mt-4">Documento emitido digitalmente em <span id="atestadoEmissionDate">01/01/2026</span></p>
+            </div>
+        </div>
+    </div>
+</div>
 
 <script>
     document.addEventListener('DOMContentLoaded', () => {
@@ -406,6 +571,174 @@ $adminName = $_SESSION['user_name'];
             });
         } catch (err) {
             showToast('Erro ao obter cursos: ' + err.message, 'error');
+        }
+    }
+
+    // --- LÓGICA DE ABAS E RELATÓRIO DE APROVEITAMENTO (Obsidian Gold) ---
+    let currentTab = 'attendance';
+
+    function switchTab(tabName) {
+        currentTab = tabName;
+        
+        const btnAttendance = document.getElementById('tab-attendance');
+        const btnReport = document.getElementById('tab-report');
+        const dateFilter = document.getElementById('dateFilterWrapper');
+        
+        if (tabName === 'attendance') {
+            btnAttendance.className = "px-5 py-3 text-xs uppercase tracking-widest font-bold border-b-2 border-primary text-primary transition-all duration-300";
+            btnReport.className = "px-5 py-3 text-xs uppercase tracking-widest font-bold border-b-2 border-transparent text-on-surface-variant hover:text-white transition-all duration-300";
+            dateFilter.classList.remove('hidden');
+        } else {
+            btnAttendance.className = "px-5 py-3 text-xs uppercase tracking-widest font-bold border-b-2 border-transparent text-on-surface-variant hover:text-white transition-all duration-300";
+            btnReport.className = "px-5 py-3 text-xs uppercase tracking-widest font-bold border-b-2 border-primary text-primary transition-all duration-300";
+            dateFilter.classList.add('hidden');
+        }
+        
+        handleCourseChange();
+    }
+
+    function handleCourseChange() {
+        const courseId = document.getElementById('courseSelect').value;
+        const placeholder = document.getElementById('placeholderCard');
+        const cardAttendance = document.getElementById('attendanceCard');
+        const cardReport = document.getElementById('reportCard');
+        
+        if (!courseId) {
+            cardAttendance.classList.add('hidden');
+            cardReport.classList.add('hidden');
+            placeholder.classList.remove('hidden');
+            return;
+        }
+        
+        placeholder.classList.add('hidden');
+        
+        if (currentTab === 'attendance') {
+            cardReport.classList.add('hidden');
+            loadAttendanceList();
+        } else {
+            cardAttendance.classList.add('hidden');
+            loadPerformanceReport();
+        }
+    }
+
+    async function loadPerformanceReport() {
+        const courseId = document.getElementById('courseSelect').value;
+        const cardReport = document.getElementById('reportCard');
+        const table = document.getElementById('reportListTable');
+        
+        cardReport.classList.remove('hidden');
+        table.innerHTML = `<tr><td colspan="7" class="text-center py-8 text-on-surface-variant text-xs font-bold uppercase tracking-wider">Carregando relatório de desempenho...</td></tr>`;
+        
+        try {
+            const response = await fetch(`../api/admin/attendance.php?action=performance_report&course_id=${courseId}`);
+            if (!response.ok) throw new Error('Falha ao obter relatório consolidado.');
+            const res = await response.json();
+            
+            if (!res.success) throw new Error(res.error || 'Erro de processamento.');
+            
+            table.innerHTML = '';
+            
+            if (res.report.length === 0) {
+                table.innerHTML = `<tr><td colspan="7" class="text-center py-8 text-on-surface-variant font-bold tracking-wider italic">Nenhum aluno ativo matriculado neste curso.</td></tr>`;
+                return;
+            }
+            
+            res.report.forEach(r => {
+                let badgeClass = 'bg-red-500/10 text-red-400 border-red-500/20';
+                if (r.percentage >= 75) {
+                    badgeClass = 'bg-green-500/10 text-green-400 border-green-500/20';
+                } else if (r.percentage >= 50) {
+                    badgeClass = 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20';
+                }
+                
+                const studentEscapedName = r.student_name.replace(/'/g, "\\'");
+                const courseTitle = document.getElementById('courseSelect').options[document.getElementById('courseSelect').selectedIndex].text;
+                const courseEscapedTitle = courseTitle.replace(/'/g, "\\'");
+                
+                const studentData = JSON.stringify({
+                    student_name: r.student_name,
+                    student_email: r.student_email,
+                    total_classes: r.total_classes,
+                    total_present: r.total_present,
+                    total_absent: r.total_absent,
+                    percentage: r.percentage,
+                    course_title: courseTitle
+                }).replace(/"/g, '&quot;');
+                
+                table.innerHTML += `
+                    <tr class="hover:bg-white/[0.01] transition-all border-b border-white/5 font-medium">
+                        <td class="py-4 font-bold text-white">${r.student_name}</td>
+                        <td class="py-4 text-on-surface-variant font-mono">${r.student_email}</td>
+                        <td class="py-4 text-center font-bold">${r.total_classes}</td>
+                        <td class="py-4 text-center font-bold text-primary">${r.total_present}</td>
+                        <td class="py-4 text-center text-on-surface-variant">${r.total_absent}</td>
+                        <td class="py-4 text-center">
+                            <span class="inline-flex px-2.5 py-1 rounded border text-[10px] font-bold ${badgeClass}">
+                                ${r.percentage}%
+                            </span>
+                        </td>
+                        <td class="py-4 text-center print:hidden">
+                            <div class="flex items-center justify-center gap-2">
+                                <button onclick="openComprovanteModal('${studentData}')" class="p-1.5 rounded bg-primary/10 border border-primary/20 text-primary hover:bg-primary hover:text-black transition-all flex items-center" title="Visualizar Ficha de Frequência">
+                                    <span class="material-symbols-outlined text-[15px]">badge</span>
+                                </button>
+                                <button onclick="shareAttendance('${studentEscapedName}', '${r.student_email}', ${r.percentage}, ${r.total_present}, '${courseEscapedTitle}', 'whatsapp')" class="p-1.5 rounded bg-green-500/10 border border-green-500/20 text-green-400 hover:bg-green-500 hover:text-black transition-all flex items-center" title="Enviar WhatsApp">
+                                    <span class="material-symbols-outlined text-[15px]">chat</span>
+                                </button>
+                                <button onclick="shareAttendance('${studentEscapedName}', '${r.student_email}', ${r.percentage}, ${r.total_present}, '${courseEscapedTitle}', 'email')" class="p-1.5 rounded bg-white/5 border border-white/10 text-white hover:bg-white/10 transition-all flex items-center" title="Enviar E-mail">
+                                    <span class="material-symbols-outlined text-[15px]">mail</span>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+            
+        } catch (err) {
+            showToast(err.message, 'error');
+            table.innerHTML = `<tr><td colspan="7" class="text-center py-8 text-error font-bold tracking-wider">Erro ao processar o relatório consolidado.</td></tr>`;
+        }
+    }
+
+    function openComprovanteModal(studentDataJson) {
+        const s = JSON.parse(studentDataJson.replace(/&quot;/g, '"'));
+        
+        document.getElementById('atestadoStudentName').innerText = s.student_name;
+        document.getElementById('atestadoStudentEmail').innerText = s.student_email;
+        document.getElementById('atestadoCourseTitle').innerText = s.course_title;
+        document.getElementById('atestadoTotalClasses').innerText = s.total_classes;
+        document.getElementById('atestadoTotalPresent').innerText = s.total_present;
+        document.getElementById('atestadoTotalAbsent').innerText = s.total_absent;
+        document.getElementById('atestadoPercentage').innerText = s.percentage + '%';
+        document.getElementById('atestadoPercentageText').innerText = s.percentage + '%';
+        
+        const randHash = 'GT-ATT-' + Math.floor(100000 + Math.random() * 900000);
+        document.getElementById('atestadoAuthCode').innerText = randHash;
+        
+        const now = new Date();
+        document.getElementById('atestadoEmissionDate').innerText = now.toLocaleDateString('pt-BR') + ' às ' + now.toTimeString().substring(0, 5);
+        
+        document.getElementById('comprovanteModal').classList.remove('hidden');
+    }
+
+    function closeComprovanteModal() {
+        document.getElementById('comprovanteModal').classList.add('hidden');
+    }
+
+    function printCertificate() {
+        window.print();
+    }
+
+    function shareAttendance(name, email, percentage, present, course, method) {
+        const textMessage = `Olá, ${name}! Segue o seu comprovante de frequência prática no treinamento ${course}. Sua presença acumulada foi de ${present} aulas, obtendo um aproveitamento de frequência de ${percentage}%. Parabéns pelo empenho e dedicação!`;
+        
+        if (method === 'whatsapp') {
+            const url = `https://api.whatsapp.com/send?text=${encodeURIComponent(textMessage)}`;
+            window.open(url, '_blank');
+            showToast('Redirecionando para o WhatsApp...', 'success');
+        } else {
+            const url = `email_whatsapp.php?to=${encodeURIComponent(email)}&subject=${encodeURIComponent('Comprovante de Desempenho e Frequência GT')}&body=${encodeURIComponent(textMessage)}`;
+            window.location.href = url;
         }
     }
 

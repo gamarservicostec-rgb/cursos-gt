@@ -24,6 +24,63 @@ $dbInstance = Database::getInstance();
 $db = $dbInstance->getConnection();
 
 if ($method === 'GET') {
+    $action = $_GET['action'] ?? '';
+
+    if ($action === 'performance_report') {
+        $courseId = filter_var($_GET['course_id'] ?? 0, FILTER_VALIDATE_INT);
+        if (!$courseId) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Parâmetro course_id inválido ou ausente.']);
+            exit;
+        }
+
+        try {
+            $query = "SELECT 
+                        u.id as student_id, 
+                        u.name as student_name, 
+                        u.email as student_email,
+                        (SELECT COUNT(*) FROM physical_attendance pa WHERE pa.user_id = u.id AND pa.course_id = e.course_id AND pa.attended = 1) as total_present,
+                        (SELECT COUNT(DISTINCT date) FROM physical_attendance pa WHERE pa.course_id = e.course_id) as total_classes
+                      FROM enrollments e
+                      JOIN users u ON e.user_id = u.id
+                      WHERE e.course_id = :course_id AND e.status = 'active'
+                      ORDER BY u.name ASC";
+            
+            $stmt = $db->prepare($query);
+            $stmt->execute([':course_id' => $courseId]);
+            $list = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+            $formattedList = array_map(function($student) {
+                $totalClasses = (int)$student['total_classes'];
+                $totalPresent = (int)$student['total_present'];
+                $totalAbsent = max(0, $totalClasses - $totalPresent);
+                $percentage = $totalClasses > 0 ? round(($totalPresent / $totalClasses) * 100) : 100;
+
+                return [
+                    'student_id' => (int)$student['student_id'],
+                    'student_name' => htmlspecialchars($student['student_name'], ENT_QUOTES, 'UTF-8'),
+                    'student_email' => htmlspecialchars($student['student_email'], ENT_QUOTES, 'UTF-8'),
+                    'total_classes' => $totalClasses,
+                    'total_present' => $totalPresent,
+                    'total_absent' => $totalAbsent,
+                    'percentage' => $percentage
+                ];
+            }, $list);
+
+            echo json_encode([
+                'success' => true,
+                'course_id' => $courseId,
+                'report' => $formattedList
+            ]);
+            exit;
+
+        } catch (\PDOException $e) {
+            http_response_code(500);
+            echo json_encode(['error' => 'Erro interno de servidor ao gerar relatório: ' . $e->getMessage()]);
+            exit;
+        }
+    }
+
     // 1. RECUPERAR LISTA DE ALUNOS E SUAS PRESENÇAS EM UMA DATA ESPECÍFICA
     $courseId = filter_var($_GET['course_id'] ?? 0, FILTER_VALIDATE_INT);
     $date = $_GET['date'] ?? date('Y-m-d'); // Data padrão: hoje
