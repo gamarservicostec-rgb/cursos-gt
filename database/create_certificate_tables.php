@@ -73,7 +73,22 @@ try {
         'custom_text_x' => "INT NOT NULL DEFAULT 100",
         'custom_text_y' => "INT NOT NULL DEFAULT 120",
         'custom_text_size' => "INT NOT NULL DEFAULT 16",
-        'custom_text_color' => "VARCHAR(7) NOT NULL DEFAULT '#F5F5F7'"
+        'custom_text_color' => "VARCHAR(7) NOT NULL DEFAULT '#F5F5F7'",
+        'student_name_font' => "VARCHAR(50) NOT NULL DEFAULT 'Clash Display'",
+        'student_name_bold' => "TINYINT(1) NOT NULL DEFAULT 1",
+        'student_name_italic' => "TINYINT(1) NOT NULL DEFAULT 0",
+        'course_title_font' => "VARCHAR(50) NOT NULL DEFAULT 'Clash Display'",
+        'course_title_bold' => "TINYINT(1) NOT NULL DEFAULT 1",
+        'course_title_italic' => "TINYINT(1) NOT NULL DEFAULT 0",
+        'date_font' => "VARCHAR(50) NOT NULL DEFAULT 'Satoshi'",
+        'date_bold' => "TINYINT(1) NOT NULL DEFAULT 1",
+        'date_italic' => "TINYINT(1) NOT NULL DEFAULT 0",
+        'code_font' => "VARCHAR(50) NOT NULL DEFAULT 'Satoshi'",
+        'code_bold' => "TINYINT(1) NOT NULL DEFAULT 1",
+        'code_italic' => "TINYINT(1) NOT NULL DEFAULT 0",
+        'custom_text_font' => "VARCHAR(50) NOT NULL DEFAULT 'Clash Display'",
+        'custom_text_bold' => "TINYINT(1) NOT NULL DEFAULT 1",
+        'custom_text_italic' => "TINYINT(1) NOT NULL DEFAULT 0"
     ];
 
     foreach ($newCols as $colName => $colDef) {

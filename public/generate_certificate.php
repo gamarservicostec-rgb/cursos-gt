@@ -76,7 +76,7 @@ $validationUrl = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "http
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <link href="https://fonts.cdnfonts.com/css/clash-display" rel="stylesheet">
     <link href="https://fonts.cdnfonts.com/css/satoshi" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Alex+Brush&family=Cinzel:wght@500;700&family=Montserrat:wght@500;700&family=Playfair+Display:ital,wght@0,500;0,700;1,500&family=Plus+Jakarta+Sans:wght@500;700&family=Outfit:wght@500;700&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
     <!-- Biblioteca leve para geração do QR Code real -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
@@ -352,24 +352,36 @@ $validationUrl = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "http
             ctx.textAlign = 'left';
 
             // Elemento A: Nome do Aluno
-            ctx.fillStyle = t.student_name_color;
-            ctx.font = `bold ${t.student_name_size * 2}px Clash Display, sans-serif`;
-            ctx.fillText(cert.student_name, t.student_name_x * 2, t.student_name_y * 2);
+            if (t.student_name_size > 0) {
+                ctx.fillStyle = t.student_name_color;
+                const fontStyle = (t.student_name_italic ? 'italic ' : '') + (t.student_name_bold ? 'bold ' : 'normal ');
+                ctx.font = `${fontStyle}${t.student_name_size * 2}px "${t.student_name_font || 'Clash Display'}", sans-serif`;
+                ctx.fillText(cert.student_name, t.student_name_x * 2, t.student_name_y * 2);
+            }
 
             // Elemento B: Título do Curso
-            ctx.fillStyle = t.course_title_color;
-            ctx.font = `bold ${t.course_title_size * 2}px Clash Display, sans-serif`;
-            ctx.fillText(cert.course_title, t.course_title_x * 2, t.course_title_y * 2);
+            if (t.course_title_size > 0) {
+                ctx.fillStyle = t.course_title_color;
+                const fontStyle = (t.course_title_italic ? 'italic ' : '') + (t.course_title_bold ? 'bold ' : 'normal ');
+                ctx.font = `${fontStyle}${t.course_title_size * 2}px "${t.course_title_font || 'Clash Display'}", sans-serif`;
+                ctx.fillText(cert.course_title, t.course_title_x * 2, t.course_title_y * 2);
+            }
 
             // Elemento C: Data de Emissão
-            ctx.fillStyle = t.date_color;
-            ctx.font = `bold ${t.date_size * 2}px Satoshi, sans-serif`;
-            ctx.fillText(`Emitido em ${cert.date}`, t.date_x * 2, t.date_y * 2);
+            if (t.date_size > 0) {
+                ctx.fillStyle = t.date_color;
+                const fontStyle = (t.date_italic ? 'italic ' : '') + (t.date_bold ? 'bold ' : 'normal ');
+                ctx.font = `${fontStyle}${t.date_size * 2}px "${t.date_font || 'Satoshi'}", sans-serif`;
+                ctx.fillText(`Emitido em ${cert.date}`, t.date_x * 2, t.date_y * 2);
+            }
 
             // Elemento D: Hash do Código
-            ctx.fillStyle = t.code_color;
-            ctx.font = `bold ${t.code_size * 2}px Satoshi, sans-serif`;
-            ctx.fillText(`Autenticidade: ${cert.code}`, t.code_x * 2, t.code_y * 2);
+            if (t.code_size > 0) {
+                ctx.fillStyle = t.code_color;
+                const fontStyle = (t.code_italic ? 'italic ' : '') + (t.code_bold ? 'bold ' : 'normal ');
+                ctx.font = `${fontStyle}${t.code_size * 2}px "${t.code_font || 'Satoshi'}", sans-serif`;
+                ctx.fillText(`Autenticidade: ${cert.code}`, t.code_x * 2, t.code_y * 2);
+            }
 
             // 4. DESENHA O LOGO INSTITUCIONAL CUSTOMIZADO SE SALVO
             if (logoLoaded && logoImg.src) {
@@ -381,11 +393,19 @@ $validationUrl = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "http
                 ctx.drawImage(sigImg, t.signature_x * 2, t.signature_y * 2, t.signature_w * 2, t.signature_h * 2);
             }
 
-            // 6. DESENHA O TEXTO CUSTOMIZADO SE SALVO
-            if (t.custom_text) {
+            // 6. DESENHA O TEXTO CUSTOMIZADO SE SALVO (com substituição dinâmica de tags)
+            if (t.custom_text && t.custom_text_size > 0) {
                 ctx.fillStyle = t.custom_text_color;
-                ctx.font = `bold ${t.custom_text_size * 2}px Clash Display, sans-serif`;
-                ctx.fillText(t.custom_text, t.custom_text_x * 2, t.custom_text_y * 2);
+                const fontStyle = (t.custom_text_italic ? 'italic ' : '') + (t.custom_text_bold ? 'bold ' : 'normal ');
+                ctx.font = `${fontStyle}${t.custom_text_size * 2}px "${t.custom_text_font || 'Clash Display'}", sans-serif`;
+                
+                let renderedText = t.custom_text;
+                renderedText = renderedText.replace(/{student_name}/g, cert.student_name);
+                renderedText = renderedText.replace(/{course_title}/g, cert.course_title);
+                renderedText = renderedText.replace(/{date}/g, cert.date);
+                renderedText = renderedText.replace(/{code}/g, cert.code);
+
+                ctx.fillText(renderedText, t.custom_text_x * 2, t.custom_text_y * 2);
             }
 
             // 7. DESENHA O QR CODE REAL DE VERIFICAÇÃO NO CANVAS

@@ -37,7 +37,7 @@ try {
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <link href="https://fonts.cdnfonts.com/css/clash-display" rel="stylesheet">
     <link href="https://fonts.cdnfonts.com/css/satoshi" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Alex+Brush&family=Cinzel:wght@500;700&family=Montserrat:wght@500;700&family=Playfair+Display:ital,wght@0,500;0,700;1,500&family=Plus+Jakarta+Sans:wght@500;700&family=Outfit:wght@500;700&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
     
     <script id="tailwind-config">
         tailwind.config = {
@@ -435,6 +435,31 @@ try {
 
                             <!-- Text Controls -->
                             <div id="textControlsSection" class="space-y-4">
+                                <!-- Font Family -->
+                                <div class="space-y-2">
+                                    <label class="block text-[10px] text-white/60">Família da Fonte</label>
+                                    <select id="elementFont" class="custom-select w-full rounded" onchange="updateActiveElement('font', this.value)">
+                                        <option value="Clash Display">Clash Display</option>
+                                        <option value="Satoshi">Satoshi</option>
+                                        <option value="Plus Jakarta Sans">Plus Jakarta Sans</option>
+                                        <option value="Outfit">Outfit</option>
+                                        <option value="Playfair Display">Playfair Display</option>
+                                        <option value="Cinzel">Cinzel</option>
+                                        <option value="Montserrat">Montserrat</option>
+                                        <option value="Alex Brush">Alex Brush (Caligráfica)</option>
+                                    </select>
+                                </div>
+                                <!-- Bold and Italic toggles -->
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div class="flex items-center gap-2">
+                                        <input type="checkbox" id="elementBold" class="rounded border-white/10 bg-black/40 text-primary focus:ring-primary" onchange="updateActiveElement('bold', this.checked)">
+                                        <label for="elementBold" class="text-[10px] text-white/60 font-semibold cursor-pointer">Negrito</label>
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <input type="checkbox" id="elementItalic" class="rounded border-white/10 bg-black/40 text-primary focus:ring-primary" onchange="updateActiveElement('italic', this.checked)">
+                                        <label for="elementItalic" class="text-[10px] text-white/60 font-semibold cursor-pointer">Itálico</label>
+                                    </div>
+                                </div>
                                 <!-- Font Size -->
                                 <div class="space-y-2">
                                     <label class="block text-[10px] text-white/60">Tamanho da Fonte (px)</label>
@@ -569,7 +594,8 @@ try {
             elements.forEach((el, index) => {
                 if (el.type === 'text') {
                     ctx.fillStyle = el.color;
-                    ctx.font = `bold ${el.size}px Clash Display`;
+                    const fontStyle = (el.italic ? 'italic ' : '') + (el.bold ? 'bold ' : 'normal ');
+                    ctx.font = `${fontStyle}${el.size}px "${el.font || 'Clash Display'}"`;
                     ctx.textAlign = 'left';
                     ctx.fillText(el.text, el.x, el.y);
 
@@ -757,15 +783,21 @@ try {
                 
                 document.getElementById('elementSize').value = el.size;
                 document.getElementById('elementColor').value = el.color;
+                
+                // Preenche fonte, negrito e itálico
+                document.getElementById('elementFont').value = el.font || 'Clash Display';
+                document.getElementById('elementBold').checked = el.bold !== undefined ? el.bold : true;
+                document.getElementById('elementItalic').checked = el.italic !== undefined ? el.italic : false;
 
                 if (el.isCustom) {
                     textValGroup.style.display = 'block';
                     document.getElementById('elementValue').value = el.text;
-                    deleteBtn.style.display = 'block';
                 } else {
                     textValGroup.style.display = 'none';
-                    deleteBtn.style.display = 'none';
                 }
+                
+                // Exibe o botão de deletar para todos os textos
+                deleteBtn.style.display = 'block';
             } else if (el.type === 'image') {
                 textSection.style.display = 'none';
                 imageSection.style.display = 'block';
@@ -788,6 +820,12 @@ try {
                     el.color = value;
                 } else if (prop === 'text') {
                     el.text = value;
+                } else if (prop === 'font') {
+                    el.font = value;
+                } else if (prop === 'bold') {
+                    el.bold = value;
+                } else if (prop === 'italic') {
+                    el.italic = value;
                 }
             } else if (el.type === 'image') {
                 if (prop === 'width') {
@@ -850,7 +888,8 @@ try {
                 const el = elements[i];
 
                 if (el.type === 'text') {
-                    ctx.font = `bold ${el.size}px Clash Display`;
+                    const fontStyle = (el.italic ? 'italic ' : '') + (el.bold ? 'bold ' : 'normal ');
+                    ctx.font = `${fontStyle}${el.size}px "${el.font || 'Clash Display'}"`;
                     const textWidth = ctx.measureText(el.text).width;
 
                     if (clickX >= el.x - 5 && clickX <= el.x + textWidth + 5 &&
@@ -938,12 +977,67 @@ try {
                 if (!res.success) throw new Error(res.error || 'Erro inesperado.');
 
                 const t = res.template;
-                elements = [
-                    { type: 'text', name: 'Nome do Aluno', text: '{student_name}', x: t.student_name_x, y: t.student_name_y, size: t.student_name_size, color: t.student_name_color },
-                    { type: 'text', name: 'Título do Curso', text: '{course_title}', x: t.course_title_x, y: t.course_title_y, size: t.course_title_size, color: t.course_title_color },
-                    { type: 'text', name: 'Data de Emissão', text: 'Emitido em {date}', x: t.date_x, y: t.date_y, size: t.date_size, color: t.date_color },
-                    { type: 'text', name: 'Código do QR Code', text: 'Autenticidade: {code}', x: t.code_x, y: t.code_y, size: t.code_size, color: t.code_color }
-                ];
+                elements = [];
+
+                if (t.student_name_size > 0) {
+                    elements.push({ 
+                        type: 'text', 
+                        name: 'Nome do Aluno', 
+                        text: '{student_name}', 
+                        x: t.student_name_x, 
+                        y: t.student_name_y, 
+                        size: t.student_name_size, 
+                        color: t.student_name_color,
+                        font: t.student_name_font || 'Clash Display',
+                        bold: t.student_name_bold !== undefined ? !!t.student_name_bold : true,
+                        italic: t.student_name_italic !== undefined ? !!t.student_name_italic : false
+                    });
+                }
+                
+                if (t.course_title_size > 0) {
+                    elements.push({ 
+                        type: 'text', 
+                        name: 'Título do Curso', 
+                        text: '{course_title}', 
+                        x: t.course_title_x, 
+                        y: t.course_title_y, 
+                        size: t.course_title_size, 
+                        color: t.course_title_color,
+                        font: t.course_title_font || 'Clash Display',
+                        bold: t.course_title_bold !== undefined ? !!t.course_title_bold : true,
+                        italic: t.course_title_italic !== undefined ? !!t.course_title_italic : false
+                    });
+                }
+                
+                if (t.date_size > 0) {
+                    elements.push({ 
+                        type: 'text', 
+                        name: 'Data de Emissão', 
+                        text: 'Emitido em {date}', 
+                        x: t.date_x, 
+                        y: t.date_y, 
+                        size: t.date_size, 
+                        color: t.date_color,
+                        font: t.date_font || 'Satoshi',
+                        bold: t.date_bold !== undefined ? !!t.date_bold : true,
+                        italic: t.date_italic !== undefined ? !!t.date_italic : false
+                    });
+                }
+                
+                if (t.code_size > 0) {
+                    elements.push({ 
+                        type: 'text', 
+                        name: 'Código do QR Code', 
+                        text: 'Autenticidade: {code}', 
+                        x: t.code_x, 
+                        y: t.code_y, 
+                        size: t.code_size, 
+                        color: t.code_color,
+                        font: t.code_font || 'Satoshi',
+                        bold: t.code_bold !== undefined ? !!t.code_bold : true,
+                        italic: t.code_italic !== undefined ? !!t.code_italic : false
+                    });
+                }
 
                 // Fundo customizado
                 if (t.background_url) {
@@ -988,7 +1082,7 @@ try {
                 }
 
                 // Texto customizado estático
-                if (t.custom_text) {
+                if (t.custom_text && t.custom_text_size > 0) {
                     elements.push({
                         type: 'text',
                         name: 'Texto Customizado',
@@ -997,6 +1091,9 @@ try {
                         y: t.custom_text_y,
                         size: t.custom_text_size,
                         color: t.custom_text_color,
+                        font: t.custom_text_font || 'Clash Display',
+                        bold: t.custom_text_bold !== undefined ? !!t.custom_text_bold : true,
+                        italic: t.custom_text_italic !== undefined ? !!t.custom_text_italic : false,
                         isCustom: true
                     });
                 }
@@ -1018,33 +1115,40 @@ try {
                 return;
             }
 
-            if (elements.length === 0) {
-                showToast('Carregue ou adicione os elementos ao template antes de salvar.', 'error');
-                return;
-            }
-
             // Mapeia os elementos do canvas para o payload JSON
             const payload = {
                 course_id: parseInt(courseId),
                 student_name_x: getElementProp('{student_name}', 'x', 100),
                 student_name_y: getElementProp('{student_name}', 'y', 180),
-                student_name_size: getElementProp('{student_name}', 'size', 26),
+                student_name_size: getElementProp('{student_name}', 'size', 0),
                 student_name_color: getElementProp('{student_name}', 'color', '#F5F5F7'),
+                student_name_font: getElementProp('{student_name}', 'font', 'Clash Display'),
+                student_name_bold: getElementProp('{student_name}', 'bold', true) ? 1 : 0,
+                student_name_italic: getElementProp('{student_name}', 'italic', false) ? 1 : 0,
                 
                 course_title_x: getElementProp('{course_title}', 'x', 100),
                 course_title_y: getElementProp('{course_title}', 'y', 240),
-                course_title_size: getElementProp('{course_title}', 'size', 20),
+                course_title_size: getElementProp('{course_title}', 'size', 0),
                 course_title_color: getElementProp('{course_title}', 'color', '#f2c94c'),
+                course_title_font: getElementProp('{course_title}', 'font', 'Clash Display'),
+                course_title_bold: getElementProp('{course_title}', 'bold', true) ? 1 : 0,
+                course_title_italic: getElementProp('{course_title}', 'italic', false) ? 1 : 0,
                 
                 date_x: getElementProp('{date}', 'x', 100),
                 date_y: getElementProp('{date}', 'y', 300),
-                date_size: getElementProp('{date}', 'size', 12),
+                date_size: getElementProp('{date}', 'size', 0),
                 date_color: getElementProp('{date}', 'color', '#8F8F9D'),
+                date_font: getElementProp('{date}', 'font', 'Satoshi'),
+                date_bold: getElementProp('{date}', 'bold', true) ? 1 : 0,
+                date_italic: getElementProp('{date}', 'italic', false) ? 1 : 0,
                 
                 code_x: getElementProp('{code}', 'x', 100),
                 code_y: getElementProp('{code}', 'y', 350),
-                code_size: getElementProp('{code}', 'size', 10),
+                code_size: getElementProp('{code}', 'size', 0),
                 code_color: getElementProp('{code}', 'color', '#8F8F9D'),
+                code_font: getElementProp('{code}', 'font', 'Satoshi'),
+                code_bold: getElementProp('{code}', 'bold', true) ? 1 : 0,
+                code_italic: getElementProp('{code}', 'italic', false) ? 1 : 0,
 
                 background_url: bgImage.src || null,
 
@@ -1063,8 +1167,11 @@ try {
                 custom_text: getElementProp('Texto Customizado', 'text', null, true),
                 custom_text_x: getElementProp('Texto Customizado', 'x', 100, true),
                 custom_text_y: getElementProp('Texto Customizado', 'y', 120, true),
-                custom_text_size: getElementProp('Texto Customizado', 'size', 16, true),
-                custom_text_color: getElementProp('Texto Customizado', 'color', '#F5F5F7', true)
+                custom_text_size: getElementProp('Texto Customizado', 'size', 0, true),
+                custom_text_color: getElementProp('Texto Customizado', 'color', '#F5F5F7', true),
+                custom_text_font: getElementProp('Texto Customizado', 'font', 'Clash Display', true),
+                custom_text_bold: getElementProp('Texto Customizado', 'bold', true, true) ? 1 : 0,
+                custom_text_italic: getElementProp('Texto Customizado', 'italic', false, true) ? 1 : 0
             };
 
             try {
@@ -1098,6 +1205,9 @@ try {
                 if (prop === 'y') return Math.round(el.y);
                 if (prop === 'size') return Math.round(el.size);
                 if (prop === 'color') return el.color;
+                if (prop === 'font') return el.font || 'Clash Display';
+                if (prop === 'bold') return el.bold !== undefined ? el.bold : true;
+                if (prop === 'italic') return el.italic !== undefined ? el.italic : false;
                 if (prop === 'width') return Math.round(el.w);
                 if (prop === 'height') return Math.round(el.h);
                 if (prop === 'text') return el.text;
