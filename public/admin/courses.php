@@ -337,6 +337,10 @@ $adminName = $_SESSION['user_name'];
                         <form id="courseForm" onsubmit="saveCourse(event)" class="space-y-4">
                             <input type="hidden" id="courseIdField">
                             
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+                                <!-- Coluna 1: Dados Gerais de Identificação -->
+                                <div class="space-y-4">
+                            
                             <div>
                                 <label class="block text-[10px] font-bold uppercase tracking-widest text-primary mb-2">Título do Curso</label>
                                 <input type="text" id="courseTitleField" required placeholder="ex: Masterclass em Segurança de Elite" class="w-full px-4 py-3 rounded-lg input-glass text-xs">
@@ -385,8 +389,11 @@ $adminName = $_SESSION['user_name'];
                                     </select>
                                 </div>
                             </div>
+                                        </div> <!-- Fim da Coluna 1 -->
 
-                                       <div>
+                                <!-- Coluna 2: Configurações, Selos, Status e Visibilidade -->
+                                <div class="space-y-4">
+                                        <div>
                                  <label class="block text-[10px] font-bold uppercase tracking-widest text-primary mb-2">Categoria</label>
                                  <select id="courseCategoryField" class="w-full px-4 py-3 rounded-lg input-glass text-xs">
                                      <option value="">Sem Categoria</option>
@@ -492,8 +499,9 @@ $adminName = $_SESSION['user_name'];
                                       <label class="block text-[10px] font-bold uppercase tracking-widest text-primary mb-2">Público Alvo (um perfil por linha)</label>
                                       <textarea id="courseEadTargetAudienceField" rows="3" placeholder="Profissionais de TI que desejam evoluir&#10;Iniciantes sem experiência prévia&#10;Gestores que buscam certificação" class="w-full px-4 py-3 rounded-lg input-glass text-xs resize-none"></textarea>
                                   </div>
-                              </div>
-                         </div>
+                                                      </div>
+                                </div> <!-- Fim da Coluna 2 -->
+                            </div> <!-- Fim da Grid -->
 
                             <div class="pt-4 border-t border-white/5 flex gap-3">
                                 <button type="submit" class="w-full bg-primary py-3 rounded-lg text-on-primary font-bold text-xs uppercase tracking-wider shadow-[0_0_20px_rgba(242,201,76,0.2)] hover:shadow-[0_0_35px_rgba(242,201,76,0.35)] transition-all">Salvar Registro</button>
