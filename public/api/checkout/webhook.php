@@ -7,6 +7,7 @@ use Helpers\EmailSender;
 use Helpers\WhatsAppSender;
 
 require_once __DIR__ . '/../../../src/Config/Database.php';
+require_once __DIR__ . '/../../../src/Config/AppConfig.php';
 require_once __DIR__ . '/../../../src/Helpers/EmailSender.php';
 require_once __DIR__ . '/../../../src/Helpers/WhatsAppSender.php';
 
