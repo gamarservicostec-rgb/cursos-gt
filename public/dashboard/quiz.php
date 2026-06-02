@@ -24,7 +24,7 @@ $db = $dbInstance->getConnection();
 
 try {
     // 1. Busca os detalhes da prova
-    $quizStmt = $db->prepare("SELECT id, course_id, title, min_score FROM quizzes WHERE id = :id LIMIT 1");
+    $quizStmt = $db->prepare("SELECT id, course_id, title, min_score, description FROM quizzes WHERE id = :id LIMIT 1");
     $quizStmt->execute([':id' => $quizId]);
     $quiz = $quizStmt->fetch();
 
@@ -421,8 +421,41 @@ $csrfToken = \Middleware\SecurityHeaders::generateCSRFToken();
                 </div>
             </div>
         <?php else: ?>
+            <!-- ================= EXAM INSTRUCTIONS SCREEN ================= -->
+            <div id="instructionsCard" class="glass-card rounded-xl p-8 space-y-6">
+                <div class="flex items-center gap-3 border-b border-white/5 pb-4">
+                    <span class="material-symbols-outlined text-primary text-3xl">info</span>
+                    <div>
+                        <h2 class="text-base font-bold text-white uppercase tracking-wider font-display">Instruções da Avaliação</h2>
+                        <p class="text-[10px] text-text-muted uppercase tracking-widest mt-0.5">Leia com atenção antes de iniciar</p>
+                    </div>
+                </div>
+
+                <div class="space-y-4 text-xs text-text-main leading-relaxed">
+                    <?php if (!empty($quiz['description'])): ?>
+                        <div class="whitespace-pre-line text-text-muted"><?php echo htmlspecialchars($quiz['description'], ENT_QUOTES, 'UTF-8'); ?></div>
+                    <?php else: ?>
+                        <!-- Fallback padrão se não houver instruções customizadas -->
+                        <ul class="list-disc list-inside space-y-2 text-text-muted">
+                            <li>Leia atentamente cada questão.</li>
+                            <li>Cada pergunta possui apenas <strong class="text-primary">1 alternativa correta</strong>.</li>
+                            <li>A prova contém questões objetivas de múltipla escolha.</li>
+                            <li>Nota mínima exigida para aprovação: <strong class="text-primary"><?php echo $quiz['min_score']; ?>%</strong>.</li>
+                            <li>Seu progresso não será salvo caso você feche o navegador antes de enviar.</li>
+                        </ul>
+                    <?php endif; ?>
+                </div>
+
+                <div class="pt-4 flex justify-center">
+                    <button onclick="startExam()" class="btn-primary font-bold py-3.5 px-8 rounded-lg text-[10px] uppercase tracking-widest inline-flex items-center gap-2">
+                        <span>Iniciar Avaliação Técnica</span>
+                        <span class="material-symbols-outlined text-sm">arrow_forward</span>
+                    </button>
+                </div>
+            </div>
+
             <!-- ================= EXAM QUESTIONS FORM ================= -->
-            <form method="POST" class="space-y-8">
+            <form method="POST" id="quizForm" class="space-y-8 hidden">
                 <!-- CSRF Token -->
                 <input type="hidden" name="csrf_token" value="<?php echo $csrfToken; ?>">
                 
@@ -462,6 +495,11 @@ $csrfToken = \Middleware\SecurityHeaders::generateCSRFToken();
     </main>
 
     <script>
+        function startExam() {
+            document.getElementById('instructionsCard').classList.add('hidden');
+            document.getElementById('quizForm').classList.remove('hidden');
+        }
+
         // Custom visual select handler for radios
         function selectRadio(questionId, optionId) {
             // Remove selection class from all choices of this question

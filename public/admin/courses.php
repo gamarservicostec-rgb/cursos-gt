@@ -743,6 +743,12 @@ $adminName = $_SESSION['user_name'];
                     <input type="number" id="quizMinScoreField" value="70" min="0" max="100" required class="w-full px-4 py-3 rounded-lg input-glass text-xs">
                     <p class="text-[9px] text-on-surface-variant uppercase mt-1">O aluno precisará atingir este aproveitamento para destravar o certificado.</p>
                 </div>
+
+                <div>
+                    <label class="block text-[10px] font-bold uppercase tracking-widest text-primary mb-2">Instruções da Prova (para o Aluno)</label>
+                    <textarea id="quizDescField" rows="4" placeholder="Escreva as instruções passo a passo para o aluno antes de iniciar a prova..." class="w-full px-4 py-3 rounded-lg input-glass text-xs resize-none"></textarea>
+                    <p class="text-[9px] text-on-surface-variant uppercase mt-1">Esse texto será exibido como guia antes de iniciar o questionário.</p>
+                </div>
             </div>
 
             <div class="px-6 py-4 flex items-center justify-end gap-3 border-t border-white/5 flex-shrink-0">
@@ -1786,6 +1792,7 @@ $adminName = $_SESSION['user_name'];
         document.getElementById('quizIdField').value = quiz ? quiz.id : '';
         document.getElementById('quizTitleField').value = quiz ? quiz.title : '';
         document.getElementById('quizMinScoreField').value = quiz ? quiz.min_score : '70';
+        document.getElementById('quizDescField').value = quiz ? (quiz.description || '') : '';
         document.getElementById('quizModalHeader').innerText = quiz ? 'Editar Avaliação Técnica' : 'Configurar Avaliação Técnica';
         document.getElementById('quizModal').classList.remove('hidden');
     }
@@ -1804,7 +1811,8 @@ $adminName = $_SESSION['user_name'];
             course_id: currentCourseId,
             quiz_id: id ? parseInt(id) : undefined,
             title: document.getElementById('quizTitleField').value,
-            min_score: parseInt(document.getElementById('quizMinScoreField').value)
+            min_score: parseInt(document.getElementById('quizMinScoreField').value),
+            description: document.getElementById('quizDescField').value
         };
 
         try {

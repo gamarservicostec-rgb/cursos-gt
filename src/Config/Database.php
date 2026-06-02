@@ -134,6 +134,14 @@ class Database {
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
             ");
 
+            // --- Tabela: quizzes (Adicionar descrição/instruções) ---
+            $quizTableCheck = $db->query("SHOW TABLES LIKE 'quizzes'");
+            if ($quizTableCheck->rowCount() > 0) {
+                $qCols = array_column($db->query("DESCRIBE `quizzes`")->fetchAll(\PDO::FETCH_ASSOC), 'Field');
+                if (!in_array('description', $qCols))
+                    $db->exec("ALTER TABLE `quizzes` ADD COLUMN `description` TEXT DEFAULT NULL");
+            }
+
         } catch (\PDOException $e) {
             // Falha silenciosa — não quebra a aplicação se a migração falhar
         }
@@ -239,6 +247,7 @@ class Database {
                     `module_id` INT DEFAULT NULL,
                     `title` VARCHAR(150) NOT NULL,
                     `min_score` INT DEFAULT 70,
+                    `description` TEXT DEFAULT NULL,
                     FOREIGN KEY (`course_id`) REFERENCES `courses` (`id`) ON DELETE CASCADE,
                     FOREIGN KEY (`module_id`) REFERENCES `modules` (`id`) ON DELETE SET NULL,
                     INDEX `idx_quizzes_course` (`course_id`),

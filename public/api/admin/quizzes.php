@@ -30,7 +30,7 @@ try {
         }
 
         // Busca o quiz do curso
-        $quizStmt = $db->prepare("SELECT id, title, min_score FROM quizzes WHERE course_id = :course_id LIMIT 1");
+        $quizStmt = $db->prepare("SELECT id, title, min_score, description FROM quizzes WHERE course_id = :course_id LIMIT 1");
         $quizStmt->execute([':course_id' => $courseId]);
         $quiz = $quizStmt->fetch(PDO::FETCH_ASSOC);
 
@@ -83,6 +83,7 @@ try {
                 'id' => $quizId,
                 'title' => $quiz['title'],
                 'min_score' => (int)$quiz['min_score'],
+                'description' => $quiz['description'] ?? '',
                 'questions' => $quizQuestions
             ]
         ]);
@@ -105,6 +106,7 @@ try {
             $quizId = isset($input['quiz_id']) ? filter_var($input['quiz_id'], FILTER_VALIDATE_INT) : null;
             $title = isset($input['title']) ? trim($input['title']) : '';
             $minScore = isset($input['min_score']) ? filter_var($input['min_score'], FILTER_VALIDATE_INT) : 70;
+            $description = isset($input['description']) ? trim($input['description']) : '';
 
             if (!$courseId || empty($title)) {
                 echo json_encode(['success' => false, 'error' => 'Título e Curso são obrigatórios.']);
@@ -113,20 +115,22 @@ try {
 
             if ($quizId) {
                 // Atualiza
-                $stmt = $db->prepare("UPDATE quizzes SET title = :title, min_score = :min_score WHERE id = :id AND course_id = :course_id");
+                $stmt = $db->prepare("UPDATE quizzes SET title = :title, min_score = :min_score, description = :description WHERE id = :id AND course_id = :course_id");
                 $stmt->execute([
                     ':title' => $title,
                     ':min_score' => $minScore,
+                    ':description' => $description,
                     ':id' => $quizId,
                     ':course_id' => $courseId
                 ]);
             } else {
                 // Cria novo
-                $stmt = $db->prepare("INSERT INTO quizzes (course_id, title, min_score) VALUES (:course_id, :title, :min_score)");
+                $stmt = $db->prepare("INSERT INTO quizzes (course_id, title, min_score, description) VALUES (:course_id, :title, :min_score, :description)");
                 $stmt->execute([
                     ':course_id' => $courseId,
                     ':title' => $title,
-                    ':min_score' => $minScore
+                    ':min_score' => $minScore,
+                    ':description' => $description
                 ]);
                 $quizId = (int)$db->lastInsertId();
             }
