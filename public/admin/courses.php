@@ -413,6 +413,27 @@ $adminName = $_SESSION['user_name'];
                                  </select>
                              </div>
 
+                             <!-- Visibilidade: Público / Privado (Em Breve) -->
+                             <div class="p-4 rounded-lg border border-white/10 bg-white/[0.02]">
+                                 <label class="block text-[10px] font-bold uppercase tracking-widest text-primary mb-3">Visibilidade do Curso</label>
+                                 <div class="flex gap-3">
+                                     <label class="flex-1 flex items-center gap-3 p-3 rounded-lg border border-white/10 cursor-pointer hover:border-primary/40 transition-all has-[:checked]:border-primary has-[:checked]:bg-primary/10">
+                                         <input type="radio" name="courseVisibility" id="visibilityPublic" value="0" class="accent-primary" checked>
+                                         <div>
+                                             <span class="text-[11px] font-bold text-white block">Público</span>
+                                             <span class="text-[10px] text-text-muted">Venda aberta normalmente</span>
+                                         </div>
+                                     </label>
+                                     <label class="flex-1 flex items-center gap-3 p-3 rounded-lg border border-white/10 cursor-pointer hover:border-primary/40 transition-all has-[:checked]:border-primary has-[:checked]:bg-primary/10">
+                                         <input type="radio" name="courseVisibility" id="visibilityPrivate" value="1" class="accent-primary">
+                                         <div>
+                                             <span class="text-[11px] font-bold text-white block">Privado — Em Breve</span>
+                                             <span class="text-[10px] text-text-muted">Exibe informações, bloqueia compra</span>
+                                         </div>
+                                     </label>
+                                 </div>
+                             </div>
+
                              <!-- Campos Premium de Modalidade Híbrida -->
                              <div id="hybridFields" class="hidden space-y-4 border-t border-white/5 pt-4 mt-2">
                                  <div class="grid grid-cols-2 gap-4">
@@ -464,6 +485,12 @@ $adminName = $_SESSION['user_name'];
                                   <div>
                                       <label class="block text-[10px] font-bold uppercase tracking-widest text-primary mb-2">Bônus (um item por linha)</label>
                                       <textarea id="courseEadBonusField" rows="3" placeholder="Aula bônus: Técnicas Avançadas&#10;Acesso ao grupo exclusivo&#10;Mentoria em grupo" class="w-full px-4 py-3 rounded-lg input-glass text-xs resize-none"></textarea>
+                                  </div>
+
+                                  <!-- Público Alvo (EAD) -->
+                                  <div>
+                                      <label class="block text-[10px] font-bold uppercase tracking-widest text-primary mb-2">Público Alvo (um perfil por linha)</label>
+                                      <textarea id="courseEadTargetAudienceField" rows="3" placeholder="Profissionais de TI que desejam evoluir&#10;Iniciantes sem experiência prévia&#10;Gestores que buscam certificação" class="w-full px-4 py-3 rounded-lg input-glass text-xs resize-none"></textarea>
                                   </div>
                               </div>
                          </div>
@@ -907,9 +934,14 @@ $adminName = $_SESSION['user_name'];
             document.getElementById('courseCertificateInfoField').value = course.certificate_info || '';
 
             // Preenche campos específicos EAD
-            document.getElementById('courseEadWhatLearnField').value = course.what_learn || '';
-            document.getElementById('courseEadMaterialsField').value = course.materials_included || '';
-            document.getElementById('courseEadBonusField').value     = course.bonus || '';
+            document.getElementById('courseEadWhatLearnField').value     = course.what_learn || '';
+            document.getElementById('courseEadMaterialsField').value     = course.materials_included || '';
+            document.getElementById('courseEadBonusField').value         = course.bonus || '';
+            document.getElementById('courseEadTargetAudienceField').value = course.target_audience || '';
+
+            // Preenche visibilidade (público/privado)
+            document.getElementById('visibilityPublic').checked  = !course.is_private;
+            document.getElementById('visibilityPrivate').checked = !!course.is_private;
             
             toggleModalityFields();
 
@@ -1164,6 +1196,10 @@ $adminName = $_SESSION['user_name'];
             bonus:              document.getElementById('courseTypeField').value === 'ead'
                                     ? document.getElementById('courseEadBonusField').value
                                     : null,
+            target_audience:    document.getElementById('courseTypeField').value === 'ead'
+                                    ? document.getElementById('courseEadTargetAudienceField').value
+                                    : null,
+            is_private:         document.querySelector('input[name="courseVisibility"]:checked')?.value === '1' ? 1 : 0,
             access_type:        document.getElementById('courseAccessTypeField').value,
             certificate_info:   document.getElementById('courseCertificateInfoField').value
         };

@@ -36,6 +36,16 @@ try {
         $db->exec("ALTER TABLE `courses` ADD COLUMN `bonus` TEXT DEFAULT NULL");
     }
 
+    // 7. Adiciona target_audience (campo EAD: público-alvo do curso)
+    if (!in_array('target_audience', $columns)) {
+        $db->exec("ALTER TABLE `courses` ADD COLUMN `target_audience` TEXT DEFAULT NULL");
+    }
+
+    // 8. Adiciona is_private (0 = público, 1 = privado/em breve)
+    if (!in_array('is_private', $columns)) {
+        $db->exec("ALTER TABLE `courses` ADD COLUMN `is_private` TINYINT(1) NOT NULL DEFAULT 0");
+    }
+
     // 6. Verifica as colunas da tabela transactions
     $transStmt = $db->query("DESCRIBE `transactions`");
     $transCols = $transStmt->fetchAll(\PDO::FETCH_COLUMN);

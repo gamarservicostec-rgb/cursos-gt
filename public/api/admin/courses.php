@@ -30,7 +30,7 @@ if ($method === 'GET') {
     try {
         if ($courseId) {
             // Retorna a árvore completa (Pensando no Editor de Grade/Syllabus do Admin)
-            $courseQuery = "SELECT id, title, description, price, type, status, thumbnail_url, category_id, duration_days, weekdays_only, available_hours, what_learn, materials_included, access_type, certificate_info, bonus FROM courses WHERE id = :id LIMIT 1";
+            $courseQuery = "SELECT id, title, description, price, type, status, thumbnail_url, category_id, duration_days, weekdays_only, available_hours, what_learn, materials_included, access_type, certificate_info, bonus, target_audience, is_private FROM courses WHERE id = :id LIMIT 1";
             $cStmt = $db->prepare($courseQuery);
             $cStmt->execute([':id' => $courseId]);
             $course = $cStmt->fetch(\PDO::FETCH_ASSOC);
@@ -111,6 +111,8 @@ if ($method === 'GET') {
                     'what_learn'         => $course['what_learn'] ?? null,
                     'materials_included' => $course['materials_included'] ?? null,
                     'bonus'              => $course['bonus'] ?? null,
+                    'target_audience'    => $course['target_audience'] ?? null,
+                    'is_private'         => (int)($course['is_private'] ?? 0),
                     'access_type'        => $course['access_type'] ?? null,
                     'certificate_info'   => $course['certificate_info'] ?? null,
                     'curriculum'         => $curriculum
@@ -183,6 +185,8 @@ if ($method === 'GET') {
                 $accessType        = isset($input['access_type'])        ? trim($input['access_type'])        : null;
                 $certificateInfo   = isset($input['certificate_info'])   ? trim($input['certificate_info'])   : null;
                 $bonus             = isset($input['bonus'])              ? trim($input['bonus'])              : null;
+                $targetAudience    = isset($input['target_audience'])    ? trim($input['target_audience'])    : null;
+                $isPrivate         = isset($input['is_private'])         ? (int)$input['is_private']          : 0;
 
                 if (empty($title) || empty($description) || $price < 0) {
                     http_response_code(400);
@@ -190,7 +194,7 @@ if ($method === 'GET') {
                     exit;
                 }
 
-                $stmt = $db->prepare("INSERT INTO courses (title, description, price, type, status, thumbnail_url, category_id, duration_days, weekdays_only, available_hours, what_learn, materials_included, access_type, certificate_info, bonus) VALUES (:title, :description, :price, :type, :status, :thumbnail_url, :category_id, :duration_days, :weekdays_only, :available_hours, :what_learn, :materials_included, :access_type, :certificate_info, :bonus)");
+                $stmt = $db->prepare("INSERT INTO courses (title, description, price, type, status, thumbnail_url, category_id, duration_days, weekdays_only, available_hours, what_learn, materials_included, access_type, certificate_info, bonus, target_audience, is_private) VALUES (:title, :description, :price, :type, :status, :thumbnail_url, :category_id, :duration_days, :weekdays_only, :available_hours, :what_learn, :materials_included, :access_type, :certificate_info, :bonus, :target_audience, :is_private)");
                 $stmt->execute([
                     ':title'             => $title,
                     ':description'       => $description,
@@ -206,7 +210,9 @@ if ($method === 'GET') {
                     ':materials_included'=> $materialsIncluded,
                     ':access_type'       => $accessType,
                     ':certificate_info'  => $certificateInfo,
-                    ':bonus'             => $bonus
+                    ':bonus'             => $bonus,
+                    ':target_audience'   => $targetAudience,
+                    ':is_private'        => $isPrivate
                 ]);
 
                 $newId = $db->lastInsertId();
@@ -243,6 +249,8 @@ if ($method === 'GET') {
                 $accessType        = isset($input['access_type'])        ? trim($input['access_type'])        : null;
                 $certificateInfo   = isset($input['certificate_info'])   ? trim($input['certificate_info'])   : null;
                 $bonus             = isset($input['bonus'])              ? trim($input['bonus'])              : null;
+                $targetAudience    = isset($input['target_audience'])    ? trim($input['target_audience'])    : null;
+                $isPrivate         = isset($input['is_private'])         ? (int)$input['is_private']          : 0;
 
                 if (!$courseId || empty($title) || empty($description) || $price < 0) {
                     http_response_code(400);
@@ -250,7 +258,7 @@ if ($method === 'GET') {
                     exit;
                 }
 
-                $stmt = $db->prepare("UPDATE courses SET title = :title, description = :description, price = :price, type = :type, status = :status, thumbnail_url = :thumbnail_url, category_id = :category_id, duration_days = :duration_days, weekdays_only = :weekdays_only, available_hours = :available_hours, what_learn = :what_learn, materials_included = :materials_included, access_type = :access_type, certificate_info = :certificate_info, bonus = :bonus WHERE id = :id");
+                $stmt = $db->prepare("UPDATE courses SET title = :title, description = :description, price = :price, type = :type, status = :status, thumbnail_url = :thumbnail_url, category_id = :category_id, duration_days = :duration_days, weekdays_only = :weekdays_only, available_hours = :available_hours, what_learn = :what_learn, materials_included = :materials_included, access_type = :access_type, certificate_info = :certificate_info, bonus = :bonus, target_audience = :target_audience, is_private = :is_private WHERE id = :id");
                 $stmt->execute([
                     ':title'             => $title,
                     ':description'       => $description,
@@ -267,6 +275,8 @@ if ($method === 'GET') {
                     ':access_type'       => $accessType,
                     ':certificate_info'  => $certificateInfo,
                     ':bonus'             => $bonus,
+                    ':target_audience'   => $targetAudience,
+                    ':is_private'        => $isPrivate,
                     ':id'                => $courseId
                 ]);
 

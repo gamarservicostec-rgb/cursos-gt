@@ -300,6 +300,36 @@ try {
                     </div>
                     <?php endif; ?>
 
+                    <?php endif; ?>
+
+                    <?php
+                    // Público Alvo
+                    $targetItems = [];
+                    if (!empty($course['target_audience'])) {
+                        $lines = explode("\n", str_replace("\r", "", $course['target_audience']));
+                        foreach ($lines as $line) {
+                            $line = trim($line);
+                            if (!empty($line)) $targetItems[] = $line;
+                        }
+                    }
+                    ?>
+                    <?php if (!empty($targetItems)): ?>
+                    <div class="space-y-4 pt-4">
+                        <h3 class="text-xl font-bold text-white uppercase tracking-wider flex items-center gap-2">
+                            <span class="material-symbols-outlined text-primary">people</span>
+                            Para Quem é Este Curso
+                        </h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <?php foreach ($targetItems as $target): ?>
+                                <div class="glass-panel p-4 rounded-lg flex items-center gap-3">
+                                    <span class="material-symbols-outlined text-primary text-[20px] shrink-0" style="font-variation-settings:'FILL' 1;">person_check</span>
+                                    <span class="text-sm text-[#F5F5F7]"><?php echo htmlspecialchars($target, ENT_QUOTES, 'UTF-8'); ?></span>
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
+                    <?php endif; ?>
+
                     <?php endif; // fim type === ead ?>
                 </div>
 
@@ -330,6 +360,14 @@ try {
                                     <span class="material-symbols-outlined text-[20px]">school</span>
                                     Estudar Agora
                                 </a>
+                            <?php elseif (!empty($course['is_private'])): ?>
+                                <!-- Curso Privado: botão Em Breve -->
+                                <button onclick="openLaunchModal()" class="w-full h-14 relative overflow-hidden rounded-lg font-bold text-[14px] uppercase tracking-widest flex items-center justify-center gap-2 transition-all duration-300 group" style="background: linear-gradient(135deg, #1a1a20 0%, #252530 100%); border: 1px solid rgba(241,200,75,0.3);">
+                                    <div class="absolute inset-0 bg-gradient-to-r from-primary/0 via-primary/10 to-primary/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
+                                    <span class="material-symbols-outlined text-primary text-[20px]" style="font-variation-settings:'FILL' 1;">schedule</span>
+                                    <span class="text-primary">Em Breve</span>
+                                    <span class="absolute top-1.5 right-2 text-[8px] font-bold text-primary/60 uppercase tracking-[0.2em] bg-primary/10 px-2 py-0.5 rounded-full">Lançamento</span>
+                                </button>
                             <?php else: ?>
                                 <a href="checkout.php?id=<?php echo $course['id']; ?>" class="w-full h-14 bg-primary text-[#0A0A0C] rounded-lg font-bold text-[14px] uppercase tracking-widest glow-primary flex items-center justify-center gap-2 hover:-translate-y-1 transition-all duration-300">
                                     <span class="material-symbols-outlined text-[20px]">shopping_cart</span>
@@ -438,5 +476,100 @@ try {
             }
         }
     </script>
+
+    <?php if (!empty($course['is_private'])): ?>
+    <!-- Modal "Em Breve — Lançamento" -->
+    <div id="launchModal"
+         class="fixed inset-0 z-[999] flex items-center justify-center p-4 opacity-0 pointer-events-none transition-all duration-500"
+         style="backdrop-filter: blur(0px);">
+
+        <!-- Overlay -->
+        <div onclick="closeLaunchModal()" class="absolute inset-0 bg-black/80"></div>
+
+        <!-- Card do Modal -->
+        <div id="launchCard"
+             class="relative z-10 w-full max-w-md rounded-2xl overflow-hidden shadow-2xl scale-90 transition-transform duration-500"
+             style="background: linear-gradient(145deg, #111116 0%, #1a1a22 100%); border: 1px solid rgba(241,200,75,0.15);">
+
+            <!-- Brilho decorativo de topo -->
+            <div class="absolute -top-32 left-1/2 -translate-x-1/2 w-64 h-64 bg-primary/15 blur-[80px] rounded-full pointer-events-none"></div>
+
+            <!-- Conteúdo -->
+            <div class="relative flex flex-col items-center text-center px-8 py-12 gap-6">
+
+                <!-- Anel decorativo animado -->
+                <div class="relative flex items-center justify-center">
+                    <div class="absolute size-28 rounded-full border border-primary/20 animate-ping" style="animation-duration: 2.5s;"></div>
+                    <div class="absolute size-24 rounded-full border border-primary/30"></div>
+                    <div class="size-20 rounded-full flex items-center justify-center"
+                         style="background: radial-gradient(circle, rgba(241,200,75,0.12) 0%, transparent 70%); border: 1px solid rgba(241,200,75,0.25);">
+                        <span class="material-symbols-outlined text-primary text-4xl" style="font-variation-settings:'FILL' 1;">rocket_launch</span>
+                    </div>
+                </div>
+
+                <!-- Badge -->
+                <div class="flex items-center gap-2 px-4 py-1.5 rounded-full"
+                     style="background: rgba(241,200,75,0.08); border: 1px solid rgba(241,200,75,0.2);">
+                    <span class="size-1.5 rounded-full bg-primary animate-pulse"></span>
+                    <span class="text-[10px] font-bold text-primary uppercase tracking-[0.2em]">Lançamento em Breve</span>
+                </div>
+
+                <!-- Título -->
+                <div class="space-y-2">
+                    <h2 class="text-2xl font-bold text-white leading-tight">
+                        Este curso está<br>
+                        <span class="text-primary">chegando em breve!</span>
+                    </h2>
+                    <p class="text-sm text-[#8F8F9D] leading-relaxed max-w-xs mx-auto">
+                        Estamos preparando algo incrível para você. Em breve abriremos as inscrições para este treinamento exclusivo.
+                    </p>
+                </div>
+
+                <!-- Nome do curso -->
+                <div class="w-full px-4 py-3 rounded-lg text-center"
+                     style="background: rgba(241,200,75,0.05); border: 1px solid rgba(241,200,75,0.1);">
+                    <p class="text-xs text-primary/70 uppercase tracking-widest mb-1 font-bold">Curso</p>
+                    <p class="text-sm font-bold text-white"><?php echo htmlspecialchars($course['title'], ENT_QUOTES, 'UTF-8'); ?></p>
+                </div>
+
+                <!-- Botão Voltar -->
+                <button onclick="closeLaunchModal()"
+                        class="w-full h-12 rounded-xl font-bold text-sm uppercase tracking-widest transition-all duration-300 hover:-translate-y-0.5 flex items-center justify-center gap-2"
+                        style="background: linear-gradient(135deg, rgba(241,200,75,0.1) 0%, rgba(241,200,75,0.05) 100%); border: 1px solid rgba(241,200,75,0.25); color: #F1C84B;">
+                    <span class="material-symbols-outlined text-base">arrow_back</span>
+                    Voltar à Página de Vendas
+                </button>
+
+            </div>
+        </div>
+    </div>
+
+    <style>
+        #launchModal.modal-open {
+            opacity: 1;
+            pointer-events: all;
+            backdrop-filter: blur(12px);
+        }
+        #launchModal.modal-open #launchCard {
+            transform: scale(1);
+        }
+    </style>
+
+    <script>
+        function openLaunchModal() {
+            document.getElementById('launchModal').classList.add('modal-open');
+            document.body.style.overflow = 'hidden';
+        }
+        function closeLaunchModal() {
+            document.getElementById('launchModal').classList.remove('modal-open');
+            document.body.style.overflow = '';
+        }
+        // Fechar com Esc
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape') closeLaunchModal();
+        });
+    </script>
+    <?php endif; ?>
+
 </body>
 </html>
