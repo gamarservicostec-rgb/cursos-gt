@@ -159,12 +159,34 @@ try {
         }
         .spin-slow { animation: spin-slow 2s linear infinite; }
 
-        /* Pulso verde de aprovação */
+        /* Pulso dourado de aprovação */
         @keyframes success-pulse {
             0%, 100% { box-shadow: 0 0 20px rgba(241, 200, 75, 0.2); }
             50%       { box-shadow: 0 0 40px rgba(241, 200, 75, 0.5); }
         }
         .success-pulse { animation: success-pulse 2s ease-in-out infinite; }
+
+        /* Anel de progresso do countdown */
+        .countdown-ring {
+            transform: rotate(-90deg);
+            transform-origin: 50% 50%;
+        }
+        .countdown-ring-track {
+            stroke: rgba(255,255,255,0.08);
+        }
+        .countdown-ring-fill {
+            stroke: #f1c84b;
+            stroke-linecap: round;
+            transition: stroke-dashoffset 1s linear;
+            filter: drop-shadow(0 0 6px rgba(241,200,75,0.6));
+        }
+
+        /* Entrada suave do bloco de sucesso */
+        @keyframes slide-up {
+            from { opacity: 0; transform: translateY(20px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        .slide-up { animation: slide-up 0.5s ease-out forwards; }
     </style>
 </head>
 <body class="antialiased bg-radial-glow min-h-screen flex items-center justify-center py-12 select-none">
@@ -205,19 +227,46 @@ try {
                     </div>
                 </div>
 
-                <div class="pt-2">
+                <!-- Countdown de Redirecionamento Automático -->
+                <div class="slide-up pt-2 space-y-4">
+
+                    <!-- Anel SVG regressivo -->
+                    <div class="flex flex-col items-center gap-2">
+                        <div class="relative inline-flex items-center justify-center">
+                            <svg width="72" height="72" viewBox="0 0 72 72">
+                                <circle class="countdown-ring countdown-ring-track" cx="36" cy="36" r="30"
+                                        stroke-width="4" fill="none"/>
+                                <circle class="countdown-ring countdown-ring-fill" id="cdRing" cx="36" cy="36" r="30"
+                                        stroke-width="4" fill="none"
+                                        stroke-dasharray="188.5"
+                                        stroke-dashoffset="0"/>
+                            </svg>
+                            <span id="cdNumber"
+                                  class="absolute text-xl font-bold font-mono text-primary leading-none">5</span>
+                        </div>
+                        <p class="text-[10px] text-text-muted uppercase tracking-widest" id="cdLabel">
+                            Redirecionando automaticamente...
+                        </p>
+                    </div>
+
+                    <!-- Botão primário: ir para a aula (destino do redirect automático) -->
                     <?php if ($transaction['first_lesson_id']): ?>
                         <a href="dashboard/classroom.php?lesson_id=<?php echo (int)$transaction['first_lesson_id']; ?>"
-                           class="w-full btn-primary font-bold py-4 rounded-lg uppercase tracking-[0.15em] text-[11px] flex items-center justify-center gap-2 mb-3">
-                            <span>Iniciar Treinamento Imediato</span>
+                           id="btnStartNow"
+                           class="w-full btn-primary font-bold py-4 rounded-lg uppercase tracking-[0.15em] text-[11px] flex items-center justify-center gap-2">
+                            <span>Iniciar Treinamento Agora</span>
                             <span class="material-symbols-outlined text-sm">play_circle</span>
                         </a>
                     <?php endif; ?>
+
+                    <!-- Botão secundário: painel do aluno -->
                     <a href="dashboard/index.php"
+                       onclick="cancelCountdown()"
                        class="w-full btn-secondary font-bold py-3 rounded-lg uppercase tracking-[0.15em] text-[10px] flex items-center justify-center gap-2">
                         <span>Ir para Área do Aluno</span>
                         <span class="material-symbols-outlined text-sm">dashboard</span>
                     </a>
+
                 </div>
 
             <?php else: ?>
@@ -420,6 +469,60 @@ try {
                 }
 
             }, 3000); // a cada 3 segundos
+        })();
+        <?php endif; ?>
+
+        // ─────────────────────────────────────────────
+        // COUNTDOWN AUTOMÁTICO — só executa se APROVADO
+        // ─────────────────────────────────────────────
+        <?php if ($isApproved): ?>
+        (function() {
+            <?php
+            $destination = $transaction['first_lesson_id']
+                ? 'dashboard/classroom.php?lesson_id=' . (int)$transaction['first_lesson_id']
+                : 'dashboard/index.php';
+            ?>
+            const destination  = '<?php echo $destination; ?>';
+            const TOTAL        = 5;      // segundos
+            const CIRCUMF      = 188.5;  // 2π × r (r = 30)
+            let   remaining    = TOTAL;
+            let   cancelled    = false;
+
+            const cdNumber  = document.getElementById('cdNumber');
+            const cdRing    = document.getElementById('cdRing');
+            const cdLabel   = document.getElementById('cdLabel');
+
+            // Inicia imediatamente após 300ms para o usuário ver o 5 por um instante
+            setTimeout(() => {
+                const timer = setInterval(() => {
+                    if (cancelled) { clearInterval(timer); return; }
+
+                    remaining--;
+
+                    // Atualiza número
+                    if (cdNumber) cdNumber.textContent = remaining > 0 ? remaining : '→';
+
+                    // Atualiza anel (esvazia progressivamente)
+                    if (cdRing) {
+                        const offset = CIRCUMF * (1 - remaining / TOTAL);
+                        cdRing.style.strokeDashoffset = offset;
+                    }
+
+                    if (remaining <= 0) {
+                        clearInterval(timer);
+                        if (cdLabel) cdLabel.textContent = 'Entrando na sua área de estudos...';
+                        // Pequeno delay extra para a animação concluir
+                        setTimeout(() => window.location.href = destination, 400);
+                    }
+                }, 1000);
+            }, 300);
+
+            // Permite cancelar o countdown ao clicar em qualquer botão
+            window.cancelCountdown = function() { cancelled = true; };
+
+            // Cancela se o usuário clicar no botão de início imediato
+            const btnNow = document.getElementById('btnStartNow');
+            if (btnNow) btnNow.addEventListener('click', () => { cancelled = true; });
         })();
         <?php endif; ?>
     </script>
