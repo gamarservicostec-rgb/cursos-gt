@@ -94,6 +94,12 @@ if ($method === 'GET') {
                 ];
             }
 
+            // Busca bônus reais do curso
+            $bonusQuery = "SELECT id, type, title, ebook_url, bonus_course_id, sort_order FROM course_bonuses WHERE course_id = :course_id ORDER BY sort_order ASC";
+            $bStmt = $db->prepare($bonusQuery);
+            $bStmt->execute([':course_id' => $courseId]);
+            $bonusesList = $bStmt->fetchAll(\PDO::FETCH_ASSOC);
+
             echo json_encode([
                 'success' => true,
                 'course' => [
@@ -115,6 +121,16 @@ if ($method === 'GET') {
                     'is_private'         => (int)($course['is_private'] ?? 0),
                     'access_type'        => $course['access_type'] ?? null,
                     'certificate_info'   => $course['certificate_info'] ?? null,
+                    'bonuses'            => array_map(function($b) {
+                        return [
+                            'id' => (int)$b['id'],
+                            'type' => $b['type'],
+                            'title' => htmlspecialchars($b['title'], ENT_QUOTES, 'UTF-8'),
+                            'ebook_url' => $b['ebook_url'],
+                            'bonus_course_id' => $b['bonus_course_id'] ? (int)$b['bonus_course_id'] : null,
+                            'sort_order' => (int)$b['sort_order']
+                        ];
+                    }, $bonusesList),
                     'curriculum'         => $curriculum
                 ]
             ]);
@@ -532,6 +548,75 @@ if ($method === 'GET') {
                 $stmt->execute([':id' => $lessonId]);
 
                 echo json_encode(['success' => true, 'message' => 'Aula excluída com sucesso.']);
+                exit;
+
+            case 'create_bonus':
+                $courseId = filter_var($input['course_id'] ?? 0, FILTER_VALIDATE_INT);
+                $type = $input['type'] ?? 'ebook';
+                $title = trim($input['title'] ?? '');
+                $ebookUrl = trim($input['ebook_url'] ?? '');
+                $bonusCourseId = isset($input['bonus_course_id']) && $input['bonus_course_id'] !== '' ? (int)$input['bonus_course_id'] : null;
+                $sortOrder = filter_var($input['sort_order'] ?? 0, FILTER_VALIDATE_INT);
+
+                if (!$courseId || empty($title) || ($type === 'ebook' && empty($ebookUrl)) || ($type === 'course' && empty($bonusCourseId))) {
+                    http_response_code(400);
+                    echo json_encode(['error' => 'Dados de bônus inválidos ou incompletos.']);
+                    exit;
+                }
+
+                $stmt = $db->prepare("INSERT INTO course_bonuses (course_id, type, title, ebook_url, bonus_course_id, sort_order) VALUES (:course_id, :type, :title, :ebook_url, :bonus_course_id, :sort_order)");
+                $stmt->execute([
+                    ':course_id' => $courseId,
+                    ':type' => $type,
+                    ':title' => $title,
+                    ':ebook_url' => $type === 'ebook' ? $ebookUrl : null,
+                    ':bonus_course_id' => $type === 'course' ? $bonusCourseId : null,
+                    ':sort_order' => $sortOrder
+                ]);
+
+                echo json_encode(['success' => true, 'message' => 'Bônus cadastrado com sucesso no curso.']);
+                exit;
+
+            case 'update_bonus':
+                $bonusId = filter_var($input['bonus_id'] ?? 0, FILTER_VALIDATE_INT);
+                $type = $input['type'] ?? 'ebook';
+                $title = trim($input['title'] ?? '');
+                $ebookUrl = trim($input['ebook_url'] ?? '');
+                $bonusCourseId = isset($input['bonus_course_id']) && $input['bonus_course_id'] !== '' ? (int)$input['bonus_course_id'] : null;
+                $sortOrder = filter_var($input['sort_order'] ?? 0, FILTER_VALIDATE_INT);
+
+                if (!$bonusId || empty($title) || ($type === 'ebook' && empty($ebookUrl)) || ($type === 'course' && empty($bonusCourseId))) {
+                    http_response_code(400);
+                    echo json_encode(['error' => 'Dados de atualização de bônus inválidos ou incompletos.']);
+                    exit;
+                }
+
+                $stmt = $db->prepare("UPDATE course_bonuses SET type = :type, title = :title, ebook_url = :ebook_url, bonus_course_id = :bonus_course_id, sort_order = :sort_order WHERE id = :id");
+                $stmt->execute([
+                    ':type' => $type,
+                    ':title' => $title,
+                    ':ebook_url' => $type === 'ebook' ? $ebookUrl : null,
+                    ':bonus_course_id' => $type === 'course' ? $bonusCourseId : null,
+                    ':sort_order' => $sortOrder,
+                    ':id' => $bonusId
+                ]);
+
+                echo json_encode(['success' => true, 'message' => 'Bônus atualizado com sucesso.']);
+                exit;
+
+            case 'delete_bonus':
+                $bonusId = filter_var($input['bonus_id'] ?? 0, FILTER_VALIDATE_INT);
+
+                if (!$bonusId) {
+                    http_response_code(400);
+                    echo json_encode(['error' => 'ID do bônus inválido para exclusão.']);
+                    exit;
+                }
+
+                $stmt = $db->prepare("DELETE FROM course_bonuses WHERE id = :id");
+                $stmt->execute([':id' => $bonusId]);
+
+                echo json_encode(['success' => true, 'message' => 'Bônus excluído com sucesso do curso.']);
                 exit;
 
             default:

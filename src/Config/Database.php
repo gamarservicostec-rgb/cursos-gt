@@ -119,6 +119,21 @@ class Database {
                     $db->exec("ALTER TABLE `transactions` ADD COLUMN `payment_details` LONGTEXT DEFAULT NULL");
             }
 
+            // --- Tabela: course_bonuses ---
+            $db->exec("
+                CREATE TABLE IF NOT EXISTS `course_bonuses` (
+                    `id` INT AUTO_INCREMENT PRIMARY KEY,
+                    `course_id` INT NOT NULL,
+                    `type` ENUM('ebook', 'course') NOT NULL,
+                    `title` VARCHAR(150) NOT NULL,
+                    `ebook_url` VARCHAR(255) DEFAULT NULL,
+                    `bonus_course_id` INT DEFAULT NULL,
+                    `sort_order` INT DEFAULT 0,
+                    FOREIGN KEY (`course_id`) REFERENCES `courses` (`id`) ON DELETE CASCADE,
+                    FOREIGN KEY (`bonus_course_id`) REFERENCES `courses` (`id`) ON DELETE SET NULL
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+            ");
+
         } catch (\PDOException $e) {
             // Falha silenciosa — não quebra a aplicação se a migração falhar
         }

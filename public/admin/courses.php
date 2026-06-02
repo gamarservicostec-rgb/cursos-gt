@@ -559,6 +559,37 @@ $adminName = $_SESSION['user_name'];
                                 <!-- Carregado via AJAX -->
                             </div>
                         </div>
+
+                        <!-- Seção de Bônus Reais -->
+                        <div class="glass-card rounded-xl p-6" id="bonusSection">
+                            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-white/5 pb-6 mb-6">
+                                <div>
+                                    <span class="text-[10px] font-bold text-primary uppercase tracking-widest text-glow">Brindes e Recompensas</span>
+                                    <h2 class="text-lg font-bold text-white mt-0.5 font-display">Bônus Reais Associados</h2>
+                                </div>
+                                <button onclick="openBonusModal()" class="border border-primary/20 bg-primary/5 hover:bg-primary/10 text-primary flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-all">
+                                    <span class="material-symbols-outlined text-[18px]">gift</span>
+                                    Novo Bônus Real
+                                </button>
+                            </div>
+
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-left text-xs border-collapse">
+                                    <thead>
+                                        <tr class="border-b border-white/5 text-text-muted font-bold uppercase tracking-wider">
+                                            <th class="py-3 px-4">Título</th>
+                                            <th class="py-3 px-4">Tipo</th>
+                                            <th class="py-3 px-4">Destino / Recurso</th>
+                                            <th class="py-3 px-4">Ordem</th>
+                                            <th class="py-3 px-4 text-right">Ações</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="bonusTableBody" class="divide-y divide-white/5">
+                                        <!-- Carregado via JS -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -773,6 +804,68 @@ $adminName = $_SESSION['user_name'];
     </div>
 </div>
 
+<!-- BONUS CREATION/EDITION MODAL -->
+<div id="bonusModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm hidden">
+    <div class="glass-card w-full max-w-md rounded-xl overflow-hidden shadow-2xl relative flex flex-col max-h-[85vh]" style="border-color: rgba(242, 201, 76, 0.3);">
+        <div class="border-b border-white/5 px-6 py-4 flex items-center justify-between flex-shrink-0">
+            <h3 class="text-sm font-bold text-white uppercase tracking-widest" id="bonusModalHeader">Adicionar Novo Bônus</h3>
+            <button onclick="closeBonusModal()" class="text-on-surface-variant hover:text-white transition-colors">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+        <form id="bonusForm" onsubmit="saveBonus(event)" class="flex flex-col flex-1 overflow-hidden mb-0">
+            <div class="flex-1 overflow-y-auto px-6 py-4 space-y-4 custom-scrollbar">
+                <input type="hidden" id="bonusIdField">
+                
+                <div>
+                    <label class="block text-[10px] font-bold uppercase tracking-widest text-primary mb-2">Tipo de Bônus</label>
+                    <select id="bonusTypeField" onchange="toggleBonusTypeFields()" class="w-full px-4 py-3 rounded-lg input-glass text-xs">
+                        <option value="ebook">E-book (Download PDF/EPUB)</option>
+                        <option value="course">Curso Extra (Acesso Gratuito)</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-[10px] font-bold uppercase tracking-widest text-primary mb-2">Título do Bônus</label>
+                    <input type="text" id="bonusTitleField" required placeholder="ex: Manual Tático de Câmeras de Segurança" class="w-full px-4 py-3 rounded-lg input-glass text-xs">
+                </div>
+
+                <!-- Campo Ebook -->
+                <div id="bonusEbookFields" class="space-y-3">
+                    <label class="block text-[10px] font-bold uppercase tracking-widest text-primary mb-0">Arquivo do E-book (PDF/EPUB/TXT)</label>
+                    <input type="text" id="bonusEbookUrlField" placeholder="assets/documents/uploads/manual.pdf" class="w-full px-4 py-3 rounded-lg input-glass text-xs">
+                    <div class="flex items-center gap-2">
+                        <button type="button" onclick="document.getElementById('bonusDocUpload').click()" class="flex items-center justify-center rounded border border-primary/40 text-primary text-[10px] font-bold px-4 py-2.5 uppercase tracking-wider hover:bg-primary hover:text-background-deep transition-all duration-300">
+                            <span class="material-symbols-outlined mr-1.5 text-xs">upload_file</span>
+                            Upload de Documento
+                        </button>
+                        <span id="bonusDocStatusText" class="text-[10px] text-on-surface-variant italic"></span>
+                    </div>
+                    <input type="file" id="bonusDocUpload" accept=".pdf,.epub,.mobi,.txt" class="hidden" onchange="uploadBonusDocFile(this)">
+                </div>
+
+                <!-- Campo Curso Extra -->
+                <div id="bonusCourseFields" class="hidden">
+                    <label class="block text-[10px] font-bold uppercase tracking-widest text-primary mb-2">Selecionar Curso Extra</label>
+                    <select id="bonusCourseIdField" class="w-full px-4 py-3 rounded-lg input-glass text-xs">
+                        <!-- Carregado via JS -->
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-[10px] font-bold uppercase tracking-widest text-primary mb-2">Ordem de Exibição (Sort)</label>
+                    <input type="number" id="bonusSortField" value="1" required class="w-full px-4 py-3 rounded-lg input-glass text-xs">
+                </div>
+            </div>
+
+            <div class="px-6 py-4 flex items-center justify-end gap-3 border-t border-white/5 flex-shrink-0">
+                <button type="button" onclick="closeBonusModal()" class="px-4 py-2.5 rounded-lg text-xs font-bold uppercase tracking-wider text-on-surface-variant hover:text-white transition-colors">Cancelar</button>
+                <button type="submit" id="bonusSubmitBtn" class="bg-primary px-5 py-2.5 rounded-lg text-on-primary font-bold text-label-sm shadow-[0_0_20px_rgba(242,201,76,0.2)]">Salvar Bônus</button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <!-- TOAST NOTIFICATION CONTAINER -->
 <div id="toastContainer" class="fixed bottom-6 right-6 z-50 space-y-3"></div>
 
@@ -960,6 +1053,9 @@ $adminName = $_SESSION['user_name'];
             toggleModalityFields();
 
             updateThumbnailPreview(course.thumbnail_url || '');
+            
+            // Carrega dinamicamente os bônus associados ao curso
+            renderBonusesList(course.bonuses, course.id);
             
             document.getElementById('coursePanelHeader').innerText = 'Editar Registro de Treinamento';
             document.getElementById('activeEditingCourseTitle').innerText = course.title;
@@ -1910,6 +2006,217 @@ $adminName = $_SESSION['user_name'];
             closeQuestionModal();
         }
     });
+
+    document.getElementById('bonusModal').addEventListener('click', (e) => {
+        if (e.target === document.getElementById('bonusModal')) {
+            closeBonusModal();
+        }
+    });
+
+    // --- FUNÇÕES DE CONTROLE DE BÔNUS REAIS ---
+    function openBonusModal() {
+        document.getElementById('bonusForm').reset();
+        document.getElementById('bonusIdField').value = '';
+        document.getElementById('bonusDocStatusText').innerText = '';
+        document.getElementById('bonusModalHeader').innerText = 'Adicionar Novo Bônus';
+        document.getElementById('bonusSubmitBtn').innerText = 'Criar Bônus';
+        
+        toggleBonusTypeFields();
+        loadCoursesForBonusDropdown();
+        
+        document.getElementById('bonusModal').classList.remove('hidden');
+    }
+
+    function closeBonusModal() {
+        document.getElementById('bonusModal').classList.add('hidden');
+    }
+
+    function toggleBonusTypeFields() {
+        const type = document.getElementById('bonusTypeField').value;
+        if (type === 'ebook') {
+            document.getElementById('bonusEbookFields').classList.remove('hidden');
+            document.getElementById('bonusCourseFields').classList.add('hidden');
+        } else {
+            document.getElementById('bonusEbookFields').classList.add('hidden');
+            document.getElementById('bonusCourseFields').classList.remove('hidden');
+        }
+    }
+
+    async function loadCoursesForBonusDropdown(selectedCourseId = null) {
+        const select = document.getElementById('bonusCourseIdField');
+        select.innerHTML = '<option value="">Selecione um curso...</option>';
+        try {
+            const response = await fetch('../api/admin/courses.php');
+            const courses = await response.json();
+            
+            courses.forEach(c => {
+                if (c.id !== currentCourseId) {
+                    const sel = (selectedCourseId && parseInt(selectedCourseId) === c.id) ? ' selected' : '';
+                    select.innerHTML += `<option value="${c.id}"${sel}>${c.title} (R$ ${c.price})</option>`;
+                }
+            });
+        } catch (err) {
+            console.error('Erro ao popular dropdown de cursos extras: ', err);
+        }
+    }
+
+    function renderBonusesList(bonuses, courseId) {
+        const tbody = document.getElementById('bonusTableBody');
+        tbody.innerHTML = '';
+        
+        if (!bonuses || bonuses.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="5" class="py-8 text-center text-on-surface-variant font-medium italic">
+                        Nenhum bônus real vinculado a este curso.
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+
+        bonuses.forEach(b => {
+            const dest = b.type === 'ebook' 
+                ? `<a href="../${b.ebook_url}" target="_blank" class="text-primary hover:underline flex items-center gap-1 font-semibold"><span class="material-symbols-outlined text-[14px]">download</span> Ver Ebook</a>` 
+                : `<span class="text-white flex items-center gap-1 font-semibold"><span class="material-symbols-outlined text-[14px]">school</span> Curso Extra (ID: ${b.bonus_course_id})</span>`;
+
+            tbody.innerHTML += `
+                <tr class="hover:bg-white/[0.02] transition-colors border-b border-white/5">
+                    <td class="py-3.5 px-4 font-bold text-white">${b.title}</td>
+                    <td class="py-3.5 px-4">
+                        <span class="px-2.5 py-1 rounded text-[10px] font-bold uppercase tracking-wider ${b.type === 'ebook' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-primary/10 text-primary border border-primary/20'}">
+                            ${b.type === 'ebook' ? 'E-book' : 'Curso Extra'}
+                        </span>
+                    </td>
+                    <td class="py-3.5 px-4">${dest}</td>
+                    <td class="py-3.5 px-4 font-mono">${b.sort_order}</td>
+                    <td class="py-3.5 px-4 text-right">
+                        <div class="flex items-center justify-end gap-1.5">
+                            <button onclick="editBonus(${b.id}, '${b.type}', '${b.title.replace(/'/g, "\\'")}', '${b.ebook_url || ''}', ${b.bonus_course_id || 'null'}, ${b.sort_order})" class="p-1 text-on-surface-variant hover:text-primary transition-colors" title="Editar Bônus">
+                                <span class="material-symbols-outlined text-[16px]">edit</span>
+                            </button>
+                            <button onclick="deleteBonus(${b.id})" class="p-1 text-on-surface-variant hover:text-red-500 transition-colors" title="Excluir Bônus">
+                                <span class="material-symbols-outlined text-[16px]">delete</span>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        });
+    }
+
+    function uploadBonusDocFile(input) {
+        if (!input.files || input.files.length === 0) return;
+        
+        const file = input.files[0];
+        const statusText = document.getElementById('bonusDocStatusText');
+        
+        statusText.innerText = 'Enviando...';
+        statusText.classList.remove('text-red-400');
+        statusText.classList.add('text-on-surface-variant');
+        
+        const formData = new FormData();
+        formData.append('file', file);
+        
+        fetch('../api/admin/upload_doc.php', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => {
+            if (!response.ok) {
+                return response.json().then(data => {
+                    throw new Error(data.error || 'Falha no upload.');
+                });
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                document.getElementById('bonusEbookUrlField').value = data.url;
+                statusText.innerText = 'Concluído!';
+                showToast('Documento carregado com sucesso!', 'success');
+            } else {
+                throw new Error(data.error || 'Erro desconhecido.');
+            }
+        })
+        .catch(err => {
+            statusText.innerText = 'Erro no envio.';
+            statusText.classList.remove('text-on-surface-variant');
+            statusText.classList.add('text-red-400');
+            showToast(err.message, 'error');
+        });
+    }
+
+    async function saveBonus(e) {
+        e.preventDefault();
+        const id = document.getElementById('bonusIdField').value;
+        const type = document.getElementById('bonusTypeField').value;
+        
+        const payload = {
+            action: id ? 'update_bonus' : 'create_bonus',
+            bonus_id: id ? parseInt(id) : undefined,
+            course_id: currentCourseId,
+            type: type,
+            title: document.getElementById('bonusTitleField').value,
+            ebook_url: document.getElementById('bonusEbookUrlField').value,
+            bonus_course_id: document.getElementById('bonusCourseIdField').value ? parseInt(document.getElementById('bonusCourseIdField').value) : null,
+            sort_order: parseInt(document.getElementById('bonusSortField').value || 1)
+        };
+
+        try {
+            const response = await fetch('../api/admin/courses.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const res = await response.json();
+
+            if (!res.success) throw new Error(res.error || 'Erro ao salvar bônus.');
+
+            showToast(res.message, 'success');
+            closeBonusModal();
+            selectCourse(currentCourseId);
+        } catch (err) {
+            showToast(err.message, 'error');
+        }
+    }
+
+    function editBonus(id, type, title, ebookUrl, bonusCourseId, sortOrder) {
+        document.getElementById('bonusIdField').value = id;
+        document.getElementById('bonusTypeField').value = type;
+        document.getElementById('bonusTitleField').value = title;
+        document.getElementById('bonusEbookUrlField').value = ebookUrl;
+        document.getElementById('bonusSortField').value = sortOrder;
+        document.getElementById('bonusDocStatusText').innerText = '';
+        
+        document.getElementById('bonusModalHeader').innerText = 'Editar Bônus Real';
+        document.getElementById('bonusSubmitBtn').innerText = 'Salvar Alterações';
+        
+        toggleBonusTypeFields();
+        loadCoursesForBonusDropdown(bonusCourseId);
+        
+        document.getElementById('bonusModal').classList.remove('hidden');
+    }
+
+    async function deleteBonus(bonusId) {
+        if (!confirm('Deseja realmente remover este bônus real do curso?')) return;
+
+        try {
+            const response = await fetch('../api/admin/courses.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'delete_bonus', bonus_id: bonusId })
+            });
+            const res = await response.json();
+
+            if (!res.success) throw new Error(res.error || 'Erro ao remover bônus.');
+
+            showToast(res.message, 'success');
+            selectCourse(currentCourseId);
+        } catch (err) {
+            showToast(err.message, 'error');
+        }
+    }
 </script>
 </body>
 </html>

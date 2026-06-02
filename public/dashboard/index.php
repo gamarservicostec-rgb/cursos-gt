@@ -109,7 +109,47 @@ try {
     $xpInCurrentLevel = $xp % 1000;
     $xpProgressPercentage = round(($xpInCurrentLevel / 1000) * 100);
 
-    // 2. Busca os cursos matriculados do aluno
+    // --- SINCRONIZAÇÃO AUTOMÁTICA DE MATRÍCULAS DE CURSO BÔNUS ---
+    try {
+        // Busca IDs dos cursos em que o aluno já está matriculado
+        $myEnrollmentsStmt = $db->prepare("SELECT course_id FROM enrollments WHERE user_id = :user_id AND status IN ('active', 'completed')");
+        $myEnrollmentsStmt->execute([':user_id' => $userId]);
+        $myCourseIds = $myEnrollmentsStmt->fetchAll(PDO::FETCH_COLUMN);
+
+        if (!empty($myCourseIds)) {
+            // Busca todos os cursos extras cadastrados como bônus para esses cursos
+            $inClause = implode(',', array_map('intval', $myCourseIds));
+            $bonusCoursesStmt = $db->prepare("SELECT DISTINCT bonus_course_id FROM course_bonuses WHERE course_id IN ($inClause) AND type = 'course' AND bonus_course_id IS NOT NULL");
+            $bonusCoursesStmt->execute();
+            $bonusCourseIds = $bonusCoursesStmt->fetchAll(PDO::FETCH_COLUMN);
+
+            foreach ($bonusCourseIds as $bonusId) {
+                if (!in_array($bonusId, $myCourseIds)) {
+                    // Matricula silenciosa
+                    $insStmt = $db->prepare("INSERT IGNORE INTO enrollments (user_id, course_id, status) VALUES (:user_id, :course_id, 'active')");
+                    $insStmt->execute([
+                        ':user_id' => $userId,
+                        ':course_id' => $bonusId
+                    ]);
+                    
+                    // Insere uma notificação parabenizando o aluno pelo bônus recebido!
+                    $bonusTitleStmt = $db->prepare("SELECT title FROM courses WHERE id = :id LIMIT 1");
+                    $bonusTitleStmt->execute([':id' => $bonusId]);
+                    $bonusTitle = $bonusTitleStmt->fetchColumn();
+
+                    $notifStmt = $db->prepare("INSERT INTO notifications (user_id, title, message, type) VALUES (:user_id, 'Novo Bônus Liberado! 🎁', :msg, 'success')");
+                    $notifStmt->execute([
+                        ':user_id' => $userId,
+                        ':msg' => "Parabéns! Você ganhou acesso gratuito ao curso '" . $bonusTitle . "' como bônus especial!"
+                    ]);
+                }
+            }
+        }
+    } catch (\Exception $ex) {
+        // Silencioso
+    }
+
+    // 2. Busca os cursos matriculados do aluno (agora atualizado com possíveis cursos bônus)
     $coursesStmt = $db->prepare("
         SELECT c.id, c.title, c.description, c.thumbnail_url, e.status as enroll_status 
         FROM enrollments e
@@ -168,6 +208,11 @@ try {
         ]);
         $startLessonId = $lastLessonStmt->fetchColumn();
 
+        // Busca os bônus associados a este curso específico
+        $cBonusStmt = $db->prepare("SELECT id, type, title, ebook_url, bonus_course_id FROM course_bonuses WHERE course_id = :course_id ORDER BY sort_order ASC");
+        $cBonusStmt->execute([':course_id' => $courseId]);
+        $cBonuses = $cBonusStmt->fetchAll();
+
         $coursesList[] = [
             'id' => (int)$courseId,
             'title' => htmlspecialchars($ec['title'], ENT_QUOTES, 'UTF-8'),
@@ -176,7 +221,8 @@ try {
             'completed_lessons' => $completedLessons,
             'total_lessons' => $totalLessons,
             'percentage' => (int)$percentage,
-            'start_lesson_id' => $startLessonId ? (int)$startLessonId : null
+            'start_lesson_id' => $startLessonId ? (int)$startLessonId : null,
+            'bonuses' => $cBonuses
         ];
     }
 
@@ -389,14 +435,24 @@ try {
                                     </div>
                                 </div>
                                 
-                                <div class="w-full md:w-auto flex-shrink-0">
+                                <div class="w-full md:w-auto flex-shrink-0 flex flex-col sm:flex-row md:flex-col gap-3">
                                     <?php if ($course['start_lesson_id']): ?>
                                         <a href="classroom.php?lesson_id=<?php echo $course['start_lesson_id']; ?>" class="w-full md:w-auto btn-primary font-bold py-3.5 px-6 rounded-lg text-[10px] uppercase tracking-wider flex items-center justify-center gap-2">
                                             <span>Continuar Assistindo</span>
                                             <span class="material-symbols-outlined text-[16px]">play_circle</span>
                                         </a>
                                     <?php else: ?>
-                                        <span class="text-xs font-bold text-primary bg-primary/10 border border-primary/20 rounded px-4 py-2 uppercase">Curso Concluído 🏆</span>
+                                        <span class="text-xs font-bold text-primary bg-primary/10 border border-primary/20 rounded px-4 py-2 uppercase text-center">Curso Concluído 🏆</span>
+                                    <?php endif; ?>
+
+                                    <?php if (!empty($course['bonuses'])): ?>
+                                        <?php 
+                                        $encodedBonuses = htmlspecialchars(json_encode($course['bonuses']), ENT_QUOTES, 'UTF-8');
+                                        ?>
+                                        <button onclick="openStudentBonusModal('<?php echo $encodedBonuses; ?>', '<?php echo htmlspecialchars($course['title'], ENT_QUOTES, 'UTF-8'); ?>')" class="w-full md:w-auto border border-primary/30 bg-primary/5 hover:bg-primary/15 text-primary font-bold py-2.5 px-6 rounded-lg text-[10px] uppercase tracking-wider flex items-center justify-center gap-2 transition-all">
+                                            <span class="material-symbols-outlined text-[16px]" style="font-variation-settings: 'FILL' 1;">gift</span>
+                                            <span>Bônus Inclusos</span>
+                                        </button>
                                     <?php endif; ?>
                                 </div>
                             </div>
@@ -479,6 +535,110 @@ try {
         </aside>
 
     </main>
+
+<!-- MODAL DE BÔNUS DO ALUNO -->
+<div id="studentBonusModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm hidden">
+    <!-- Overlay de fechamento -->
+    <div onclick="closeStudentBonusModal()" class="absolute inset-0 bg-black/40"></div>
+    
+    <div class="glass-card w-full max-w-md rounded-2xl overflow-hidden shadow-2xl relative z-10 flex flex-col max-h-[85vh]" style="border-color: rgba(241, 200, 75, 0.25); background: linear-gradient(145deg, #111116 0%, #1a1a22 100%);">
+        
+        <!-- Top border glow line -->
+        <div class="h-1 bg-gradient-to-r from-primary/10 via-primary/50 to-primary/10"></div>
+        
+        <!-- Header -->
+        <div class="border-b border-white/5 px-6 py-4 flex items-center justify-between">
+            <div>
+                <span class="text-[9px] font-bold text-primary uppercase tracking-[0.2em]">Recompensas Inclusas</span>
+                <h3 class="text-sm font-bold text-white uppercase tracking-wider font-display" id="studentBonusModalTitle">Nome do Curso</h3>
+            </div>
+            <button onclick="closeStudentBonusModal()" class="text-text-muted hover:text-white transition-colors">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+        
+        <!-- Conteúdo -->
+        <div class="flex-1 overflow-y-auto px-6 py-6 space-y-4" id="studentBonusModalContent">
+            <!-- Os bônus serão montados dinamicamente via JS -->
+        </div>
+
+        <div class="px-6 py-4 border-t border-white/5 bg-black/20 flex justify-end">
+            <button onclick="closeStudentBonusModal()" class="border border-white/10 hover:border-white/20 text-text-muted hover:text-white px-5 py-2.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-colors">Fechar Painel</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    function openStudentBonusModal(bonusesJson, courseTitle) {
+        const bonuses = JSON.parse(bonusesJson);
+        document.getElementById('studentBonusModalTitle').innerText = courseTitle;
+        const container = document.getElementById('studentBonusModalContent');
+        container.innerHTML = '';
+
+        if (!bonuses || bonuses.length === 0) {
+            container.innerHTML = `
+                <div class="text-center py-6 text-text-muted text-xs italic">
+                    Nenhum bônus associado.
+                </div>
+            `;
+        } else {
+            bonuses.forEach(b => {
+                let actionHtml = '';
+                let icon = '';
+                let desc = '';
+
+                if (b.type === 'ebook') {
+                    icon = 'library_books';
+                    desc = 'E-book em PDF / Documento Complementar';
+                    actionHtml = `
+                        <a href="../${b.ebook_url}" download class="btn-primary font-bold px-4 py-2 rounded text-[10px] uppercase tracking-wider flex items-center gap-1.5 hover:-translate-y-0.5 transition-all">
+                            <span class="material-symbols-outlined text-[14px]">download</span>
+                            Baixar Ebook
+                        </a>
+                    `;
+                } else {
+                    icon = 'local_library';
+                    desc = 'Curso Extra Concedido de Graça';
+                    actionHtml = `
+                        <a href="classroom.php?lesson_id=first&course_id=${b.bonus_course_id}" class="btn-primary font-bold px-4 py-2 rounded text-[10px] uppercase tracking-wider flex items-center gap-1.5 hover:-translate-y-0.5 transition-all">
+                            <span class="material-symbols-outlined text-[14px]">play_circle</span>
+                            Estudar Agora
+                        </a>
+                    `;
+                }
+
+                container.innerHTML += `
+                    <div class="p-4 rounded-xl border border-white/5 bg-black/40 flex items-center justify-between gap-4">
+                        <div class="flex items-center gap-3">
+                            <div class="size-10 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center text-primary shrink-0">
+                                <span class="material-symbols-outlined text-[20px]">${icon}</span>
+                            </div>
+                            <div>
+                                <h4 class="text-xs font-bold text-white leading-tight">${b.title}</h4>
+                                <p class="text-[9px] text-text-muted mt-0.5 uppercase tracking-wide font-medium">${desc}</p>
+                            </div>
+                        </div>
+                        <div class="shrink-0">
+                            ${actionHtml}
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        document.getElementById('studentBonusModal').classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeStudentBonusModal() {
+        document.getElementById('studentBonusModal').classList.add('hidden');
+        document.body.style.overflow = '';
+    }
+
+    document.addEventListener('keydown', e => {
+        if (e.key === 'Escape') closeStudentBonusModal();
+    });
+</script>
 
 </body>
 </html>

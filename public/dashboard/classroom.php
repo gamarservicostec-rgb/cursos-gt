@@ -47,24 +47,101 @@ function getExpirationDate($startDate, $days, $weekdaysOnly = true) {
 
 $userId = $_SESSION['user_id'];
 $userName = $_SESSION['user_name'];
-$lessonId = isset($_GET['lesson_id']) ? filter_var($_GET['lesson_id'], FILTER_VALIDATE_INT) : null;
+$rawLessonId = isset($_GET['lesson_id']) ? $_GET['lesson_id'] : null;
+$reqCourseId = isset($_GET['course_id']) ? filter_var($_GET['course_id'], FILTER_VALIDATE_INT) : null;
 
 $dbInstance = Database::getInstance();
 $db = $dbInstance->getConnection();
 
 try {
-    // 1. Identifica o curso ativo do aluno para carregar a barra lateral e verificar a modalidade
-    $enrollStmt = $db->prepare("
-        SELECT e.course_id, e.enrolled_at, e.schedule_time, c.type as course_type, c.duration_days, c.weekdays_only 
-        FROM enrollments e 
-        JOIN courses c ON e.course_id = c.id 
-        WHERE e.user_id = :user_id AND e.status = 'active' 
-        LIMIT 1
-    ");
-    $enrollStmt->execute([':user_id' => $userId]);
-    $enroll = $enrollStmt->fetch();
-    $courseId = $enroll['course_id'] ?? null;
-    $courseType = $enroll['course_type'] ?? null;
+    // Se for solicitado a primeira aula de um curso específico
+    if ($rawLessonId === 'first' && $reqCourseId) {
+        $firstLessonStmt = $db->prepare("
+            SELECT l.id 
+            FROM lessons l
+            JOIN subjects s ON l.subject_id = s.id
+            JOIN modules m ON s.module_id = m.id
+            WHERE m.course_id = :course_id
+            ORDER BY m.sort_order ASC, s.sort_order ASC, l.sort_order ASC
+            LIMIT 1
+        ");
+        $firstLessonStmt->execute([':course_id' => $reqCourseId]);
+        $firstLessonId = $firstLessonStmt->fetchColumn();
+        
+        if ($firstLessonId) {
+            header("Location: classroom.php?lesson_id=" . $firstLessonId);
+            exit;
+        } else {
+            die("<h1>Grade vazia</h1><p>Este curso ainda não possui aulas cadastradas.</p><a href='index.php'>Voltar ao Painel</a>");
+        }
+    }
+
+    $lessonId = filter_var($rawLessonId, FILTER_VALIDATE_INT);
+
+    $courseId = null;
+    $courseType = null;
+    $enrolledAt = null;
+    $durationDays = null;
+    $weekdaysOnly = true;
+    $scheduleTime = null;
+
+    // 1. Se houver lesson_id, tenta identificar o curso a partir da aula
+    if ($lessonId) {
+        $courseFinder = $db->prepare("
+            SELECT m.course_id 
+            FROM lessons l
+            JOIN subjects s ON l.subject_id = s.id
+            JOIN modules m ON s.module_id = m.id
+            WHERE l.id = :lesson_id LIMIT 1
+        ");
+        $courseFinder->execute([':lesson_id' => $lessonId]);
+        $inferredCourseId = $courseFinder->fetchColumn();
+        
+        if ($inferredCourseId) {
+            $enrollStmt = $db->prepare("
+                SELECT e.course_id, e.enrolled_at, e.schedule_time, c.type as course_type, c.duration_days, c.weekdays_only 
+                FROM enrollments e 
+                JOIN courses c ON e.course_id = c.id 
+                WHERE e.user_id = :user_id AND e.course_id = :course_id AND e.status = 'active' 
+                LIMIT 1
+            ");
+            $enrollStmt->execute([
+                ':user_id' => $userId,
+                ':course_id' => $inferredCourseId
+            ]);
+            $enroll = $enrollStmt->fetch();
+            if ($enroll) {
+                $courseId = $enroll['course_id'];
+                $courseType = $enroll['course_type'];
+                $enrolledAt = $enroll['enrolled_at'];
+                $scheduleTime = $enroll['schedule_time'];
+                $durationDays = $enroll['duration_days'];
+                $weekdaysOnly = (bool)$enroll['weekdays_only'];
+            }
+        }
+    }
+
+    // Fallback: busca a matrícula ativa mais recente
+    if (!$courseId) {
+        $enrollStmt = $db->prepare("
+            SELECT e.course_id, e.enrolled_at, e.schedule_time, c.type as course_type, c.duration_days, c.weekdays_only 
+            FROM enrollments e 
+            JOIN courses c ON e.course_id = c.id 
+            WHERE e.user_id = :user_id AND e.status = 'active' 
+            ORDER BY e.enrolled_at DESC
+            LIMIT 1
+        ");
+        $enrollStmt->execute([':user_id' => $userId]);
+        $enroll = $enrollStmt->fetch();
+        if ($enroll) {
+            $courseId = $enroll['course_id'];
+            $courseType = $enroll['course_type'];
+            $enrolledAt = $enroll['enrolled_at'];
+            $scheduleTime = $enroll['schedule_time'];
+            $durationDays = $enroll['duration_days'];
+            $weekdaysOnly = (bool)$enroll['weekdays_only'];
+        }
+    }
 
     if (!$courseId) {
         die("<h1>Acesso restrito</h1><p>Você precisa possuir uma matrícula ativa em um curso para acessar a sala de aula.</p><a href='../index.php'>Voltar</a>");
