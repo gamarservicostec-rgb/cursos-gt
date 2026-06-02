@@ -34,7 +34,11 @@ $scheduleTime   = isset($input['schedule_time']) ? trim($input['schedule_time'])
 // Dados do visitante (guest checkout)
 $guestName     = isset($input['guest_name'])     ? trim($input['guest_name'])     : null;
 $guestEmail    = isset($input['guest_email'])    ? strtolower(trim($input['guest_email'])) : null;
+$guestPhone    = isset($input['guest_phone'])    ? trim($input['guest_phone'])    : null;
 $guestPassword = isset($input['guest_password']) ? $input['guest_password']       : null;
+
+// Higieniza o número do telefone mantendo apenas os dígitos
+$guestPhoneDigits = $guestPhone ? preg_replace('/\D/', '', $guestPhone) : null;
 
 if (!$courseId || empty($paymentMethod)) {
     http_response_code(400);
@@ -88,13 +92,23 @@ if (!$userId) {
             $_SESSION['user_name'] = $existingUser['name'];
             $_SESSION['user_email'] = $guestEmail;
             $_SESSION['user_role'] = 'student';
+
+            // Atualiza o telefone do usuário existente se o WhatsApp foi preenchido
+            if (!empty($guestPhoneDigits)) {
+                $updatePhoneStmt = $db->prepare("UPDATE users SET phone = :phone WHERE id = :id");
+                $updatePhoneStmt->execute([
+                    ':phone' => $guestPhoneDigits,
+                    ':id' => $userId
+                ]);
+            }
         } else {
-            // E-mail novo: cria a conta automaticamente
+            // E-mail novo: cria a conta automaticamente com telefone/WhatsApp
             $hashedPass = password_hash($guestPassword, PASSWORD_BCRYPT);
-            $createStmt = $db->prepare("INSERT INTO users (name, email, password_hash, role) VALUES (:name, :email, :pass, 'student')");
+            $createStmt = $db->prepare("INSERT INTO users (name, email, phone, password_hash, role) VALUES (:name, :email, :phone, :pass, 'student')");
             $createStmt->execute([
                 ':name'  => $guestName,
                 ':email' => $guestEmail,
+                ':phone' => $guestPhoneDigits,
                 ':pass'  => $hashedPass
             ]);
             $userId = (int)$db->lastInsertId();
@@ -284,6 +298,71 @@ try {
     }
 
     $db->commit();
+
+    // 4. Disparo imediato de e-mail e WhatsApp se a compra for aprovada de imediato
+    if ($status === 'approved') {
+        try {
+            require_once __DIR__ . '/../../../src/Helpers/EmailSender.php';
+            require_once __DIR__ . '/../../../src/Helpers/WhatsAppSender.php';
+
+            $userStmt = $db->prepare("SELECT name, email, phone FROM users WHERE id = :id LIMIT 1");
+            $userStmt->execute([':id' => $userId]);
+            $user = $userStmt->fetch(\PDO::FETCH_ASSOC);
+
+            if ($user) {
+                // E-mail de confirmação
+                $emailContent = "
+                    Olá, <strong>" . htmlspecialchars($user['name'], ENT_QUOTES, 'UTF-8') . "</strong>!<br><br>
+                    Seu pagamento de <strong>R$ " . number_format($amount, 2, ',', '.') . "</strong> 
+                    para o curso <strong>" . htmlspecialchars($course['title'], ENT_QUOTES, 'UTF-8') . "</strong> 
+                    foi confirmado com sucesso!<br><br>
+                    Sua matrícula está ativa e seu acesso liberado imediatamente.<br>
+                    Clique abaixo para iniciar seus estudos.
+                ";
+                
+                $bodyHtml = \Helpers\EmailSender::getTemplateHtml(
+                    "Matrícula Confirmada!",
+                    $emailContent,
+                    "Acessar Minha Conta",
+                    AppConfig::$APP_URL . "/login.php"
+                );
+
+                \Helpers\EmailSender::send(
+                    $user['email'],
+                    "Confirmação de Matrícula - GT Cursos",
+                    $bodyHtml
+                );
+
+                // Determina o telefone para WhatsApp
+                $phone = !empty($user['phone']) ? $user['phone'] : '';
+                if (empty($phone) && !empty($guestPhoneDigits)) {
+                    $phone = $guestPhoneDigits;
+                }
+
+                // Se houver telefone cadastrado, dispara WhatsApp
+                if (!empty($phone)) {
+                    $waResult = \Helpers\WhatsAppSender::sendPurchaseEvent(
+                        $phone, 
+                        $user['name'], 
+                        $course['title'], 
+                        $amount, 
+                        $user['email']
+                    );
+                    
+                    // Salva log do disparo do evento
+                    $waLogStmt = $db->prepare("INSERT INTO whatsapp_logs (phone, message, status, error_message) VALUES (:phone, :message, :status, :error_message)");
+                    $waLogStmt->execute([
+                        ':phone'         => $phone,
+                        ':message'       => "Disparo imediato de compra aprovada no checkout para curso '" . $course['title'] . "'",
+                        ':status'        => $waResult['success'] ? 'success' : 'failed',
+                        ':error_message' => !$waResult['success'] ? ($waResult['message'] ?? (json_encode($waResult['response'] ?? 'Erro desconhecido'))) : null
+                    ]);
+                }
+            }
+        } catch (\Exception $e) {
+            error_log("[GT checkout process] Falha ao enviar notificações: " . $e->getMessage());
+        }
+    }
 
     echo json_encode([
         'success' => true,

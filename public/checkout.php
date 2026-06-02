@@ -111,12 +111,16 @@ $courseImage = !empty($course['thumbnail_url']) ? $course['thumbnail_url'] : 'ht
             color: #ffffff !important;
             border: 1px solid rgba(255, 255, 255, 0.1) !important;
         }
+        #checkoutForm input:hover,
         #checkoutForm input:focus, 
+        #checkoutForm input:active,
         #checkoutForm select:focus, 
         #couponInput:focus {
+            background-color: #0d0d0d !important;
             border-color: #f2c94c !important;
             box-shadow: 0 0 15px rgba(242, 201, 76, 0.15) !important;
             outline: none !important;
+            color: #ffffff !important;
         }
         .glass-panel { 
             background-color: #0a0a0a; 
@@ -138,24 +142,37 @@ $courseImage = !empty($course['thumbnail_url']) ? $course['thumbnail_url'] : 'ht
             font-size: 15px !important; 
             transition: all 0.2s ease !important; 
         } 
-         /* Combate ao autofill do Chrome - Força fundo escuro e cor de fonte branca */
-         .floating-input:-webkit-autofill,
-         .floating-input:-webkit-autofill:hover, 
-         .floating-input:-webkit-autofill:focus, 
-         .floating-input:-webkit-autofill:active {
-             -webkit-text-fill-color: #ffffff !important;
-             -webkit-box-shadow: 0 0 0 30px #0a0a0a inset !important;
-             box-shadow: 0 0 0 30px #0a0a0a inset !important;
-             transition: background-color 5000s ease-in-out 0s;
-         }
+        /* Combate agressivo ao autofill e sugestões de senha forte do Google Chrome/Safari */
+        .floating-input:-webkit-autofill,
+        .floating-input:-webkit-autofill:hover, 
+        .floating-input:-webkit-autofill:focus, 
+        .floating-input:-webkit-autofill:active,
+        .floating-input:-internal-autofill-previewed,
+        .floating-input:-internal-autofill-selected,
+        #checkoutForm input:-webkit-autofill,
+        #checkoutForm input:-webkit-autofill:hover,
+        #checkoutForm input:-webkit-autofill:focus,
+        #checkoutForm input:-webkit-autofill:active,
+        #checkoutForm input:-internal-autofill-previewed,
+        #checkoutForm input:-internal-autofill-selected {
+            -webkit-text-fill-color: #ffffff !important;
+            -webkit-box-shadow: 0 0 0 1000px #0a0a0a inset !important;
+            box-shadow: 0 0 0 1000px #0a0a0a inset !important;
+            transition: background-color 5000s ease-in-out 0s !important;
+            background-color: #0a0a0a !important;
+            color: #ffffff !important;
+        }
         .floating-input::placeholder { 
-            color: #4d4635 !important; 
+            color: transparent !important; 
         } 
-        .floating-input:focus { 
+        .floating-input:hover,
+        .floating-input:focus,
+        .floating-input:active { 
             outline: none !important; 
             border-color: #f2c94c !important; 
             background-color: #0d0d0d !important; 
             box-shadow: 0 0 15px rgba(242, 201, 76, 0.15) !important; 
+            color: #ffffff !important;
         } 
         .floating-label { 
             position: absolute; 
@@ -340,15 +357,19 @@ $courseImage = !empty($course['thumbnail_url']) ? $course['thumbnail_url'] : 'ht
                         </div>
                         <p class="text-[11px] text-muted -mt-2 leading-relaxed">Preencha abaixo para criar sua conta e finalizar a compra em um único passo. Você usará estes dados para acessar as aulas.</p>
                         <div class="floating-input-container">
-                            <input class="floating-input" id="guestName" name="guest_name" placeholder="Seu Nome Completo" type="text" required autocomplete="name">
+                            <input class="floating-input" id="guestName" name="guest_name" placeholder=" " type="text" required autocomplete="name">
                             <label class="floating-label" for="guestName">Nome Completo</label>
                         </div>
                         <div class="floating-input-container">
-                            <input class="floating-input" id="guestEmail" name="guest_email" placeholder="seu@email.com" type="email" required autocomplete="email">
+                            <input class="floating-input" id="guestEmail" name="guest_email" placeholder=" " type="email" required autocomplete="email">
                             <label class="floating-label" for="guestEmail">E-mail</label>
                         </div>
                         <div class="floating-input-container">
-                            <input class="floating-input" id="guestPassword" name="guest_password" placeholder="Mínimo 6 caracteres" type="password" required autocomplete="new-password" minlength="6">
+                            <input class="floating-input" id="guestPhone" name="guest_phone" placeholder=" " type="tel" required autocomplete="tel">
+                            <label class="floating-label" for="guestPhone">WhatsApp (DDD + Número)</label>
+                        </div>
+                        <div class="floating-input-container">
+                            <input class="floating-input" id="guestPassword" name="guest_password" placeholder=" " type="password" required autocomplete="new-password" minlength="6">
                             <label class="floating-label" for="guestPassword">Crie sua Senha</label>
                         </div>
                         <p class="text-[10px] text-muted">Já tem conta? <a href="login.php" class="text-primary underline hover:text-yellow-300 transition-colors">Faça login aqui</a> e volte para comprar.</p>
@@ -403,20 +424,20 @@ $courseImage = !empty($course['thumbnail_url']) ? $course['thumbnail_url'] : 'ht
                     <!-- Credit Card Form View -->
                     <div class="hidden flex flex-col gap-6" id="form-credit_card">
                         <div class="floating-input-container">
-                            <input autocomplete="cc-number" class="floating-input" id="cardNumber" placeholder="0000 0000 0000 0000" type="text">
+                            <input autocomplete="cc-number" class="floating-input" id="cardNumber" placeholder=" " type="text">
                             <label class="floating-label" for="cardNumber">Número do Cartão</label>
                         </div>
                         <div class="floating-input-container">
-                            <input autocomplete="cc-name" class="floating-input" id="cardName" placeholder="Nome no cartão" type="text">
+                            <input autocomplete="cc-name" class="floating-input" id="cardName" placeholder=" " type="text">
                             <label class="floating-label" for="cardName">Nome Completo (como no cartão)</label>
                         </div>
                         <div class="grid grid-cols-2 gap-4">
                             <div class="floating-input-container">
-                                <input autocomplete="cc-exp" class="floating-input" id="cardExpiry" placeholder="MM/AA" type="text">
+                                <input autocomplete="cc-exp" class="floating-input" id="cardExpiry" placeholder=" " type="text">
                                 <label class="floating-label" for="cardExpiry">Validade</label>
                             </div>
                             <div class="floating-input-container">
-                                <input autocomplete="cc-csc" class="floating-input" id="cardCvc" placeholder="123" type="password">
+                                <input autocomplete="cc-csc" class="floating-input" id="cardCvc" placeholder=" " type="password">
                                 <label class="floating-label" for="cardCvc">CVV</label>
                             </div>
                         </div>
@@ -441,7 +462,7 @@ $courseImage = !empty($course['thumbnail_url']) ? $course['thumbnail_url'] : 'ht
                             </p>
                         </div>
                         <div class="floating-input-container">
-                            <input class="floating-input" id="boletoCpf" placeholder="000.000.000-00" type="text">
+                            <input class="floating-input" id="boletoCpf" placeholder=" " type="text">
                             <label class="floating-label" for="boletoCpf">CPF do Titular</label>
                         </div>
                     </div>
@@ -532,6 +553,24 @@ $courseImage = !empty($course['thumbnail_url']) ? $course['thumbnail_url'] : 'ht
                     value = value.replace(/(\D|^)(\d{3})(\d{3})(\d{3})(\d{2})/, "$2.$3.$4-$5");
                 }
                 e.target.value = value.substring(0, 14);
+            });
+        }
+
+        const guestPhone = document.getElementById('guestPhone');
+        if (guestPhone) {
+            guestPhone.addEventListener('input', (e) => {
+                let value = e.target.value.replace(/\D/g, '');
+                if (value.length > 11) {
+                    value = value.substring(0, 11);
+                }
+                if (value.length > 6) {
+                    value = `(${value.substring(0, 2)}) ${value.substring(2, 7)}-${value.substring(7)}`;
+                } else if (value.length > 2) {
+                    value = `(${value.substring(0, 2)}) ${value.substring(2)}`;
+                } else if (value.length > 0) {
+                    value = `(${value}`;
+                }
+                e.target.value = value;
             });
         }
 
@@ -640,10 +679,11 @@ $courseImage = !empty($course['thumbnail_url']) ? $course['thumbnail_url'] : 'ht
             // Se visitante (não logado): inclui dados de registro no payload
             const guestName     = document.getElementById('guestName');
             const guestEmail    = document.getElementById('guestEmail');
+            const guestPhone    = document.getElementById('guestPhone');
             const guestPassword = document.getElementById('guestPassword');
-            if (guestName && guestEmail && guestPassword) {
-                if (!guestName.value.trim() || !guestEmail.value.trim() || !guestPassword.value.trim()) {
-                    alert('Preencha seu nome, e-mail e senha para continuar.');
+            if (guestName && guestEmail && guestPhone && guestPassword) {
+                if (!guestName.value.trim() || !guestEmail.value.trim() || !guestPhone.value.trim() || !guestPassword.value.trim()) {
+                    alert('Preencha seu nome, e-mail, WhatsApp e senha para continuar.');
                     submitBtn.disabled = false;
                     btnText.textContent = 'Finalizar Compra Segura';
                     loadingSpinner.classList.add('hidden');
@@ -651,6 +691,7 @@ $courseImage = !empty($course['thumbnail_url']) ? $course['thumbnail_url'] : 'ht
                 }
                 payload.guest_name     = guestName.value.trim();
                 payload.guest_email    = guestEmail.value.trim();
+                payload.guest_phone    = guestPhone.value.trim();
                 payload.guest_password = guestPassword.value.trim();
             }
 
