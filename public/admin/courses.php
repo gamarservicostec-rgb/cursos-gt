@@ -880,6 +880,7 @@ $adminName = $_SESSION['user_name'];
     let categoriesList = [];
     let expandedModules = new Set();
     let expandedSubjects = new Set();
+    let expandedQuestions = new Set();
  
     // 1. CARREGAR CURSOS AO ABRIR A TELA
     document.addEventListener('DOMContentLoaded', () => {
@@ -1003,6 +1004,7 @@ $adminName = $_SESSION['user_name'];
         if (currentCourseId !== courseId) {
             expandedModules.clear();
             expandedSubjects.clear();
+            expandedQuestions.clear();
         }
         currentCourseId = courseId;
         
@@ -1732,38 +1734,44 @@ $adminName = $_SESSION['user_name'];
                 questionsHtml = `
                     <div class="space-y-4">
                         <span class="text-[9px] font-bold text-on-surface-variant uppercase tracking-widest block">Banco de Perguntas da Prova:</span>
-                        ${quiz.questions.map((q, idx) => `
-                            <div class="p-4 bg-black/30 border border-white/5 rounded-xl space-y-3 hover:border-primary/10 transition-all">
-                                <div class="flex items-start justify-between gap-4">
-                                    <div class="flex items-start gap-3">
-                                        <span class="w-5 h-5 rounded bg-primary/10 border border-primary/20 flex items-center justify-center font-display text-[10px] font-bold text-primary flex-shrink-0 mt-0.5">${idx + 1}</span>
-                                        <p class="text-xs font-bold text-white leading-relaxed">${q.text}</p>
+                        ${quiz.questions.map((q, idx) => {
+                            const isQuestionExpanded = expandedQuestions.has(String(q.id));
+                            const questionIcon = isQuestionExpanded ? 'expand_less' : 'expand_more';
+                            const questionHiddenClass = isQuestionExpanded ? '' : ' hidden';
+                            return `
+                                <div class="p-4 bg-black/30 border border-white/5 rounded-xl space-y-3 hover:border-primary/10 transition-all">
+                                    <div class="flex items-start justify-between gap-4 cursor-pointer select-none" onclick="toggleCollapse('question-body-${q.id}', 'question-icon-${q.id}')">
+                                        <div class="flex items-start gap-3">
+                                            <span class="material-symbols-outlined text-primary text-[18px] transition-transform duration-300 mr-1" id="question-icon-${q.id}">${questionIcon}</span>
+                                            <span class="w-5 h-5 rounded bg-primary/10 border border-primary/20 flex items-center justify-center font-display text-[10px] font-bold text-primary flex-shrink-0 mt-0.5">${idx + 1}</span>
+                                            <p class="text-xs font-bold text-white leading-relaxed">${q.text}</p>
+                                        </div>
+                                        <div class="flex items-center gap-1.5" onclick="event.stopPropagation()">
+                                            <button onclick='editQuestion(${JSON.stringify(q).replace(/'/g, "&apos;")})' class="p-1 text-on-surface-variant hover:text-primary transition-colors" title="Editar Pergunta">
+                                                <span class="material-symbols-outlined text-[16px]">edit</span>
+                                            </button>
+                                            <button onclick="deleteQuestion(${q.id}, ${quiz.id})" class="p-1 text-on-surface-variant hover:text-red-500 transition-colors" title="Excluir Pergunta">
+                                                <span class="material-symbols-outlined text-[16px]">delete</span>
+                                            </button>
+                                        </div>
                                     </div>
-                                    <div class="flex items-center gap-1.5">
-                                        <button onclick='editQuestion(${JSON.stringify(q).replace(/'/g, "&apos;")})' class="p-1 text-on-surface-variant hover:text-primary transition-colors" title="Editar Pergunta">
-                                            <span class="material-symbols-outlined text-[16px]">edit</span>
-                                        </button>
-                                        <button onclick="deleteQuestion(${q.id}, ${quiz.id})" class="p-1 text-on-surface-variant hover:text-red-500 transition-colors" title="Excluir Pergunta">
-                                            <span class="material-symbols-outlined text-[16px]">delete</span>
-                                        </button>
-                                    </div>
-                                </div>
 
-                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 pl-8">
-                                    ${q.options.map((o, optIdx) => {
-                                        const isCorrect = (optIdx === q.correct_idx);
-                                        const borderClass = isCorrect ? 'border-emerald-500/20 bg-emerald-500/5 text-emerald-400 font-bold' : 'border-white/5 bg-black/20 text-on-surface-variant';
-                                        const checkIcon = isCorrect ? '<span class="material-symbols-outlined text-[12px] text-emerald-400 fill-1">check_circle</span>' : '';
-                                        return `
-                                            <div class="px-3 py-1.5 border rounded-lg text-[10px] flex items-center justify-between gap-2 ${borderClass}">
-                                                <span>${o.text}</span>
-                                                ${checkIcon}
-                                            </div>
-                                        `;
-                                    }).join('')}
+                                    <div id="question-body-${q.id}" class="grid grid-cols-1 sm:grid-cols-2 gap-2 pl-8 transition-all duration-300${questionHiddenClass}">
+                                        ${q.options.map((o, optIdx) => {
+                                            const isCorrect = (optIdx === q.correct_idx);
+                                            const borderClass = isCorrect ? 'border-emerald-500/20 bg-emerald-500/5 text-emerald-400 font-bold' : 'border-white/5 bg-black/20 text-on-surface-variant';
+                                            const checkIcon = isCorrect ? '<span class="material-symbols-outlined text-[12px] text-emerald-400 fill-1">check_circle</span>' : '';
+                                            return `
+                                                <div class="px-3 py-1.5 border rounded-lg text-[10px] flex items-center justify-between gap-2 ${borderClass}">
+                                                    <span>${o.text}</span>
+                                                    ${checkIcon}
+                                                </div>
+                                            `;
+                                        }).join('')}
+                                    </div>
                                 </div>
-                            </div>
-                        `).join('')}
+                            `;
+                        }).join('')}
                     </div>
                 `;
             }
@@ -1980,6 +1988,13 @@ $adminName = $_SESSION['user_name'];
                 expandedSubjects.delete(String(subjectId));
             } else {
                 expandedSubjects.add(String(subjectId));
+            }
+        } else if (bodyId.startsWith('question-body-')) {
+            const questionId = bodyId.replace('question-body-', '');
+            if (isHiding) {
+                expandedQuestions.delete(String(questionId));
+            } else {
+                expandedQuestions.add(String(questionId));
             }
         }
     }
