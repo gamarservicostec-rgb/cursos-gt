@@ -238,29 +238,22 @@ try {
                         $phone = '5511999998888';
                     }
 
-                    // Prepara as mensagens sequenciais (fluxo adaptado à realidade da GT Cursos)
-                    // 1. Primeiro envia a logo oficial (link da imagem para preview rico no WhatsApp)
-                    $logoUrl = AppConfig::$APP_URL . "/assets/images/logo.png";
-                    $logoResult = \Helpers\WhatsAppSender::sendMessage($phone, $logoUrl);
-
-                    // Salva log do envio da logo
-                    $logoLogStmt = $db->prepare("INSERT INTO whatsapp_logs (phone, message, status) VALUES (:phone, :message, :status)");
-                    $logoLogStmt->execute([
-                        ':phone'   => $phone,
-                        ':message' => "[Logo da GT Cursos] " . $logoUrl,
-                        ':status'  => $logoResult['success'] ? 'success' : 'failed'
-                    ]);
-
-                    // 2. Depois envia a mensagem de confirmação de compra do curso e os dados de acesso
-                    $waMessage = "🎉 Olá, *" . $user['name'] . "*! Confirmamos a aprovação do seu pagamento para o curso *" . $courseTitle . "*!\n\nSua matrícula já está ativa e o acesso está liberado. Para iniciar as suas aulas, acesse o seu painel pelo link abaixo:\n\n🔗 " . AppConfig::$APP_URL . "/login.php\n\nSeja muito bem-vindo(a) à GT Cursos! 🚀";
-                    $waResult = \Helpers\WhatsAppSender::sendMessage($phone, $waMessage);
+                    // Dispara o evento de compra que inicia o fluxo automático de WhatsApp na Discloud
+                    $waResult = \Helpers\WhatsAppSender::sendPurchaseEvent(
+                        $phone, 
+                        $user['name'], 
+                        $courseTitle, 
+                        $transaction['amount'], 
+                        $user['email']
+                    );
                     
-                    // Salva log do envio da mensagem de acesso
-                    $waLogStmt = $db->prepare("INSERT INTO whatsapp_logs (phone, message, status) VALUES (:phone, :message, :status)");
+                    // Salva log do disparo do evento
+                    $waLogStmt = $db->prepare("INSERT INTO whatsapp_logs (phone, message, status, error_message) VALUES (:phone, :message, :status, :error_message)");
                     $waLogStmt->execute([
-                        ':phone'   => $phone,
-                        ':message' => $waMessage,
-                        ':status'  => $waResult['success'] ? 'success' : 'failed'
+                        ':phone'         => $phone,
+                        ':message'       => "Disparo de evento de compra para curso '" . $courseTitle . "' (Fluxo automático WhatsApp)",
+                        ':status'        => $waResult['success'] ? 'success' : 'failed',
+                        ':error_message' => !$waResult['success'] ? ($waResult['message'] ?? (json_encode($waResult['response'] ?? 'Erro desconhecido'))) : null
                     ]);
                 }
 
