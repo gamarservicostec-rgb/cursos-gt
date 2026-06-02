@@ -327,8 +327,8 @@ $adminName = $_SESSION['user_name'];
             <!-- Two Column Main Layout -->
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
                 
-                <!-- Coluna da Esquerda (Identidade do Curso — 4 cols) -->
-                <div class="lg:col-span-4 space-y-6">
+                <!-- Coluna da Esquerda (Identidade do Curso — Largura Total) -->
+                <div class="lg:col-span-12 space-y-6">
                     <div class="glass-card rounded-xl p-6" style="border-color: rgba(242, 201, 76, 0.25);">
                         <div class="border-b border-white/5 pb-4 mb-4">
                             <h3 class="text-xs font-bold text-primary uppercase tracking-widest" id="coursePanelHeader">Identidade do Treinamento</h3>
@@ -510,8 +510,8 @@ $adminName = $_SESSION['user_name'];
                     </div>
                 </div>
                 
-                <!-- Coluna da Direita (Engenharia Pedagógica & Avaliações — 8 cols) -->
-                <div class="lg:col-span-8 space-y-6">
+                <!-- Coluna da Direita (Engenharia Pedagógica & Avaliações — Largura Total) -->
+                <div class="lg:col-span-12 space-y-6">
                     <!-- Painel de Bloqueio se novo curso -->
                     <div id="pedagogicLockPanel" class="glass-card rounded-xl p-10 text-center space-y-4">
                         <span class="material-symbols-outlined text-5xl text-primary animate-pulse">lock</span>
