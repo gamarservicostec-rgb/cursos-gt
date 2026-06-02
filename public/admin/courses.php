@@ -779,6 +779,8 @@ $adminName = $_SESSION['user_name'];
 <script>
     let currentCourseId = null;
     let categoriesList = [];
+    let expandedModules = new Set();
+    let expandedSubjects = new Set();
  
     // 1. CARREGAR CURSOS AO ABRIR A TELA
     document.addEventListener('DOMContentLoaded', () => {
@@ -899,6 +901,10 @@ $adminName = $_SESSION['user_name'];
 
     // 2. SELECIONAR CURSO E CARREGAR GRADE DE DISCIPLINAS
     async function selectCourse(courseId) {
+        if (currentCourseId !== courseId) {
+            expandedModules.clear();
+            expandedSubjects.clear();
+        }
         currentCourseId = courseId;
         
         // Exibe o painel de construção de duas colunas e esconde a listagem geral
@@ -1004,11 +1010,15 @@ $adminName = $_SESSION['user_name'];
                                 `;
                             }
                             
+                            const isSubjectExpanded = expandedSubjects.has(String(s.id));
+                            const subjectIcon = isSubjectExpanded ? 'expand_less' : 'expand_more';
+                            const subjectHiddenClass = isSubjectExpanded ? '' : ' hidden';
+
                             subjectsHtml += `
                                 <div class="p-3 bg-black/20 border border-white/5 rounded-lg space-y-2 mt-3">
                                     <div class="flex items-center justify-between border-b border-white/5 pb-2">
                                         <div class="flex-1 flex items-center gap-2 cursor-pointer select-none" onclick="toggleCollapse('subject-body-${s.id}', 'subject-icon-${s.id}')">
-                                            <span class="material-symbols-outlined text-primary text-[18px] transition-transform duration-300 mr-1" id="subject-icon-${s.id}">expand_less</span>
+                                            <span class="material-symbols-outlined text-primary text-[18px] transition-transform duration-300 mr-1" id="subject-icon-${s.id}">${subjectIcon}</span>
                                             <span class="material-symbols-outlined text-primary text-[16px]">topic</span>
                                             <span class="text-xs font-bold text-white uppercase tracking-wider">${s.title}</span>
                                             <div class="flex items-center gap-1" onclick="event.stopPropagation()">
@@ -1025,7 +1035,7 @@ $adminName = $_SESSION['user_name'];
                                             Adicionar Aula
                                         </button>
                                     </div>
-                                    <div id="subject-body-${s.id}" class="transition-all duration-300">
+                                    <div id="subject-body-${s.id}" class="transition-all duration-300${subjectHiddenClass}">
                                         ${lessonsHtml}
                                     </div>
                                 </div>
@@ -1033,11 +1043,15 @@ $adminName = $_SESSION['user_name'];
                         });
                     }
                     
+                    const isModuleExpanded = expandedModules.has(String(m.id));
+                    const moduleIcon = isModuleExpanded ? 'expand_less' : 'expand_more';
+                    const moduleHiddenClass = isModuleExpanded ? '' : ' hidden';
+
                     accordion.innerHTML += `
                         <div class="glass-card rounded-lg p-4 bg-black/30 border border-white/5">
                             <div class="flex items-center justify-between pb-3 border-b border-white/5">
                                 <div class="flex-1 flex items-center gap-3 cursor-pointer select-none" onclick="toggleCollapse('module-body-${m.id}', 'module-icon-${m.id}')">
-                                    <span class="material-symbols-outlined text-primary text-[20px] transition-transform duration-300" id="module-icon-${m.id}">expand_less</span>
+                                    <span class="material-symbols-outlined text-primary text-[20px] transition-transform duration-300" id="module-icon-${m.id}">${moduleIcon}</span>
                                     <div>
                                         <div class="flex items-center gap-3">
                                             <h4 class="text-xs font-bold uppercase text-white tracking-wider font-display">${m.title}</h4>
@@ -1060,7 +1074,7 @@ $adminName = $_SESSION['user_name'];
                                     </button>
                                 </div>
                             </div>
-                            <div class="mt-3 transition-all duration-300" id="module-body-${m.id}">
+                            <div class="mt-3 transition-all duration-300${moduleHiddenClass}" id="module-body-${m.id}">
                                 <span class="text-[9px] font-bold text-on-surface-variant uppercase tracking-widest block mb-1">Matérias e Disciplinas:</span>
                                 ${subjectsHtml}
                             </div>
@@ -1838,12 +1852,31 @@ $adminName = $_SESSION['user_name'];
     function toggleCollapse(bodyId, iconId) {
         const body = document.getElementById(bodyId);
         const icon = document.getElementById(iconId);
-        if (body.classList.contains('hidden')) {
-            body.classList.remove('hidden');
-            icon.innerText = 'expand_less';
-        } else {
+        const isHiding = !body.classList.contains('hidden');
+        
+        if (isHiding) {
             body.classList.add('hidden');
             icon.innerText = 'expand_more';
+        } else {
+            body.classList.remove('hidden');
+            icon.innerText = 'expand_less';
+        }
+
+        // Persiste o estado de expansão/colapso no escopo em memória
+        if (bodyId.startsWith('module-body-')) {
+            const moduleId = bodyId.replace('module-body-', '');
+            if (isHiding) {
+                expandedModules.delete(String(moduleId));
+            } else {
+                expandedModules.add(String(moduleId));
+            }
+        } else if (bodyId.startsWith('subject-body-')) {
+            const subjectId = bodyId.replace('subject-body-', '');
+            if (isHiding) {
+                expandedSubjects.delete(String(subjectId));
+            } else {
+                expandedSubjects.add(String(subjectId));
+            }
         }
     }
 
