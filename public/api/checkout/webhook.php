@@ -182,7 +182,7 @@ try {
                 // -------------------------------------------------------
                 // DISPARO AUTOMÁTICO: E-MAIL + WHATSAPP
                 // -------------------------------------------------------
-                $userStmt = $db->prepare("SELECT name, email FROM users WHERE id = :id LIMIT 1");
+                $userStmt = $db->prepare("SELECT name, email, phone FROM users WHERE id = :id LIMIT 1");
                 $userStmt->execute([':id' => $userId]);
                 $user = $userStmt->fetch();
 
@@ -214,13 +214,48 @@ try {
                         $bodyHtml
                     );
 
-                    // WhatsApp via Discloud
-                    $phone     = '5511999998888'; // Substituir pelo telefone real do aluno quando disponível
-                    $waMessage = "Olá, *" . $user['name'] . "*! Seu pagamento para o curso '" . $courseTitle . "' foi aprovado! 🎉 Seu acesso está liberado. Acesse: " . AppConfig::$APP_URL . "/login.php";
-                    
+                    // Busca ou extrai telefone do aluno para envio do WhatsApp
+                    $phone = '';
+                    if (!empty($user['phone'])) {
+                        $phone = $user['phone'];
+                    } else {
+                        // Tenta extrair da resposta do Mercado Pago caso venha no payload
+                        if (!empty($result['payer']['phone'])) {
+                            $areaCode = $result['payer']['phone']['area_code'] ?? '';
+                            $number = $result['payer']['phone']['number'] ?? '';
+                            if (!empty($number)) {
+                                $phone = preg_replace('/\D/', '', $areaCode . $number);
+                                
+                                // Salva no banco de dados para futuras comunicações
+                                $updatePhoneStmt = $db->prepare("UPDATE users SET phone = :phone WHERE id = :id");
+                                $updatePhoneStmt->execute([':phone' => $phone, ':id' => $userId]);
+                            }
+                        }
+                    }
+
+                    // Se não encontrou de forma alguma, usa o fallback de testes
+                    if (empty($phone)) {
+                        $phone = '5511999998888';
+                    }
+
+                    // Prepara as mensagens sequenciais (fluxo adaptado à realidade da GT Cursos)
+                    // 1. Primeiro envia a logo oficial (link da imagem para preview rico no WhatsApp)
+                    $logoUrl = AppConfig::$APP_URL . "/assets/images/logo.png";
+                    $logoResult = \Helpers\WhatsAppSender::sendMessage($phone, $logoUrl);
+
+                    // Salva log do envio da logo
+                    $logoLogStmt = $db->prepare("INSERT INTO whatsapp_logs (phone, message, status) VALUES (:phone, :message, :status)");
+                    $logoLogStmt->execute([
+                        ':phone'   => $phone,
+                        ':message' => "[Logo da GT Cursos] " . $logoUrl,
+                        ':status'  => $logoResult['success'] ? 'success' : 'failed'
+                    ]);
+
+                    // 2. Depois envia a mensagem de confirmação de compra do curso e os dados de acesso
+                    $waMessage = "🎉 Olá, *" . $user['name'] . "*! Confirmamos a aprovação do seu pagamento para o curso *" . $courseTitle . "*!\n\nSua matrícula já está ativa e o acesso está liberado. Para iniciar as suas aulas, acesse o seu painel pelo link abaixo:\n\n🔗 " . AppConfig::$APP_URL . "/login.php\n\nSeja muito bem-vindo(a) à GT Cursos! 🚀";
                     $waResult = \Helpers\WhatsAppSender::sendMessage($phone, $waMessage);
                     
-                    // Salva log do WhatsApp
+                    // Salva log do envio da mensagem de acesso
                     $waLogStmt = $db->prepare("INSERT INTO whatsapp_logs (phone, message, status) VALUES (:phone, :message, :status)");
                     $waLogStmt->execute([
                         ':phone'   => $phone,
