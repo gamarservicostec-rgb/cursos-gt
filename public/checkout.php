@@ -446,9 +446,17 @@ $courseImage = !empty($course['thumbnail_url']) ? $course['thumbnail_url'] : 'ht
                         </div>
                     </div>
 
+                    <!-- Aceite dos Termos de Uso e Política de Privacidade (LGPD) -->
+                    <div class="flex items-start gap-3 p-4 rounded-xl border border-white/5 bg-white/[0.02] mt-4">
+                        <input type="checkbox" id="agreeTermsCheckbox" onchange="toggleSubmitButton()" class="mt-1 rounded bg-[#0a0a0a] border-white/10 text-primary focus:ring-0 focus:ring-offset-0 focus:outline-none cursor-pointer w-4 h-4">
+                        <label for="agreeTermsCheckbox" class="text-xs text-muted leading-relaxed cursor-pointer select-none">
+                            Li e concordo com os <a href="javascript:void(0)" onclick="openModal('terms')" class="text-primary hover:underline font-semibold">Termos de Serviço</a> (com as regras de certificado) e com a <a href="javascript:void(0)" onclick="openModal('privacy')" class="text-primary hover:underline font-semibold">Política de Privacidade</a> (LGPD).
+                        </label>
+                    </div>
+
                     <!-- Submit Area -->
                     <div class="flex flex-col gap-2 mt-4">
-                        <button class="w-full h-14 bg-primary text-obsidian rounded-xl font-bold text-sm uppercase tracking-[0.2em] transition-all hover:brightness-110 hover:shadow-[0_0_30px_rgba(242,201,76,0.3)] active:scale-[0.98] flex items-center justify-center gap-3" type="submit" id="submitBtn">
+                        <button class="w-full h-14 bg-primary text-obsidian rounded-xl font-bold text-sm uppercase tracking-[0.2em] transition-all hover:brightness-110 hover:shadow-[0_0_30px_rgba(242,201,76,0.3)] active:scale-[0.98] flex items-center justify-center gap-3 opacity-50 cursor-not-allowed" type="submit" id="submitBtn" disabled>
                             <span class="material-symbols-outlined font-bold">shield</span>
                             <span id="btnText">Finalizar Compra Segura</span>
                             <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-black hidden" id="loadingSpinner" fill="none" viewBox="0 0 24 24">
@@ -674,11 +682,107 @@ $courseImage = !empty($course['thumbnail_url']) ? $course['thumbnail_url'] : 'ht
             })
             .catch(error => {
                 alert(error.message);
-                submitBtn.disabled = false;
+                toggleSubmitButton();
                 btnText.textContent = 'Finalizar Compra Segura';
                 loadingSpinner.classList.add('hidden');
             });
         });
+
+        // Funções para controle dos modais legais
+        function openModal(modalId) {
+            document.getElementById(modalId + 'Modal').classList.remove('hidden');
+        }
+        function closeModal(modalId) {
+            document.getElementById(modalId + 'Modal').classList.add('hidden');
+        }
+        window.addEventListener('click', (e) => {
+            const terms = document.getElementById('termsModal');
+            const privacy = document.getElementById('privacyModal');
+            if (e.target === terms) closeModal('terms');
+            if (e.target === privacy) closeModal('privacy');
+        });
+
+        // Função para habilitar/desabilitar o botão de checkout
+        function toggleSubmitButton() {
+            const checkbox = document.getElementById('agreeTermsCheckbox');
+            const submitBtn = document.getElementById('submitBtn');
+            if (checkbox && submitBtn) {
+                if (checkbox.checked) {
+                    submitBtn.disabled = false;
+                    submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                } else {
+                    submitBtn.disabled = true;
+                    submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                }
+            }
+        }
+
+        // Inicializa o botão no estado correto
+        document.addEventListener('DOMContentLoaded', () => {
+            toggleSubmitButton();
+        });
     </script>
+
+    <!-- Modal: Termos de Serviço -->
+    <div id="termsModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md hidden">
+        <div class="glass-panel w-full max-w-2xl rounded-xl overflow-hidden shadow-2xl relative flex flex-col max-h-[80vh]" style="border: 1px solid rgba(242, 201, 76, 0.2); background-color: #0c0c0e;">
+            <div class="border-b border-white/5 px-6 py-4 flex items-center justify-between flex-shrink-0">
+                <h3 class="text-sm font-bold text-white uppercase tracking-widest flex items-center gap-2">
+                    <span class="material-symbols-outlined text-primary">description</span>
+                    Termos de Serviço — GT Cursos
+                </h3>
+                <button onclick="closeModal('terms')" class="text-muted hover:text-white transition-colors">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+            <div class="flex-1 overflow-y-auto px-6 py-6 space-y-4 text-xs text-muted leading-relaxed">
+                <h4 class="font-bold text-white uppercase text-[10px] tracking-wider text-primary">1. Regras de Emissão de Certificados</h4>
+                <p>Os certificados da GT Cursos são emitidos exclusivamente de forma digital e automática para os alunos que cumprirem cumulativamente os seguintes requisitos:</p>
+                <ul class="list-disc list-inside space-y-1 pl-2">
+                    <li>Conclusão de 100% da carga horária teórica online (aulas assistidas);</li>
+                    <li>Aprovação na Avaliação Técnica Final com aproveitamento mínimo de 70%;</li>
+                    <li>Frequência presencial comprovada de no mínimo 75% para os treinamentos na modalidade Híbrida.</li>
+                </ul>
+                <h4 class="font-bold text-white uppercase text-[10px] tracking-wider text-primary">2. Autenticidade e QR Code</h4>
+                <p>Cada certificado emitido pela plataforma possui um código alfanumérico único e um QR Code criptográfico que atesta a sua autenticidade. O código pode ser consultado publicamente a qualquer momento no nosso validador oficial.</p>
+                <h4 class="font-bold text-white uppercase text-[10px] tracking-wider text-primary">3. Licença de Uso e Acesso</h4>
+                <p>Ao adquirir um curso, o aluno recebe uma licença de acesso pessoal, intransferível e individual de acordo com o tipo de acesso contratado (vitalício ou tempo limitado). É estritamente proibido o compartilhamento de credenciais, gravação ou distribuição não autorizada do material sob pena de rescisão imediata e medidas judiciais.</p>
+                <h4 class="font-bold text-white uppercase text-[10px] tracking-wider text-primary">4. Resolução de Contratos</h4>
+                <p>Garantimos o direito de arrependimento e reembolso integral em até 7 dias a partir da data de matrícula, conforme o Código de Defesa do Consumidor.</p>
+            </div>
+            <div class="px-6 py-4 flex items-center justify-end border-t border-white/5 flex-shrink-0">
+                <button onclick="closeModal('terms')" class="bg-primary text-background-dark font-bold text-[10px] uppercase tracking-widest px-5 py-2.5 rounded-lg hover:bg-gold-light transition-all">Entendido</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Política de Privacidade (LGPD) -->
+    <div id="privacyModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md hidden">
+        <div class="glass-panel w-full max-w-2xl rounded-xl overflow-hidden shadow-2xl relative flex flex-col max-h-[80vh]" style="border: 1px solid rgba(242, 201, 76, 0.2); background-color: #0c0c0e;">
+            <div class="border-b border-white/5 px-6 py-4 flex items-center justify-between flex-shrink-0">
+                <h3 class="text-sm font-bold text-white uppercase tracking-widest flex items-center gap-2">
+                    <span class="material-symbols-outlined text-primary">gpp_good</span>
+                    Política de Privacidade (LGPD) — GT Cursos
+                </h3>
+                <button onclick="closeModal('privacy')" class="text-muted hover:text-white transition-colors">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+            <div class="flex-1 overflow-y-auto px-6 py-6 space-y-4 text-xs text-muted leading-relaxed">
+                <h4 class="font-bold text-white uppercase text-[10px] tracking-wider text-primary">1. Coleta e Finalidade dos Dados</h4>
+                <p>Em conformidade com a Lei Geral de Proteção de Dados (LGPD - Lei nº 13.709/2018), informamos que coletamos dados pessoais como Nome Completo, E-mail, Telefone/WhatsApp, CPF (para emissão de documentos fiscais e certificados) e dados de navegação/progresso escolar.</p>
+                <p>Essas informações são usadas exclusivamente para gerenciar seu progresso de estudos, emitir e validar os certificados oficiais e garantir a segurança das transações.</p>
+                <h4 class="font-bold text-white uppercase text-[10px] tracking-wider text-primary">2. Segurança de Pagamentos</h4>
+                <p>Os pagamentos são processados em ambiente seguro de forma transparente através do parceiro homologado <strong>Mercado Pago</strong>. A GT Cursos não armazena, em nenhuma hipótese, dados confidenciais de cartão de crédito no banco de dados local.</p>
+                <h4 class="font-bold text-white uppercase text-[10px] tracking-wider text-primary">3. Compartilhamento de Dados</h4>
+                <p>Não comercializamos ou transferimos suas informações pessoais para terceiros, exceto quando estritamente necessário para fins legais de conformidade regulatória ou para o próprio processador de pagamento seguro.</p>
+                <h4 class="font-bold text-white uppercase text-[10px] tracking-wider text-primary">4. Seus Direitos (Artigo 18 da LGPD)</h4>
+                <p>Você tem o direito de solicitar a qualquer momento o acesso, a retificação, a limitação de tratamento ou a exclusão permanente dos seus dados cadastrais de nossa plataforma escolar, bastando entrar em contato com o nosso DPO/Suporte.</p>
+            </div>
+            <div class="px-6 py-4 flex items-center justify-end border-t border-white/5 flex-shrink-0">
+                <button onclick="closeModal('privacy')" class="bg-primary text-background-dark font-bold text-[10px] uppercase tracking-widest px-5 py-2.5 rounded-lg hover:bg-gold-light transition-all">Entendido</button>
+            </div>
+        </div>
+    </div>
 </body>
 </html>
