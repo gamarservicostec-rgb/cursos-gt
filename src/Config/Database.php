@@ -78,6 +78,20 @@ class Database {
                 $db->exec("ALTER TABLE `courses` ADD COLUMN `available_hours` VARCHAR(255) DEFAULT NULL");
             if (!in_array('thumbnail_url', $cols))
                 $db->exec("ALTER TABLE `courses` ADD COLUMN `thumbnail_url` VARCHAR(500) DEFAULT NULL");
+            if (!in_array('what_learn', $cols))
+                $db->exec("ALTER TABLE `courses` ADD COLUMN `what_learn` TEXT DEFAULT NULL");
+            if (!in_array('materials_included', $cols))
+                $db->exec("ALTER TABLE `courses` ADD COLUMN `materials_included` TEXT DEFAULT NULL");
+            if (!in_array('access_type', $cols))
+                $db->exec("ALTER TABLE `courses` ADD COLUMN `access_type` VARCHAR(255) DEFAULT NULL");
+            if (!in_array('certificate_info', $cols))
+                $db->exec("ALTER TABLE `courses` ADD COLUMN `certificate_info` VARCHAR(255) DEFAULT NULL");
+            if (!in_array('bonus', $cols))
+                $db->exec("ALTER TABLE `courses` ADD COLUMN `bonus` TEXT DEFAULT NULL");
+            if (!in_array('target_audience', $cols))
+                $db->exec("ALTER TABLE `courses` ADD COLUMN `target_audience` TEXT DEFAULT NULL");
+            if (!in_array('is_private', $cols))
+                $db->exec("ALTER TABLE `courses` ADD COLUMN `is_private` TINYINT(1) NOT NULL DEFAULT 0");
 
             // --- Tabela: enrollments ---
             $enrollCheck = $db->query("SHOW TABLES LIKE 'enrollments'");
@@ -101,6 +115,8 @@ class Database {
                 $tCols = array_column($db->query("DESCRIBE `transactions`")->fetchAll(\PDO::FETCH_ASSOC), 'Field');
                 if (!in_array('updated_at', $tCols))
                     $db->exec("ALTER TABLE `transactions` ADD COLUMN `updated_at` DATETIME DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP");
+                if (!in_array('payment_details', $tCols))
+                    $db->exec("ALTER TABLE `transactions` ADD COLUMN `payment_details` LONGTEXT DEFAULT NULL");
             }
 
         } catch (\PDOException $e) {
