@@ -300,8 +300,6 @@ try {
                     </div>
                     <?php endif; ?>
 
-                    <?php endif; ?>
-
                     <?php
                     // Público Alvo
                     $targetItems = [];
