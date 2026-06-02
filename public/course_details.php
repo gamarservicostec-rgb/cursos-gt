@@ -201,7 +201,9 @@ try {
                         </div>
                     </div>
 
-                    <!-- Details and features (Dynamic what_you_will_learn) -->
+                    <!-- O que você vai aprender / Material / Bônus (apenas EAD) -->
+                    <?php if ($course['type'] === 'ead'): ?>
+
                     <?php
                     $learnItems = [];
                     if (!empty($course['what_learn'])) {
@@ -211,26 +213,24 @@ try {
                             if (empty($line)) continue;
                             $parts = explode("|", $line);
                             $title = trim($parts[0] ?? '');
-                            $desc = trim($parts[1] ?? '');
+                            $desc  = trim($parts[1] ?? '');
                             if (!empty($title)) {
                                 $learnItems[] = ['title' => $title, 'desc' => $desc];
                             }
                         }
                     }
-                    if (empty($learnItems)) {
-                        $learnItems = [
-                            ['title' => 'Métricas Avançadas', 'desc' => 'Definição de objetivos táticos com alta precisão e análise comportamental.'],
-                            ['title' => 'Garantia e Credibilidade', 'desc' => 'Certificados com registro criptográfico de validação imediata.']
-                        ];
-                    }
                     ?>
+                    <?php if (!empty($learnItems)): ?>
                     <div class="space-y-6 pt-4">
-                        <h3 class="text-xl font-bold text-white uppercase tracking-wider">O que você aprenderá</h3>
+                        <h3 class="text-xl font-bold text-white uppercase tracking-wider flex items-center gap-2">
+                            <span class="material-symbols-outlined text-primary">school</span>
+                            O que você vai aprender
+                        </h3>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <?php foreach ($learnItems as $item): ?>
                                 <div class="glass-panel p-6 rounded-lg flex gap-4">
                                     <div class="shrink-0 text-primary">
-                                        <span class="material-symbols-outlined">verified</span>
+                                        <span class="material-symbols-outlined" style="font-variation-settings:'FILL' 1;">verified</span>
                                     </div>
                                     <div>
                                         <h4 class="text-white font-bold mb-1"><?php echo htmlspecialchars($item['title'], ENT_QUOTES, 'UTF-8'); ?></h4>
@@ -242,6 +242,65 @@ try {
                             <?php endforeach; ?>
                         </div>
                     </div>
+                    <?php endif; ?>
+
+                    <?php
+                    // Material Didático
+                    $materialItems = [];
+                    if (!empty($course['materials_included'])) {
+                        $lines = explode("\n", str_replace("\r", "", $course['materials_included']));
+                        foreach ($lines as $line) {
+                            $line = trim($line);
+                            if (!empty($line)) $materialItems[] = $line;
+                        }
+                    }
+                    ?>
+                    <?php if (!empty($materialItems)): ?>
+                    <div class="space-y-4 pt-4">
+                        <h3 class="text-xl font-bold text-white uppercase tracking-wider flex items-center gap-2">
+                            <span class="material-symbols-outlined text-primary">menu_book</span>
+                            Material Didático
+                        </h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <?php foreach ($materialItems as $mat): ?>
+                                <div class="glass-panel p-4 rounded-lg flex items-center gap-3">
+                                    <span class="material-symbols-outlined text-primary text-[20px] shrink-0" style="font-variation-settings:'FILL' 1;">library_books</span>
+                                    <span class="text-sm text-[#F5F5F7]"><?php echo htmlspecialchars($mat, ENT_QUOTES, 'UTF-8'); ?></span>
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
+                    <?php endif; ?>
+
+                    <?php
+                    // Bônus
+                    $bonusItems = [];
+                    if (!empty($course['bonus'])) {
+                        $lines = explode("\n", str_replace("\r", "", $course['bonus']));
+                        foreach ($lines as $line) {
+                            $line = trim($line);
+                            if (!empty($line)) $bonusItems[] = $line;
+                        }
+                    }
+                    ?>
+                    <?php if (!empty($bonusItems)): ?>
+                    <div class="space-y-4 pt-4">
+                        <h3 class="text-xl font-bold text-white uppercase tracking-wider flex items-center gap-2">
+                            <span class="material-symbols-outlined text-primary">card_giftcard</span>
+                            Bônus Exclusivos
+                        </h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <?php foreach ($bonusItems as $bonus): ?>
+                                <div class="glass-panel p-4 rounded-lg flex items-center gap-3 border border-primary/20">
+                                    <span class="material-symbols-outlined text-primary text-[20px] shrink-0" style="font-variation-settings:'FILL' 1;">star</span>
+                                    <span class="text-sm text-[#F5F5F7] font-medium"><?php echo htmlspecialchars($bonus, ENT_QUOTES, 'UTF-8'); ?></span>
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
+                    <?php endif; ?>
+
+                    <?php endif; // fim type === ead ?>
                 </div>
 
                 <!-- Right Sticky Card -->

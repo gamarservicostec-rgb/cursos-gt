@@ -31,6 +31,11 @@ try {
         $db->exec("ALTER TABLE `courses` ADD COLUMN `certificate_info` VARCHAR(255) DEFAULT NULL");
     }
 
+    // 6. Adiciona bonus (campo EAD: lista de bônus inclusos)
+    if (!in_array('bonus', $columns)) {
+        $db->exec("ALTER TABLE `courses` ADD COLUMN `bonus` TEXT DEFAULT NULL");
+    }
+
     // 6. Verifica as colunas da tabela transactions
     $transStmt = $db->query("DESCRIBE `transactions`");
     $transCols = $transStmt->fetchAll(\PDO::FETCH_COLUMN);

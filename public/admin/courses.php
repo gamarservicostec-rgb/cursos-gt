@@ -445,6 +445,27 @@ $adminName = $_SESSION['user_name'];
                                       <textarea id="courseMaterialsField" rows="3" placeholder="Recurso / Material Incluso (um por linha)" class="w-full px-4 py-3 rounded-lg input-glass text-xs resize-none"></textarea>
                                   </div>
                              </div>
+
+                              <!-- Campos EAD -->
+                              <div id="eadFields" class="hidden space-y-4 border-t border-white/5 pt-4 mt-2">
+                                  <!-- O que você vai aprender (EAD) -->
+                                  <div>
+                                      <label class="block text-[10px] font-bold uppercase tracking-widest text-primary mb-2">O que você vai aprender (um item por linha. Ex: Título|Descrição)</label>
+                                      <textarea id="courseEadWhatLearnField" rows="4" placeholder="Título|Descrição (uma por linha)&#10;Ex: Programação Web|Desenvolva aplicações completas&#10;Ex: Banco de Dados|Domínio de SQL e NoSQL" class="w-full px-4 py-3 rounded-lg input-glass text-xs resize-none"></textarea>
+                                  </div>
+
+                                  <!-- Material Didático (EAD) -->
+                                  <div>
+                                      <label class="block text-[10px] font-bold uppercase tracking-widest text-primary mb-2">Material Didático (um item por linha)</label>
+                                      <textarea id="courseEadMaterialsField" rows="3" placeholder="Apostila em PDF&#10;Vídeo-aulas gravadas&#10;Exercícios práticos" class="w-full px-4 py-3 rounded-lg input-glass text-xs resize-none"></textarea>
+                                  </div>
+
+                                  <!-- Bônus (EAD) -->
+                                  <div>
+                                      <label class="block text-[10px] font-bold uppercase tracking-widest text-primary mb-2">Bônus (um item por linha)</label>
+                                      <textarea id="courseEadBonusField" rows="3" placeholder="Aula bônus: Técnicas Avançadas&#10;Acesso ao grupo exclusivo&#10;Mentoria em grupo" class="w-full px-4 py-3 rounded-lg input-glass text-xs resize-none"></textarea>
+                                  </div>
+                              </div>
                          </div>
 
                             <div class="pt-4 border-t border-white/5 flex gap-3">
@@ -732,19 +753,28 @@ $adminName = $_SESSION['user_name'];
         // Listener para modalidade híbrida
         const typeSelect = document.getElementById('courseTypeField');
         if (typeSelect) {
-            typeSelect.addEventListener('change', toggleHybridFields);
+            typeSelect.addEventListener('change', toggleModalityFields);
         }
     });
 
-    function toggleHybridFields() {
-        const type = document.getElementById('courseTypeField').value;
+    function toggleModalityFields() {
+        const type         = document.getElementById('courseTypeField').value;
         const hybridFields = document.getElementById('hybridFields');
+        const eadFields    = document.getElementById('eadFields');
+
+        // Reseta ambos
+        hybridFields.classList.add('hidden');
+        eadFields.classList.add('hidden');
+
         if (type === 'hybrid') {
             hybridFields.classList.remove('hidden');
-        } else {
-            hybridFields.classList.add('hidden');
+        } else if (type === 'ead') {
+            eadFields.classList.remove('hidden');
         }
     }
+
+    // Mantém alias para retrocompatibilidade
+    const toggleHybridFields = toggleModalityFields;
 
     async function loadCategoriesSelect() {
         try {
@@ -870,13 +900,18 @@ $adminName = $_SESSION['user_name'];
             document.getElementById('courseDurationField').value = course.duration_days || '';
             document.getElementById('courseWeekdaysField').value = course.weekdays_only !== undefined ? course.weekdays_only : '1';
             document.getElementById('courseAvailableHoursField').value = course.available_hours || '';
-            // Preenche novos campos táticos
-            document.getElementById('courseWhatLearnField').value = course.what_learn || '';
-            document.getElementById('courseMaterialsField').value = course.materials_included || '';
-            document.getElementById('courseAccessTypeField').value = course.access_type || '';
+            // Preenche campos táticos compartilhados
+            document.getElementById('courseWhatLearnField').value    = course.what_learn || '';
+            document.getElementById('courseMaterialsField').value    = course.materials_included || '';
+            document.getElementById('courseAccessTypeField').value   = course.access_type || '';
             document.getElementById('courseCertificateInfoField').value = course.certificate_info || '';
+
+            // Preenche campos específicos EAD
+            document.getElementById('courseEadWhatLearnField').value = course.what_learn || '';
+            document.getElementById('courseEadMaterialsField').value = course.materials_included || '';
+            document.getElementById('courseEadBonusField').value     = course.bonus || '';
             
-            toggleHybridFields();
+            toggleModalityFields();
 
             updateThumbnailPreview(course.thumbnail_url || '');
             
@@ -1120,10 +1155,17 @@ $adminName = $_SESSION['user_name'];
             duration_days: document.getElementById('courseDurationField').value ? parseInt(document.getElementById('courseDurationField').value) : null,
             weekdays_only: parseInt(document.getElementById('courseWeekdaysField').value),
             available_hours: document.getElementById('courseAvailableHoursField').value,
-            what_learn: document.getElementById('courseWhatLearnField').value,
-            materials_included: document.getElementById('courseMaterialsField').value,
-            access_type: document.getElementById('courseAccessTypeField').value,
-            certificate_info: document.getElementById('courseCertificateInfoField').value
+            what_learn:         document.getElementById('courseTypeField').value === 'ead'
+                                    ? document.getElementById('courseEadWhatLearnField').value
+                                    : document.getElementById('courseWhatLearnField').value,
+            materials_included: document.getElementById('courseTypeField').value === 'ead'
+                                    ? document.getElementById('courseEadMaterialsField').value
+                                    : document.getElementById('courseMaterialsField').value,
+            bonus:              document.getElementById('courseTypeField').value === 'ead'
+                                    ? document.getElementById('courseEadBonusField').value
+                                    : null,
+            access_type:        document.getElementById('courseAccessTypeField').value,
+            certificate_info:   document.getElementById('courseCertificateInfoField').value
         };
         
         try {

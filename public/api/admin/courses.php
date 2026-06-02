@@ -30,7 +30,7 @@ if ($method === 'GET') {
     try {
         if ($courseId) {
             // Retorna a árvore completa (Pensando no Editor de Grade/Syllabus do Admin)
-            $courseQuery = "SELECT id, title, description, price, type, status, thumbnail_url, category_id, duration_days, weekdays_only, available_hours, what_learn, materials_included, access_type, certificate_info FROM courses WHERE id = :id LIMIT 1";
+            $courseQuery = "SELECT id, title, description, price, type, status, thumbnail_url, category_id, duration_days, weekdays_only, available_hours, what_learn, materials_included, access_type, certificate_info, bonus FROM courses WHERE id = :id LIMIT 1";
             $cStmt = $db->prepare($courseQuery);
             $cStmt->execute([':id' => $courseId]);
             $course = $cStmt->fetch(\PDO::FETCH_ASSOC);
@@ -107,8 +107,13 @@ if ($method === 'GET') {
                     'category_id' => $course['category_id'] ? (int)$course['category_id'] : null,
                     'duration_days' => $course['duration_days'] ? (int)$course['duration_days'] : null,
                     'weekdays_only' => $course['weekdays_only'] !== null ? (int)$course['weekdays_only'] : 1,
-                    'available_hours' => $course['available_hours'] ? htmlspecialchars($course['available_hours'], ENT_QUOTES, 'UTF-8') : null,
-                    'curriculum' => $curriculum
+                    'available_hours'    => $course['available_hours'] ? htmlspecialchars($course['available_hours'], ENT_QUOTES, 'UTF-8') : null,
+                    'what_learn'         => $course['what_learn'] ?? null,
+                    'materials_included' => $course['materials_included'] ?? null,
+                    'bonus'              => $course['bonus'] ?? null,
+                    'access_type'        => $course['access_type'] ?? null,
+                    'certificate_info'   => $course['certificate_info'] ?? null,
+                    'curriculum'         => $curriculum
                 ]
             ]);
             exit;
@@ -173,10 +178,11 @@ if ($method === 'GET') {
                 $availableHours = isset($input['available_hours']) ? trim($input['available_hours']) : null;
                 
                 // Novos campos táticos
-                $whatLearn = isset($input['what_learn']) ? trim($input['what_learn']) : null;
+                $whatLearn         = isset($input['what_learn'])         ? trim($input['what_learn'])         : null;
                 $materialsIncluded = isset($input['materials_included']) ? trim($input['materials_included']) : null;
-                $accessType = isset($input['access_type']) ? trim($input['access_type']) : null;
-                $certificateInfo = isset($input['certificate_info']) ? trim($input['certificate_info']) : null;
+                $accessType        = isset($input['access_type'])        ? trim($input['access_type'])        : null;
+                $certificateInfo   = isset($input['certificate_info'])   ? trim($input['certificate_info'])   : null;
+                $bonus             = isset($input['bonus'])              ? trim($input['bonus'])              : null;
 
                 if (empty($title) || empty($description) || $price < 0) {
                     http_response_code(400);
@@ -184,22 +190,23 @@ if ($method === 'GET') {
                     exit;
                 }
 
-                $stmt = $db->prepare("INSERT INTO courses (title, description, price, type, status, thumbnail_url, category_id, duration_days, weekdays_only, available_hours, what_learn, materials_included, access_type, certificate_info) VALUES (:title, :description, :price, :type, :status, :thumbnail_url, :category_id, :duration_days, :weekdays_only, :available_hours, :what_learn, :materials_included, :access_type, :certificate_info)");
+                $stmt = $db->prepare("INSERT INTO courses (title, description, price, type, status, thumbnail_url, category_id, duration_days, weekdays_only, available_hours, what_learn, materials_included, access_type, certificate_info, bonus) VALUES (:title, :description, :price, :type, :status, :thumbnail_url, :category_id, :duration_days, :weekdays_only, :available_hours, :what_learn, :materials_included, :access_type, :certificate_info, :bonus)");
                 $stmt->execute([
-                    ':title' => $title,
-                    ':description' => $description,
-                    ':price' => $price,
-                    ':type' => $type,
-                    ':status' => $status,
-                    ':thumbnail_url' => $thumbnailUrl,
-                    ':category_id' => $categoryId,
-                    ':duration_days' => $durationDays,
-                    ':weekdays_only' => $weekdaysOnly,
-                    ':available_hours' => $availableHours,
-                    ':what_learn' => $whatLearn,
-                    ':materials_included' => $materialsIncluded,
-                    ':access_type' => $accessType,
-                    ':certificate_info' => $certificateInfo
+                    ':title'             => $title,
+                    ':description'       => $description,
+                    ':price'             => $price,
+                    ':type'              => $type,
+                    ':status'            => $status,
+                    ':thumbnail_url'     => $thumbnailUrl,
+                    ':category_id'       => $categoryId,
+                    ':duration_days'     => $durationDays,
+                    ':weekdays_only'     => $weekdaysOnly,
+                    ':available_hours'   => $availableHours,
+                    ':what_learn'        => $whatLearn,
+                    ':materials_included'=> $materialsIncluded,
+                    ':access_type'       => $accessType,
+                    ':certificate_info'  => $certificateInfo,
+                    ':bonus'             => $bonus
                 ]);
 
                 $newId = $db->lastInsertId();
@@ -231,10 +238,11 @@ if ($method === 'GET') {
                 $availableHours = isset($input['available_hours']) ? trim($input['available_hours']) : null;
                 
                 // Novos campos táticos
-                $whatLearn = isset($input['what_learn']) ? trim($input['what_learn']) : null;
+                $whatLearn         = isset($input['what_learn'])         ? trim($input['what_learn'])         : null;
                 $materialsIncluded = isset($input['materials_included']) ? trim($input['materials_included']) : null;
-                $accessType = isset($input['access_type']) ? trim($input['access_type']) : null;
-                $certificateInfo = isset($input['certificate_info']) ? trim($input['certificate_info']) : null;
+                $accessType        = isset($input['access_type'])        ? trim($input['access_type'])        : null;
+                $certificateInfo   = isset($input['certificate_info'])   ? trim($input['certificate_info'])   : null;
+                $bonus             = isset($input['bonus'])              ? trim($input['bonus'])              : null;
 
                 if (!$courseId || empty($title) || empty($description) || $price < 0) {
                     http_response_code(400);
@@ -242,23 +250,24 @@ if ($method === 'GET') {
                     exit;
                 }
 
-                $stmt = $db->prepare("UPDATE courses SET title = :title, description = :description, price = :price, type = :type, status = :status, thumbnail_url = :thumbnail_url, category_id = :category_id, duration_days = :duration_days, weekdays_only = :weekdays_only, available_hours = :available_hours, what_learn = :what_learn, materials_included = :materials_included, access_type = :access_type, certificate_info = :certificate_info WHERE id = :id");
+                $stmt = $db->prepare("UPDATE courses SET title = :title, description = :description, price = :price, type = :type, status = :status, thumbnail_url = :thumbnail_url, category_id = :category_id, duration_days = :duration_days, weekdays_only = :weekdays_only, available_hours = :available_hours, what_learn = :what_learn, materials_included = :materials_included, access_type = :access_type, certificate_info = :certificate_info, bonus = :bonus WHERE id = :id");
                 $stmt->execute([
-                    ':title' => $title,
-                    ':description' => $description,
-                    ':price' => $price,
-                    ':type' => $type,
-                    ':status' => $status,
-                    ':thumbnail_url' => $thumbnailUrl,
-                    ':category_id' => $categoryId,
-                    ':duration_days' => $durationDays,
-                    ':weekdays_only' => $weekdaysOnly,
-                    ':available_hours' => $availableHours,
-                    ':what_learn' => $whatLearn,
-                    ':materials_included' => $materialsIncluded,
-                    ':access_type' => $accessType,
-                    ':certificate_info' => $certificateInfo,
-                    ':id' => $courseId
+                    ':title'             => $title,
+                    ':description'       => $description,
+                    ':price'             => $price,
+                    ':type'              => $type,
+                    ':status'            => $status,
+                    ':thumbnail_url'     => $thumbnailUrl,
+                    ':category_id'       => $categoryId,
+                    ':duration_days'     => $durationDays,
+                    ':weekdays_only'     => $weekdaysOnly,
+                    ':available_hours'   => $availableHours,
+                    ':what_learn'        => $whatLearn,
+                    ':materials_included'=> $materialsIncluded,
+                    ':access_type'       => $accessType,
+                    ':certificate_info'  => $certificateInfo,
+                    ':bonus'             => $bonus,
+                    ':id'                => $courseId
                 ]);
 
                 // Registra na auditoria
