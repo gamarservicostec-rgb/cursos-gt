@@ -329,23 +329,83 @@ try {
             background: linear-gradient(90deg, #f1c84b 0%, #FFD700 100%);
             box-shadow: 0 0 10px rgba(241, 200, 75, 0.5);
         }
+
+        /* ================================================
+           RESPONSIVIDADE MOBILE — PAINEL DO ALUNO
+        ================================================ */
+        /* Menu dropdown mobile — no Tailwind já tem hidden/flex, mas garantimos */
+        #mobileMenuDropdown {
+            display: none;
+        }
+        #mobileMenuDropdown.active {
+            display: flex;
+        }
+
+        /* Cards de curso: no mobile o layout fica coluna */
+        @media (max-width: 767px) {
+            /* Main grid: já tem grid-cols-1 por padrão */
+            .main-content-grid {
+                padding-left: 1rem !important;
+                padding-right: 1rem !important;
+                margin-top: 1.5rem !important;
+                gap: 1.5rem !important;
+            }
+            /* Aside de widgets fica abaixo do conteúdo principal */
+            .dashboard-aside {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 1rem;
+            }
+            /* Banner de boas-vindas: reduz padding */
+            .welcome-banner {
+                padding: 1.25rem !important;
+            }
+            /* Level indicator: ocupa menos espaço */
+            .xp-indicator {
+                padding: 0.75rem 1rem !important;
+            }
+            /* Cabeçalho: altura menor no mobile */
+            .dashboard-header-inner {
+                height: 3.5rem !important;
+                padding-left: 1rem !important;
+                padding-right: 1rem !important;
+            }
+            /* Logo menor */
+            .dashboard-logo {
+                height: 2rem !important;
+            }
+            /* Nome da plataforma oculto no mobile estreito */
+            .dashboard-platform-name {
+                display: none !important;
+            }
+        }
+
+        /* Tablet portrait */
+        @media (min-width: 640px) and (max-width: 1023px) {
+            .main-content-grid {
+                padding-left: 1.5rem !important;
+                padding-right: 1.5rem !important;
+            }
+        }
     </style>
 </head>
 <body class="antialiased bg-radial-glow min-h-screen pb-16">
     
     <!-- Top Navigation Header -->
     <header class="border-b border-border-color bg-deep-obsidian/80 backdrop-blur-md sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-            <div class="flex items-center gap-3">
-                <img src="../assets/images/logo.png" alt="Logo GT Cursos" onerror="this.style.display='none'" class="h-10 w-auto object-contain">
-                <span class="font-display text-2xl font-bold tracking-widest uppercase">
+        <div class="dashboard-header-inner max-w-7xl mx-auto px-4 sm:px-6 h-14 sm:h-20 flex items-center justify-between relative">
+            <div class="flex items-center gap-2 sm:gap-3">
+                <img src="../assets/images/logo.png" alt="Logo GT Cursos" onerror="this.style.display='none'" class="dashboard-logo h-8 sm:h-10 w-auto object-contain">
+                <span class="dashboard-platform-name font-display text-xl font-bold tracking-widest uppercase hidden xs:block sm:block">
                     CURSOS <span class="text-primary">GT</span>
                 </span>
             </div>
             
-            <nav class="flex items-center gap-6">
+            <!-- Desktop Navigation -->
+            <nav class="hidden md:flex items-center gap-6">
                 <a href="../index.php" class="text-xs font-bold text-text-muted hover:text-primary transition-colors uppercase tracking-wider">Explorar Cursos</a>
                 <a href="profile.php" class="text-xs font-bold text-text-muted hover:text-primary transition-colors uppercase tracking-wider">Perfil & Medalhas</a>
+                <a href="support.php" class="text-xs font-bold text-text-muted hover:text-primary transition-colors uppercase tracking-wider">Suporte</a>
                 <div class="h-6 w-[1px] bg-border-color"></div>
                 <div class="flex items-center gap-3">
                     <div class="w-9 h-9 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center">
@@ -357,16 +417,54 @@ try {
                     <span class="material-symbols-outlined text-[22px]">logout</span>
                 </a>
             </nav>
+
+            <!-- Mobile Menu Button -->
+            <button onclick="toggleMobileMenu()" class="md:hidden text-text-muted hover:text-primary transition-colors flex items-center justify-center p-2 rounded-lg border border-white/5 bg-white/[0.02]">
+                <span class="material-symbols-outlined text-[24px]" id="mobileMenuIcon">menu</span>
+            </button>
+
+            <!-- Mobile Dropdown Navigation -->
+            <div id="mobileMenuDropdown" class="hidden absolute top-14 sm:top-20 left-0 right-0 bg-[#0A0A0C]/95 border-b border-border-color p-6 flex flex-col gap-4 z-40 backdrop-blur-lg">
+                <div class="flex items-center gap-3 pb-3 border-b border-white/5">
+                    <div class="w-9 h-9 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center">
+                        <span class="material-symbols-outlined text-primary text-[20px]">person</span>
+                    </div>
+                    <div>
+                        <p class="text-xs font-bold text-text-main leading-none"><?php echo htmlspecialchars($userName, ENT_QUOTES, 'UTF-8'); ?></p>
+                        <p class="text-[9px] font-bold text-primary uppercase tracking-widest mt-1">Estudante</p>
+                    </div>
+                </div>
+                <a href="index.php" class="text-xs font-bold text-text-main hover:text-primary transition-colors py-2.5 flex items-center gap-2.5 uppercase tracking-wider">
+                    <span class="material-symbols-outlined text-[20px] text-primary">dashboard</span>
+                    Painel do Aluno
+                </a>
+                <a href="../index.php" class="text-xs font-bold text-text-muted hover:text-primary transition-colors py-2.5 flex items-center gap-2.5 uppercase tracking-wider">
+                    <span class="material-symbols-outlined text-[20px]">explore</span>
+                    Explorar Cursos
+                </a>
+                <a href="profile.php" class="text-xs font-bold text-text-muted hover:text-primary transition-colors py-2.5 flex items-center gap-2.5 uppercase tracking-wider">
+                    <span class="material-symbols-outlined text-[20px]">military_tech</span>
+                    Perfil & Medalhas
+                </a>
+                <a href="support.php" class="text-xs font-bold text-text-muted hover:text-primary transition-colors py-2.5 flex items-center gap-2.5 uppercase tracking-wider">
+                    <span class="material-symbols-outlined text-[20px]">support_agent</span>
+                    Suporte & Chamados
+                </a>
+                <a href="../logout.php" class="text-xs font-bold text-error hover:brightness-110 transition-colors py-2.5 flex items-center gap-2.5 uppercase tracking-wider border-t border-white/5 mt-2">
+                    <span class="material-symbols-outlined text-[20px]">logout</span>
+                    Sair da Conta
+                </a>
+            </div>
         </div>
     </header>
 
     <!-- Main Content Grid -->
-    <main class="max-w-7xl mx-auto px-6 mt-12 grid grid-cols-1 lg:grid-cols-12 gap-8">
+    <main class="main-content-grid max-w-7xl mx-auto px-4 sm:px-6 mt-6 sm:mt-12 grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8">
         
         <!-- Welcome & Left Stats Columns (8 cols) -->
         <section class="lg:col-span-8 space-y-8">
             <!-- Welcome Banner -->
-            <div class="glass-card rounded-xl p-8 flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <div class="welcome-banner glass-card rounded-xl p-5 sm:p-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
                     <h1 class="text-2xl md:text-3xl font-bold tracking-tight text-text-main">
                         Olá, <span class="text-primary"><?php echo htmlspecialchars($userName, ENT_QUOTES, 'UTF-8'); ?></span>!
@@ -376,7 +474,7 @@ try {
                     </p>
                 </div>
                 <!-- Mini XP Indicator -->
-                <div class="flex items-center gap-4 bg-black/40 border border-border-color rounded-lg px-6 py-4">
+                <div class="xp-indicator flex items-center gap-3 sm:gap-4 bg-black/40 border border-border-color rounded-lg px-4 sm:px-6 py-3 sm:py-4">
                     <div class="w-12 h-12 rounded-lg level-badge bg-primary/5 flex items-center justify-center font-display text-xl font-bold text-primary">
                         <?php echo $level; ?>
                     </div>
@@ -463,7 +561,7 @@ try {
         </section>
         
         <!-- Sidebar Widgets (4 cols) -->
-        <aside class="lg:col-span-4 space-y-8">
+        <aside class="dashboard-aside lg:col-span-4 space-y-6 sm:space-y-8">
             <!-- Streak Card -->
             <div class="glass-card rounded-xl p-8 text-center relative overflow-hidden">
                 <!-- Streak Glow Background -->
@@ -633,6 +731,18 @@ try {
     function closeStudentBonusModal() {
         document.getElementById('studentBonusModal').classList.add('hidden');
         document.body.style.overflow = '';
+    }
+
+    function toggleMobileMenu() {
+        const menu = document.getElementById('mobileMenuDropdown');
+        const icon = document.getElementById('mobileMenuIcon');
+        if (menu.classList.contains('hidden')) {
+            menu.classList.remove('hidden');
+            icon.textContent = 'close';
+        } else {
+            menu.classList.add('hidden');
+            icon.textContent = 'menu';
+        }
     }
 
     document.addEventListener('keydown', e => {

@@ -381,7 +381,7 @@ try {
     </script>
     <style>
         .glass-sidebar {
-            background: rgba(10, 10, 12, 0.8);
+            background: rgba(10, 10, 12, 0.95);
             backdrop-filter: blur(24px);
             -webkit-backdrop-filter: blur(24px);
             border-right: 1px solid rgba(255, 255, 255, 0.05);
@@ -423,41 +423,156 @@ try {
             box-shadow: 0 0 10px rgba(242, 201, 76, 0.15);
             outline: none;
         }
+
+        /* ====================================================
+           RESPONSIVIDADE MOBILE — SIDEBAR DRAWER
+        ==================================================== */
+        /* Sidebar: desktop = fixa à esquerda; mobile = drawer off-canvas */
+        #classroom-sidebar {
+            transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Overlay/backdrop do sidebar mobile */
+        #sidebar-backdrop {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.72);
+            z-index: 45;
+            backdrop-filter: blur(2px);
+            -webkit-backdrop-filter: blur(2px);
+            animation: fadeInBackdrop 0.25s ease;
+        }
+        #sidebar-backdrop.active { display: block; }
+
+        @keyframes fadeInBackdrop {
+            from { opacity: 0; }
+            to   { opacity: 1; }
+        }
+
+        /* Botão hambúrguer pulsa suavemente para chamar atenção */
+        #btn-sidebar-toggle {
+            position: relative;
+        }
+        #btn-sidebar-toggle::after {
+            content: '';
+            position: absolute;
+            inset: -2px;
+            border-radius: 10px;
+            border: 1px solid rgba(242,201,76,0.25);
+            animation: btnPulse 2.5s ease-in-out infinite;
+        }
+        @keyframes btnPulse {
+            0%,100% { opacity: 0.3; transform: scale(1); }
+            50%      { opacity: 0.9; transform: scale(1.04); }
+        }
+
+        /* Mobile: sidebar fica fora da tela à esquerda */
+        @media (max-width: 1023px) {
+            #classroom-sidebar {
+                position: fixed;
+                top: 0;
+                left: 0;
+                bottom: 0;
+                width: 88vw;
+                max-width: 360px;
+                z-index: 50;
+                transform: translateX(-110%);
+                overflow-y: auto;
+            }
+            #classroom-sidebar.open {
+                transform: translateX(0);
+                box-shadow: 4px 0 40px rgba(0,0,0,0.6);
+            }
+            /* Main ocupa largura total no mobile */
+            #classroom-main {
+                width: 100%;
+                flex: 1 1 auto;
+            }
+            /* Header mobile: reduz padding e oculta elementos verbosos */
+            .classroom-header-title { display: none; }
+            .classroom-header-course-name { font-size: 11px; max-width: 140px; }
+            .classroom-header-back-text { display: none; }
+            .classroom-header-user-name { display: none; }
+            /* Botões de ação de aula menores no mobile */
+            #btnPrevClass, #btnNextClass, #btnCompleteClass {
+                font-size: 10px;
+                padding: 8px 14px;
+            }
+        }
+
+        /* Tablet portrait: sidebar ainda como drawer mas um pouco maior */
+        @media (min-width: 640px) and (max-width: 1023px) {
+            #classroom-sidebar {
+                width: 340px;
+            }
+        }
+
+        /* Desktop: sidebar sempre visível e no fluxo normal */
+        @media (min-width: 1024px) {
+            #btn-sidebar-toggle { display: none; }
+            #classroom-sidebar {
+                position: relative;
+                transform: translateX(0) !important;
+                width: 25%;
+                min-width: 300px;
+                max-width: 380px;
+            }
+        }
     </style>
 </head>
 <body class="bg-background text-text font-body h-screen w-full overflow-hidden flex flex-col selection:bg-primary selection:text-background">
-    <!-- Header -->
-    <header class="h-16 w-full border-b border-white/5 flex items-center justify-between px-6 shrink-0 z-50 bg-background/50 backdrop-blur-md">
-        <div class="flex items-center gap-8">
-            <a href="index.php" class="flex items-center gap-3 font-display text-xl tracking-wider text-white hover:text-primary transition-all">
-                <img src="../assets/images/logo.png" alt="Logo GT Cursos" onerror="this.style.display='none'" class="h-9 w-auto object-contain bg-black/45 p-1 rounded border border-white/10 shadow-[0_0_10px_rgba(242,201,76,0.15)]">
-                <span class="hidden sm:inline">CURSOS <span class="text-primary">GT</span></span>
+
+    <!-- Backdrop do Sidebar Mobile -->
+    <div id="sidebar-backdrop" onclick="closeSidebar()"></div>
+
+    <!-- Header Responsivo -->
+    <header class="h-14 md:h-16 w-full border-b border-white/5 flex items-center justify-between px-3 md:px-6 shrink-0 z-40 bg-background/60 backdrop-blur-md">
+        <!-- Esquerda: logo + hambúrguer + título do curso -->
+        <div class="flex items-center gap-2 md:gap-6 min-w-0 flex-1">
+
+            <!-- Botão Hambúrguer (mobile/tablet) -->
+            <button id="btn-sidebar-toggle" onclick="toggleSidebar()" aria-label="Ver currículo"
+                class="lg:hidden flex items-center justify-center w-10 h-10 rounded-xl bg-primary/10 border border-primary/30 text-primary hover:bg-primary/20 transition-all flex-shrink-0">
+                <span class="material-symbols-outlined text-[22px]" id="sidebar-hamburger-icon">menu_book</span>
+            </button>
+
+            <!-- Logo + Nome da plataforma -->
+            <a href="index.php" class="flex items-center gap-2 font-display tracking-wider text-white hover:text-primary transition-all flex-shrink-0">
+                <img src="../assets/images/logo.png" alt="Logo GT Cursos" onerror="this.style.display='none'"
+                    class="h-8 md:h-9 w-auto object-contain bg-black/45 p-1 rounded border border-white/10 shadow-[0_0_10px_rgba(242,201,76,0.15)]">
+                <span class="classroom-header-title hidden md:inline text-base lg:text-xl">CURSOS <span class="text-primary">GT</span></span>
             </a>
-            <div class="h-6 w-[1px] bg-white/10"></div>
-            <h1 class="text-xs font-semibold tracking-wide text-text/80 uppercase truncate max-w-xs md:max-w-md">
+
+            <!-- Separador + Nome do Curso -->
+            <div class="hidden md:block h-6 w-[1px] bg-white/10 flex-shrink-0"></div>
+            <h1 class="classroom-header-course-name text-[10px] md:text-xs font-semibold tracking-wide text-text/70 uppercase truncate">
                 <?php echo htmlspecialchars($courseTitle, ENT_QUOTES, 'UTF-8'); ?>
             </h1>
         </div>
-        <div class="flex items-center gap-6">
-            <a href="index.php" class="flex items-center gap-2 text-xs font-semibold text-muted hover:text-primary transition-colors uppercase tracking-widest border border-white/10 hover:border-primary/40 rounded-full px-4 py-2">
-                <span class="material-symbols-outlined text-sm">exit_to_app</span>
-                Voltar ao Dashboard
+
+        <!-- Direita: voltar + avatar -->
+        <div class="flex items-center gap-2 md:gap-4 flex-shrink-0">
+            <!-- Botão Voltar -->
+            <a href="index.php"
+                class="flex items-center gap-1.5 text-[10px] md:text-xs font-semibold text-muted hover:text-primary transition-colors uppercase tracking-widest border border-white/10 hover:border-primary/40 rounded-full px-3 md:px-4 py-2">
+                <span class="material-symbols-outlined text-[16px] md:text-sm">exit_to_app</span>
+                <span class="classroom-header-back-text hidden sm:inline">Voltar</span>
             </a>
-            <div class="flex items-center gap-3 pl-4 border-l border-white/10">
-                <div class="text-right hidden sm:block">
-                    <p class="text-[11px] font-bold text-primary leading-none uppercase">Estudante</p>
-                    <p class="text-sm font-medium text-text"><?php echo htmlspecialchars($userName, ENT_QUOTES, 'UTF-8'); ?></p>
-                </div>
-                <div class="w-9 h-9 rounded-full bg-surface border border-gold-border overflow-hidden flex items-center justify-center">
-                    <span class="material-symbols-outlined text-primary text-[20px]">person</span>
+
+            <!-- Avatar e nome -->
+            <div class="flex items-center gap-2 pl-2 md:pl-4 border-l border-white/10">
+                <p class="classroom-header-user-name text-[11px] font-bold text-primary leading-none uppercase hidden lg:block"><?php echo htmlspecialchars($userName, ENT_QUOTES, 'UTF-8'); ?></p>
+                <div class="w-8 h-8 md:w-9 md:h-9 rounded-full bg-surface border border-gold-border overflow-hidden flex items-center justify-center">
+                    <span class="material-symbols-outlined text-primary text-[18px] md:text-[20px]">person</span>
                 </div>
             </div>
         </div>
     </header>
 
     <div class="flex flex-1 overflow-hidden">
-        <!-- Sidebar (Left) -->
-        <aside class="w-1/4 min-w-[320px] max-w-[400px] glass-sidebar flex flex-col h-full z-40">
+        <!-- Sidebar (Left) — Drawer no mobile, fixo no desktop -->
+        <aside id="classroom-sidebar" class="glass-sidebar flex flex-col h-full">
             <!-- Progress Section -->
             <div class="p-6 border-b border-white/5 space-y-4">
                 <div>
@@ -592,7 +707,7 @@ try {
         </aside>
 
         <!-- Main Content Area (Right) -->
-        <main class="flex-1 flex flex-col h-full overflow-y-auto custom-scrollbar bg-background">
+        <main id="classroom-main" class="flex-1 flex flex-col h-full overflow-y-auto custom-scrollbar bg-background">
             <!-- Video Player Section -->
             <section class="w-full bg-black">
                              <div class="video-aspect-ratio relative bg-surface rounded-2xl overflow-hidden border border-white/5 shadow-2xl">
@@ -1140,6 +1255,48 @@ try {
                 alert('Erro de conexão.');
             });
         }
+
+        // ================================================
+        // SIDEBAR DRAWER — CONTROLE MOBILE
+        // ================================================
+        const sidebarEl   = document.getElementById('classroom-sidebar');
+        const backdropEl  = document.getElementById('sidebar-backdrop');
+        const hamburgerIcon = document.getElementById('sidebar-hamburger-icon');
+
+        function openSidebar() {
+            sidebarEl.classList.add('open');
+            backdropEl.classList.add('active');
+            hamburgerIcon.textContent = 'close';
+            document.body.style.overflow = 'hidden'; // previne scroll da página
+        }
+
+        function closeSidebar() {
+            sidebarEl.classList.remove('open');
+            backdropEl.classList.remove('active');
+            hamburgerIcon.textContent = 'menu_book';
+            document.body.style.overflow = '';
+        }
+
+        function toggleSidebar() {
+            sidebarEl.classList.contains('open') ? closeSidebar() : openSidebar();
+        }
+
+        // Fechar ao pressionar Escape
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeSidebar();
+        });
+
+        // Fechar automaticamente ao ampliar para desktop
+        window.addEventListener('resize', () => {
+            if (window.innerWidth >= 1024) closeSidebar();
+        });
+
+        // Fechar sidebar ao clicar em uma aula no mobile
+        document.querySelectorAll('#classroom-sidebar a[href*="classroom.php"]').forEach(link => {
+            link.addEventListener('click', () => {
+                if (window.innerWidth < 1024) closeSidebar();
+            });
+        });
     </script>
 </body>
 </html>
