@@ -31,6 +31,63 @@ try {
     $courses = [];
     $categories = [];
 }
+
+// Fallback robusto caso o banco de dados esteja vazio ou sem os cursos novos
+if (empty($courses) || count($courses) < 4) {
+    $categories = [
+        ['id' => 1, 'name' => 'Segurança Eletrônica', 'slug' => 'seguranca-eletronica'],
+        ['id' => 2, 'name' => 'Automação Smart Home', 'slug' => 'automacao'],
+        ['id' => 3, 'name' => 'Infraestrutura de TI', 'slug' => 'infraestrutura-ti'],
+        ['id' => 4, 'name' => 'Assistência Técnica', 'slug' => 'assistencia-tecnica']
+    ];
+
+    $courses = [
+        [
+            'id' => 1,
+            'title' => 'Instalador de Sistemas de Segurança Eletrônica',
+            'description' => 'Domine a instalação, configuração e manutenção de centrais de alarme residenciais e comerciais, cercas elétricas, interfonia física e sistemas integrados de CFTV com monitoramento por aplicativo móvel.',
+            'thumbnail_url' => 'https://images.unsplash.com/photo-1557597774-9d273605dfa9?q=80&w=1470&auto=format&fit=crop',
+            'type' => 'hybrid',
+            'price' => 890.00,
+            'category_id' => 1,
+            'category_slug' => 'seguranca-eletronica',
+            'category_name' => 'Segurança Eletrônica'
+        ],
+        [
+            'id' => 2,
+            'title' => 'Especialista em Automação Residencial e Smart Home',
+            'description' => 'Aprenda a planejar e instalar sistemas inteligentes de automação residencial. Integração completa de módulos de iluminação, automação de portões, fechaduras eletrônicas inteligentes e sensores integrados com controle via Alexa ou Google Assistant.',
+            'thumbnail_url' => 'https://images.unsplash.com/photo-1558002038-1055907df827?q=80&w=1470&auto=format&fit=crop',
+            'type' => 'hybrid',
+            'price' => 990.00,
+            'category_id' => 2,
+            'category_slug' => 'automacao',
+            'category_name' => 'Automação Smart Home'
+        ],
+        [
+            'id' => 3,
+            'title' => 'Instalador de Redes, Cabeamento Estruturado e Infraestrutura de TI',
+            'description' => 'Capacitação teórica e prática para infraestrutura de TI corporativa e residencial. Aprenda organização de racks, crimpagem profissional RJ45/Keystones, roteadores Wi-Fi de alta performance, e cabeamento estruturado seguindo normas técnicas.',
+            'thumbnail_url' => 'https://images.unsplash.com/photo-1544256718-3bcf237f3974?q=80&w=1471&auto=format&fit=crop',
+            'type' => 'hybrid',
+            'price' => 1190.00,
+            'category_id' => 3,
+            'category_slug' => 'infraestrutura-ti',
+            'category_name' => 'Infraestrutura de TI'
+        ],
+        [
+            'id' => 4,
+            'title' => 'Manutenção de Hardware: PCs, Notebooks e Smartphones',
+            'description' => 'Torne-se um profissional completo em assistência técnica. Diagnóstico de falhas de hardware, troca de telas de celulares, limpeza e troca de pasta térmica, formatação, recuperação e otimização de sistemas operacionais.',
+            'thumbnail_url' => 'https://images.unsplash.com/photo-1597872200969-2b65d56bd16b?q=80&w=1470&auto=format&fit=crop',
+            'type' => 'online',
+            'price' => 790.00,
+            'category_id' => 4,
+            'category_slug' => 'assistencia-tecnica',
+            'category_name' => 'Assistência Técnica'
+        ]
+    ];
+}
 ?>
 <!DOCTYPE html>
 <html class="dark scroll-smooth" lang="pt-BR">
@@ -105,6 +162,64 @@ try {
                 linear-gradient(to right, rgba(242, 201, 76, 0.02) 1px, transparent 1px),
                 linear-gradient(to bottom, rgba(242, 201, 76, 0.02) 1px, transparent 1px);
         }
+
+        /* Animações de Entrada e Saída (Scroll Reveal) */
+        .reveal {
+            opacity: 0;
+            transform: translateY(40px) scale(0.97);
+            transition: all 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+            will-change: transform, opacity;
+        }
+        .reveal.active {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+
+        /* Delays Dinâmicos de Animação para Efeito Cascata */
+        .delay-100 { transition-delay: 100ms; }
+        .delay-200 { transition-delay: 200ms; }
+        .delay-300 { transition-delay: 300ms; }
+        .delay-400 { transition-delay: 400ms; }
+
+        /* Hover Premium nos Cards de Cursos */
+        .course-card {
+            transition: all 0.45s cubic-bezier(0.16, 1, 0.3, 1) !important;
+            border: 1px solid rgba(242, 201, 76, 0.04) !important;
+            position: relative;
+            overflow: hidden;
+        }
+        .course-card:hover {
+            transform: translateY(-10px) scale(1.02);
+            border-color: rgba(242, 201, 76, 0.25) !important;
+            box-shadow: 0 25px 50px -12px rgba(242, 201, 76, 0.08), 0 0 30px rgba(242, 201, 76, 0.04) !important;
+        }
+        /* Efeito de Reflexo de Brilho Dinâmico (Hover Light Sweep) */
+        .course-card::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 50%;
+            height: 100%;
+            background: linear-gradient(to right, transparent, rgba(242, 201, 76, 0.08), transparent);
+            transform: skewX(-25deg);
+            transition: 0.8s ease-in-out;
+            pointer-events: none;
+            z-index: 2;
+        }
+        .course-card:hover::after {
+            left: 130%;
+        }
+
+        /* Hover nos Cards de Diferenciais */
+        .diff-card {
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .diff-card:hover {
+            transform: translateY(-6px);
+            border-color: rgba(242, 201, 76, 0.2) !important;
+            box-shadow: 0 15px 30px rgba(242, 201, 76, 0.05);
+        }
     </style>
 </head>
 <body class="bg-background-dark text-text-main font-body antialiased overflow-x-hidden bg-grid-pattern">
@@ -163,12 +278,12 @@ try {
         <div class="relative w-full aspect-[1920/600] min-h-[260px] sm:min-h-[380px] md:min-h-[500px] lg:h-[600px] overflow-hidden">
             <!-- Slide 1 -->
             <div class="absolute inset-0 w-full h-full opacity-100 transition-opacity duration-1000 ease-in-out z-10" id="slide-0">
-                <img src="assets/imagens/banner1.jpg" alt="Treinamento Técnico GT Cursos - Banner 1" class="w-full h-full object-cover">
+                <img src="assets/imagens/banner1.png" alt="Treinamento Técnico GT Cursos - Banner 1" class="w-full h-full object-cover">
                 <div class="absolute inset-0 bg-gradient-to-t from-background-dark/95 via-transparent to-transparent"></div>
             </div>
             <!-- Slide 2 -->
             <div class="absolute inset-0 w-full h-full opacity-0 transition-opacity duration-1000 ease-in-out z-0" id="slide-1">
-                <img src="assets/imagens/banner2.jpg" alt="Capacitação Profissional GT Cursos - Banner 2" class="w-full h-full object-cover">
+                <img src="assets/imagens/banner2.png" alt="Capacitação Profissional GT Cursos - Banner 2" class="w-full h-full object-cover">
                 <div class="absolute inset-0 bg-gradient-to-t from-background-dark/95 via-transparent to-transparent"></div>
             </div>
 
@@ -196,7 +311,7 @@ try {
 
         <div class="max-w-[1440px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 items-center relative z-10">
             <!-- Texto Esquerda -->
-            <div class="lg:col-span-7 flex flex-col items-start text-left gap-6">
+            <div class="lg:col-span-7 flex flex-col items-start text-left gap-6 reveal">
                 <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-bold uppercase tracking-widest">
                     <span class="w-2 h-2 rounded-full bg-success animate-ping"></span>
                     Matrículas Abertas • Canal de Talentos
@@ -234,7 +349,7 @@ try {
             </div>
 
             <!-- Card/Imagem Direita (Hero) -->
-            <div class="lg:col-span-5 relative">
+            <div class="lg:col-span-5 relative reveal delay-200">
                 <div class="relative w-full aspect-[4/5] rounded-2xl overflow-hidden border border-primary/20 shadow-glow bg-cover bg-center group" style="background-image: linear-gradient(to top, rgba(6, 6, 8, 0.9) 0%, rgba(6, 6, 8, 0.3) 50%, rgba(6, 6, 8, 0) 100%), url('https://images.unsplash.com/photo-1557597774-9d273605dfa9?q=80&w=1470&auto=format&fit=crop');">
                     <!-- Overlay de Scanner Tático -->
                     <div class="absolute inset-0 border border-primary/10 rounded-2xl pointer-events-none"></div>
@@ -254,15 +369,15 @@ try {
     <!-- 3. Diferenciais (Seção 2) -->
     <section id="diferenciais" class="px-6 md:px-16 py-20 bg-surface-dark/40 border-b border-border-color relative">
         <div class="max-w-[1440px] mx-auto">
-            <div class="text-center flex flex-col items-center gap-4 mb-16">
+            <div class="text-center flex flex-col items-center gap-4 mb-16 reveal">
                 <span class="text-primary text-xs font-bold uppercase tracking-widest font-heading">POR QUE ESCOLHER A GT?</span>
                 <h2 class="text-3xl md:text-5xl font-heading font-bold uppercase tracking-tight">OS PILARES DO NOSSO TREINAMENTO</h2>
-                <p class="text-muted text-base md:text-lg max-w-2xl">Desenvolvemos uma estrutura de ensino voltada para a prática absoluta, com tecnologias que impulsionam o seu potencial de ação.</p>
+                <p class="text-muted text-base md:text-lg max-w-2xl">Desenvolvemos uma estrutura de ensino voltada para a prática absoluta, com tecnologias que impulsionam o seu potential de ação.</p>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
                 <!-- Diferencial 1 -->
-                <div class="glass-panel p-8 rounded-xl flex flex-col gap-4 hover:border-primary/30 transition-all duration-300 hover:-translate-y-1">
+                <div class="glass-panel diff-card p-8 rounded-xl flex flex-col gap-4 reveal delay-100">
                     <div class="h-12 w-12 rounded bg-primary/10 border border-primary/20 flex items-center justify-center text-primary text-glow">
                         <span class="material-symbols-outlined text-2xl font-bold">school</span>
                     </div>
@@ -271,7 +386,7 @@ try {
                 </div>
                 
                 <!-- Diferencial 2 -->
-                <div class="glass-panel p-8 rounded-xl flex flex-col gap-4 hover:border-primary/30 transition-all duration-300 hover:-translate-y-1">
+                <div class="glass-panel diff-card p-8 rounded-xl flex flex-col gap-4 reveal delay-200">
                     <div class="h-12 w-12 rounded bg-primary/10 border border-primary/20 flex items-center justify-center text-primary text-glow">
                         <span class="material-symbols-outlined text-2xl font-bold">workspace_premium</span>
                     </div>
@@ -280,7 +395,7 @@ try {
                 </div>
 
                 <!-- Diferencial 3 -->
-                <div class="glass-panel p-8 rounded-xl flex flex-col gap-4 hover:border-primary/30 transition-all duration-300 hover:-translate-y-1">
+                <div class="glass-panel diff-card p-8 rounded-xl flex flex-col gap-4 reveal delay-300">
                     <div class="h-12 w-12 rounded bg-primary/10 border border-primary/20 flex items-center justify-center text-primary text-glow">
                         <span class="material-symbols-outlined text-2xl font-bold">groups</span>
                     </div>
@@ -289,7 +404,7 @@ try {
                 </div>
 
                 <!-- Diferencial 4 -->
-                <div class="glass-panel p-8 rounded-xl flex flex-col gap-4 hover:border-primary/30 transition-all duration-300 hover:-translate-y-1">
+                <div class="glass-panel diff-card p-8 rounded-xl flex flex-col gap-4 reveal delay-400">
                     <div class="h-12 w-12 rounded bg-primary/10 border border-primary/20 flex items-center justify-center text-primary text-glow">
                         <span class="material-symbols-outlined text-2xl font-bold">support_agent</span>
                     </div>
@@ -303,7 +418,7 @@ try {
     <!-- 4. Catálogo de Cursos (Seção 3) -->
     <section id="catalogo" class="px-6 md:px-16 py-20 border-b border-border-color">
         <div class="max-w-[1440px] mx-auto">
-            <div class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
+            <div class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12 reveal">
                 <div class="flex flex-col gap-4">
                     <span class="text-primary text-xs font-bold uppercase tracking-widest font-heading">NOSSOS TREINAMENTOS</span>
                     <h2 class="text-3xl md:text-5xl font-heading font-bold uppercase tracking-tight">PROGRAMAS DE FORMAÇÃO DISPONÍVEIS</h2>
@@ -313,7 +428,7 @@ try {
 
             <!-- Abas de Filtros de Categorias (Obsidian Gold) -->
             <?php if (!empty($categories)): ?>
-                <div class="flex flex-wrap items-center justify-center gap-3 mb-10 border-b border-white/5 pb-8">
+                <div class="flex flex-wrap items-center justify-center gap-3 mb-10 border-b border-white/5 pb-8 reveal delay-100">
                     <button onclick="filterCategory('all', this)" class="px-5 py-2.5 rounded-full text-xs font-bold uppercase tracking-wider bg-primary text-background-dark shadow-glow-strong hover:bg-gold-light hover:shadow-glow transition-all duration-300 transform active:scale-95 tab-btn active-tab">
                         Todos
                     </button>
@@ -328,8 +443,13 @@ try {
             <!-- Grid de Cursos Dinâmicos -->
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8" id="coursesGridContainer">
                 <?php if (!empty($courses)): ?>
+                    <?php $courseIndex = 0; ?>
                     <?php foreach ($courses as $course): ?>
-                        <div data-category-slug="<?php echo htmlspecialchars($course['category_slug'] ?? 'unassigned', ENT_QUOTES, 'UTF-8'); ?>" class="course-card glass-panel rounded-xl overflow-hidden flex flex-col justify-between group hover:border-primary/20 hover:shadow-glow transition-all duration-500 transform ease-in-out opacity-100 scale-100">
+                        <?php 
+                            $delayClass = 'delay-' . (($courseIndex % 3) * 100); 
+                            $courseIndex++;
+                        ?>
+                        <div data-category-slug="<?php echo htmlspecialchars($course['category_slug'] ?? 'unassigned', ENT_QUOTES, 'UTF-8'); ?>" class="course-card glass-panel rounded-xl overflow-hidden flex flex-col justify-between group hover:border-primary/20 hover:shadow-glow transition-all duration-500 transform ease-in-out opacity-100 scale-100 reveal <?php echo $delayClass; ?>">
                             <!-- Thumbnail Area -->
                             <div class="relative aspect-video w-full overflow-hidden bg-cover bg-center border-b border-white/5" style="background-image: url('<?php echo $course['thumbnail_url'] ?? 'https://lh3.googleusercontent.com/aida-public/AB6AXuCOZxoS-KaOHz2AQP_l-4pCnAOU55dDkFGrPU1UWvoYfvguKBjWVSTpGWkrosgpc5tAulMSWltO9FEY_pPGWgXIfJSk3nDGa5Sln93zKm49t0cfx3Rt41EpQmF0oZA7nVtIAsObChnhjSwTCqnSr2bGJfedSqdorO8A6LPiwU6Bzh57MN4fFHkKkFqbp5n1YBlJoOQrhpxl6yUFhz_gymvmJPCHnFCBE487_7b-yyGcSpGHu_NNTksWusxyIRG87m9YbpHDk5klzSnG'; ?>');">
                                 <div class="absolute inset-0 bg-gradient-to-t from-background-dark/95 to-transparent opacity-60"></div>
@@ -387,7 +507,7 @@ try {
     <!-- 5. Metodologia Híbrida (Seção 4) -->
     <section id="metodo" class="px-6 md:px-16 py-20 bg-surface-dark/40 border-b border-border-color relative">
         <div class="max-w-[1440px] mx-auto">
-            <div class="text-center flex flex-col items-center gap-4 mb-16">
+            <div class="text-center flex flex-col items-center gap-4 mb-16 reveal">
                 <span class="text-primary text-xs font-bold uppercase tracking-widest font-heading">COMO FUNCIONA</span>
                 <h2 class="text-3xl md:text-5xl font-heading font-bold uppercase tracking-tight">O CAMINHO DA EXCELÊNCIA OPERACIONAL</h2>
                 <p class="text-muted text-base md:text-lg max-w-2xl">Entenda a nossa metodologia de alta performance, projetada para consolidar o aprendizado em nível profissional.</p>
@@ -396,7 +516,7 @@ try {
             <!-- Steps Grid -->
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-12 relative">
                 <!-- Step 1 -->
-                <div class="flex flex-col gap-4 items-center text-center relative z-10">
+                <div class="flex flex-col gap-4 items-center text-center relative z-10 reveal delay-100">
                     <div class="h-16 w-16 rounded-full bg-primary/10 border-2 border-primary/20 flex items-center justify-center text-primary font-heading text-2xl font-bold shadow-glow">
                         01
                     </div>
@@ -405,7 +525,7 @@ try {
                 </div>
 
                 <!-- Step 2 -->
-                <div class="flex flex-col gap-4 items-center text-center relative z-10">
+                <div class="flex flex-col gap-4 items-center text-center relative z-10 reveal delay-200">
                     <div class="h-16 w-16 rounded-full bg-primary/10 border-2 border-primary/20 flex items-center justify-center text-primary font-heading text-2xl font-bold shadow-glow">
                         02
                     </div>
@@ -414,7 +534,7 @@ try {
                 </div>
 
                 <!-- Step 3 -->
-                <div class="flex flex-col gap-4 items-center text-center relative z-10">
+                <div class="flex flex-col gap-4 items-center text-center relative z-10 reveal delay-300">
                     <div class="h-16 w-16 rounded-full bg-primary/10 border-2 border-primary/20 flex items-center justify-center text-primary font-heading text-2xl font-bold shadow-glow">
                         03
                     </div>
@@ -427,7 +547,7 @@ try {
 
     <!-- 6. Estatísticas & Impacto (Seção 5) -->
     <section class="px-6 md:px-16 py-20 border-b border-border-color">
-        <div class="max-w-[1440px] mx-auto glass-panel p-10 md:p-16 rounded-2xl relative overflow-hidden">
+        <div class="max-w-[1440px] mx-auto glass-panel p-10 md:p-16 rounded-2xl relative overflow-hidden reveal">
             <!-- Glow do Card -->
             <div class="absolute -top-24 -right-24 w-80 h-80 rounded-full bg-primary/5 blur-3xl pointer-events-none"></div>
 
@@ -446,16 +566,10 @@ try {
                 </div>
                 <div class="flex flex-col gap-2 py-4 lg:py-0">
                     <span class="text-4xl md:text-5xl font-heading font-bold text-primary text-glow">+25</span>
-                    <span class="text-xs text-muted uppercase tracking-wider font-semibold">Cidades Atendidas</span>
-                </div>
-            </div>
-        </div>
-    </section>
-
     <!-- 7. Depoimentos de Elite (Seção 6) -->
     <section class="px-6 md:px-16 py-20 bg-surface-dark/40 border-b border-border-color">
         <div class="max-w-[1440px] mx-auto">
-            <div class="text-center flex flex-col items-center gap-4 mb-16">
+            <div class="text-center flex flex-col items-center gap-4 mb-16 reveal">
                 <span class="text-primary text-xs font-bold uppercase tracking-widest font-heading">DEPOIMENTOS</span>
                 <h2 class="text-3xl md:text-5xl font-heading font-bold uppercase tracking-tight">O QUE DIZEM OS NOSSOS OPERADORES</h2>
                 <p class="text-muted text-base md:text-lg max-w-2xl">Confira a avaliação de profissionais que passaram pelo nosso treinamento de alto impacto e transformaram suas carreiras.</p>
@@ -463,7 +577,7 @@ try {
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
                 <!-- Depoimento 1 -->
-                <div class="glass-panel p-8 rounded-xl flex flex-col justify-between gap-6">
+                <div class="glass-panel diff-card p-8 rounded-xl flex flex-col justify-between gap-6 reveal delay-100">
                     <div class="flex flex-col gap-4">
                         <div class="flex text-primary gap-1">
                             <span class="material-symbols-outlined text-[18px]" style="font-variation-settings: 'FILL' 1;">star</span>
@@ -486,7 +600,7 @@ try {
                 </div>
 
                 <!-- Depoimento 2 -->
-                <div class="glass-panel p-8 rounded-xl flex flex-col justify-between gap-6">
+                <div class="glass-panel diff-card p-8 rounded-xl flex flex-col justify-between gap-6 reveal delay-200">
                     <div class="flex flex-col gap-4">
                         <div class="flex text-primary gap-1">
                             <span class="material-symbols-outlined text-[18px]" style="font-variation-settings: 'FILL' 1;">star</span>
@@ -509,7 +623,7 @@ try {
                 </div>
 
                 <!-- Depoimento 3 -->
-                <div class="glass-panel p-8 rounded-xl flex flex-col justify-between gap-6">
+                <div class="glass-panel diff-card p-8 rounded-xl flex flex-col justify-between gap-6 reveal delay-300">
                     <div class="flex flex-col gap-4">
                         <div class="flex text-primary gap-1">
                             <span class="material-symbols-outlined text-[18px]" style="font-variation-settings: 'FILL' 1;">star</span>
@@ -537,14 +651,14 @@ try {
     <!-- 8. FAQ Accordion (Seção 7) -->
     <section id="faq" class="px-6 md:px-16 py-20 border-b border-border-color">
         <div class="max-w-[800px] mx-auto">
-            <div class="text-center flex flex-col items-center gap-4 mb-16">
+            <div class="text-center flex flex-col items-center gap-4 mb-16 reveal">
                 <span class="text-primary text-xs font-bold uppercase tracking-widest font-heading">DÚVIDAS FREQUENTES</span>
                 <h2 class="text-3xl md:text-4xl font-heading font-bold uppercase tracking-tight text-center">PERGUNTAS FREQUENTES</h2>
             </div>
 
             <div class="flex flex-col gap-4">
                 <!-- FAQ Item 1 -->
-                <div class="glass-panel rounded-lg overflow-hidden transition-all duration-300">
+                <div class="glass-panel rounded-lg overflow-hidden transition-all duration-300 reveal delay-100">
                     <button class="w-full px-6 py-5 flex items-center justify-between text-left focus:outline-none" onclick="toggleFaq(this)">
                         <span class="text-base font-bold uppercase tracking-wide text-text-main font-heading">Como funciona a parceria da GT Cursos com a GT Serv Tec?</span>
                         <span class="material-symbols-outlined text-primary transition-transform duration-300">expand_more</span>
@@ -557,7 +671,7 @@ try {
                 </div>
 
                 <!-- FAQ Item 2 -->
-                <div class="glass-panel rounded-lg overflow-hidden transition-all duration-300">
+                <div class="glass-panel rounded-lg overflow-hidden transition-all duration-300 reveal delay-200">
                     <button class="w-full px-6 py-5 flex items-center justify-between text-left focus:outline-none" onclick="toggleFaq(this)">
                         <span class="text-base font-bold uppercase tracking-wide text-text-main font-heading">Como funciona a parte prática presencial nos treinamentos híbridos?</span>
                         <span class="material-symbols-outlined text-primary transition-transform duration-300">expand_more</span>
@@ -570,7 +684,7 @@ try {
                 </div>
 
                 <!-- FAQ Item 3 -->
-                <div class="glass-panel rounded-lg overflow-hidden transition-all duration-300">
+                <div class="glass-panel rounded-lg overflow-hidden transition-all duration-300 reveal delay-300">
                     <button class="w-full px-6 py-5 flex items-center justify-between text-left focus:outline-none" onclick="toggleFaq(this)">
                         <span class="text-base font-bold uppercase tracking-wide text-text-main font-heading">Os certificados possuem validação oficial?</span>
                         <span class="material-symbols-outlined text-primary transition-transform duration-300">expand_more</span>
@@ -583,7 +697,7 @@ try {
                 </div>
 
                 <!-- FAQ Item 4 -->
-                <div class="glass-panel rounded-lg overflow-hidden transition-all duration-300">
+                <div class="glass-panel rounded-lg overflow-hidden transition-all duration-300 reveal delay-400">
                     <button class="w-full px-6 py-5 flex items-center justify-between text-left focus:outline-none" onclick="toggleFaq(this)">
                         <span class="text-base font-bold uppercase tracking-wide text-text-main font-heading">Quais são as formas de pagamento para as matrículas?</span>
                         <span class="material-symbols-outlined text-primary transition-transform duration-300">expand_more</span>
@@ -747,6 +861,41 @@ try {
             showSlide(index);
             carouselInterval = setInterval(nextSlide, 3500);
         }
+
+        // Efeito interativo que acompanha o cursor do mouse (Obsidian Gold Glow Grid)
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('.course-card').forEach(card => {
+                card.addEventListener('mousemove', e => {
+                    const rect = card.getBoundingClientRect();
+                    const x = e.clientX - rect.left;
+                    const y = e.clientY - rect.top;
+                    card.style.setProperty('--mouse-x', `${x}px`);
+                    card.style.setProperty('--mouse-y', `${y}px`);
+                });
+            });
+
+            // Intersection Observer para Animações de Entrada/Saída ao rolar a página
+            const revealOptions = {
+                root: null,
+                rootMargin: '0px -10px -50px -10px',
+                threshold: 0.1
+            };
+
+            const revealObserver = new IntersectionObserver((entries, observer) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('active');
+                    } else {
+                        // Permite animar de novo se sair da tela (efeito entrada/saída contínuo)
+                        entry.target.classList.remove('active');
+                    }
+                });
+            }, revealOptions);
+
+            document.querySelectorAll('.reveal').forEach(el => {
+                revealObserver.observe(el);
+            });
+        });
     </script>
 
     <!-- Modal: Termos de Serviço -->

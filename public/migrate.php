@@ -69,18 +69,17 @@ try {
     $db->exec($createCategoriesTable);
     echo "<p class='text-xs text-emerald-400 font-medium ml-4'>✓ Tabela 'categories' criada ou verificada com sucesso.</p>";
 
-    // Inserção das sementes
-    $countStmt = $db->query("SELECT COUNT(*) FROM `categories`");
-    if ($countStmt->fetchColumn() == 0) {
-        $insertSeeds = "
-            INSERT INTO `categories` (`name`, `slug`, `sort_order`) VALUES 
-            ('Segurança de Elite', 'seguranca-de-elite', 1),
-            ('Tecnologia & Dev', 'tecnologia-dev', 2),
-            ('Negócios & Marketing', 'negocios-marketing', 3)
-        ";
-        $db->exec($insertSeeds);
-        echo "<p class='text-xs text-emerald-400 font-medium ml-4'>✓ Categorias padrão (Segurança de Elite, Tecnologia, Negócios) importadas.</p>";
-    }
+    // Inserção das sementes de Categorias técnicas (GT Serv Tec)
+    $categoriesSeeds = "
+        INSERT INTO `categories` (`id`, `name`, `slug`, `sort_order`) VALUES 
+        (1, 'Segurança Eletrônica', 'seguranca-eletronica', 1),
+        (2, 'Automação Smart Home', 'automacao', 2),
+        (3, 'Infraestrutura de TI', 'infraestrutura-ti', 3),
+        (4, 'Assistência Técnica', 'assistencia-tecnica', 4)
+        ON DUPLICATE KEY UPDATE `name` = VALUES(`name`), `slug` = VALUES(`slug`), `sort_order` = VALUES(`sort_order`);
+    ";
+    $db->exec($categoriesSeeds);
+    echo "<p class='text-xs text-emerald-400 font-medium ml-4'>✓ Categorias técnicas sincronizadas com sucesso (Segurança, Automação, Redes, Hardware).</p>";
 
     // Coluna category_id na tabela de cursos
     $columnsStmt = $db->query("DESCRIBE `courses`");
@@ -96,14 +95,29 @@ try {
         ";
         $db->exec($alterCourses);
         echo "<p class='text-xs text-emerald-400 font-medium ml-4'>✓ Coluna 'category_id' e relacionamento FOREIGN KEY adicionados à tabela 'courses'.</p>";
-
-        // Vincula cursos iniciais aos IDs criados
-        $db->exec("UPDATE `courses` SET `category_id` = 1 WHERE `id` = 1");
-        $db->exec("UPDATE `courses` SET `category_id` = 2 WHERE `id` = 2");
-        echo "<p class='text-xs text-emerald-400 font-medium ml-4'>✓ Cursos de exemplo vinculados automaticamente.</p>";
     } else {
         echo "<p class='text-xs text-slate-400 ml-4'>• Relacionamento 'category_id' em 'courses' já existe.</p>";
     }
+
+    // Inserção/Atualização dos Cursos correspondentes aos serviços da GT Serv Tec (Segurança de Dados)
+    $coursesSeeds = "
+        INSERT INTO `courses` (id, title, description, thumbnail_url, type, price, category_id, available_hours, status) VALUES 
+        (1, 'Instalador de Sistemas de Segurança Eletrônica', 'Domine a instalação, configuração e manutenção de centrais de alarme residenciais e comerciais, cercas elétricas, interfonia física e sistemas integrados de CFTV com monitoramento por aplicativo móvel.', 'https://images.unsplash.com/photo-1557597774-9d273605dfa9?q=80&w=1470&auto=format&fit=crop', 'hybrid', 890.00, 1, '08:00 às 10:00,10:00 às 12:00,14:00 às 16:00,19:00 às 21:00', 'active'),
+        (2, 'Especialista em Automação Residencial e Smart Home', 'Aprenda a planejar e instalar sistemas inteligentes de automação residencial. Integração completa de módulos de iluminação, automação de portões, fechaduras eletrônicas inteligentes e sensores integrados com controle via Alexa ou Google Assistant.', 'https://images.unsplash.com/photo-1558002038-1055907df827?q=80&w=1470&auto=format&fit=crop', 'hybrid', 990.00, 2, '08:00 às 10:00,14:00 às 16:00,19:00 às 21:00', 'active'),
+        (3, 'Instalador de Redes, Cabeamento Estruturado e Infraestrutura de TI', 'Capacitação teórica e prática para infraestrutura de TI corporativa e residencial. Aprenda organização de racks, crimpagem profissional RJ45/Keystones, roteadores Wi-Fi de alta performance, e cabeamento estruturado seguindo normas técnicas.', 'https://images.unsplash.com/photo-1544256718-3bcf237f3974?q=80&w=1471&auto=format&fit=crop', 'hybrid', 1190.00, 3, '10:00 às 12:00,14:00 às 16:00,19:00 às 21:00', 'active'),
+        (4, 'Manutenção de Hardware: PCs, Notebooks e Smartphones', 'Torne-se um profissional completo em assistência técnica. Diagnóstico de falhas de hardware, troca de telas de celulares, limpeza e troca de pasta térmica, formatação, recuperação e otimização de sistemas operacionais.', 'https://images.unsplash.com/photo-1597872200969-2b65d56bd16b?q=80&w=1470&auto=format&fit=crop', 'online', 790.00, 4, NULL, 'active')
+        ON DUPLICATE KEY UPDATE 
+            `title` = VALUES(`title`),
+            `description` = VALUES(`description`),
+            `thumbnail_url` = VALUES(`thumbnail_url`),
+            `type` = VALUES(`type`),
+            `price` = VALUES(`price`),
+            `category_id` = VALUES(`category_id`),
+            `available_hours` = VALUES(`available_hours`),
+            `status` = VALUES(`status`);
+    ";
+    $db->exec($coursesSeeds);
+    echo "<p class='text-xs text-emerald-400 font-medium ml-4'>✓ Catálogo de cursos sincronizado e atualizado sem afetar matrículas existentes.</p>";
     echo "</div>";
 
     // 2. Executa a migração de quizzes/gamificação
