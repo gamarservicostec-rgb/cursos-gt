@@ -88,6 +88,46 @@ if (empty($courses) || count($courses) < 4) {
         ]
     ];
 }
+
+// Lógica de Detecção Inteligente e Fallback de Arquivos de Banner
+$banner1 = 'assets/images/banner1.png';
+$banner2 = 'assets/images/banner2.png';
+
+$possiblePaths1 = [
+    'assets/images/banner1.png',
+    'assets/images/banner1.jpg',
+    'assets/imagens/banner1.png',
+    'assets/imagens/banner1.jpg',
+    'assets/images/banner1.PNG',
+    'assets/images/banner1.JPG',
+    'assets/imagens/banner1.PNG',
+    'assets/imagens/banner1.JPG'
+];
+
+$possiblePaths2 = [
+    'assets/images/banner2.png',
+    'assets/images/banner2.jpg',
+    'assets/imagens/banner2.png',
+    'assets/imagens/banner2.jpg',
+    'assets/images/banner2.PNG',
+    'assets/images/banner2.JPG',
+    'assets/imagens/banner2.PNG',
+    'assets/imagens/banner2.JPG'
+];
+
+foreach ($possiblePaths1 as $path) {
+    if (file_exists(__DIR__ . '/' . $path)) {
+        $banner1 = $path;
+        break;
+    }
+}
+
+foreach ($possiblePaths2 as $path) {
+    if (file_exists(__DIR__ . '/' . $path)) {
+        $banner2 = $path;
+        break;
+    }
+}
 ?>
 <!DOCTYPE html>
 <html class="dark scroll-smooth" lang="pt-BR">
@@ -226,7 +266,7 @@ if (empty($courses) || count($courses) < 4) {
     
     <!-- 1. Header (Navegação) -->
     <header class="w-full border-b border-solid border-border-color px-6 md:px-16 py-4 glass-panel sticky top-0 z-50 transition-all duration-300">
-        <div class="max-w-[1440px] mx-auto flex items-center justify-between">
+        <div class="max-w-[1440px] mx-auto flex items-center justify-between relative">
             <div class="flex items-center gap-3 text-text-main">
                 <img src="assets/images/logo.png" alt="Logo GT Cursos" class="h-10 w-auto object-contain">
                 <span class="font-heading text-2xl font-bold tracking-wider uppercase hidden sm:inline">
@@ -234,7 +274,7 @@ if (empty($courses) || count($courses) < 4) {
                 </span>
             </div>
             
-            <nav class="hidden md:flex items-center gap-8 text-sm font-semibold tracking-wider uppercase">
+            <nav class="hidden md:flex absolute left-1/2 -translate-x-1/2 items-center gap-8 text-sm font-semibold tracking-wider uppercase">
                 <a href="#inicio" class="hover:text-primary transition-colors">Início</a>
                 <a href="#diferenciais" class="hover:text-primary transition-colors">Diferenciais</a>
                 <a href="#catalogo" class="hover:text-primary transition-colors">Cursos</a>
@@ -242,7 +282,7 @@ if (empty($courses) || count($courses) < 4) {
                 <a href="#faq" class="hover:text-primary transition-colors">FAQ</a>
             </nav>
 
-            <div class="flex flex-1 justify-end items-center gap-6">
+            <div class="flex items-center gap-6">
                 <!-- Botão do WhatsApp -->
                 <a href="https://wa.me/5511946721741" target="_blank" class="flex items-center justify-center rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 p-2.5 hover:bg-emerald-500 hover:text-background-dark transition-all duration-300 hover:shadow-[0_0_15px_rgba(16,185,129,0.3)]" title="Falar no WhatsApp">
                     <svg class="h-5 w-5 fill-current" viewBox="0 0 24 24">
@@ -278,12 +318,12 @@ if (empty($courses) || count($courses) < 4) {
         <div class="relative w-full aspect-[1920/600] min-h-[260px] sm:min-h-[380px] md:min-h-[500px] lg:h-[600px] overflow-hidden">
             <!-- Slide 1 -->
             <div class="absolute inset-0 w-full h-full opacity-100 transition-opacity duration-1000 ease-in-out z-10" id="slide-0">
-                <img src="assets/imagens/banner1.png" alt="Treinamento Técnico GT Cursos - Banner 1" class="w-full h-full object-cover">
+                <img src="<?php echo $banner1; ?>" alt="Treinamento Técnico GT Cursos - Banner 1" class="w-full h-full object-cover">
                 <div class="absolute inset-0 bg-gradient-to-t from-background-dark/95 via-transparent to-transparent"></div>
             </div>
             <!-- Slide 2 -->
             <div class="absolute inset-0 w-full h-full opacity-0 transition-opacity duration-1000 ease-in-out z-0" id="slide-1">
-                <img src="assets/imagens/banner2.png" alt="Capacitação Profissional GT Cursos - Banner 2" class="w-full h-full object-cover">
+                <img src="<?php echo $banner2; ?>" alt="Capacitação Profissional GT Cursos - Banner 2" class="w-full h-full object-cover">
                 <div class="absolute inset-0 bg-gradient-to-t from-background-dark/95 via-transparent to-transparent"></div>
             </div>
 
