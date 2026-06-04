@@ -653,7 +653,11 @@ foreach ($possiblePaths2 as $path) {
                     </button>
                     <div class="max-h-0 overflow-hidden transition-all duration-300 ease-in-out">
                         <p class="px-6 pb-6 text-sm text-muted leading-relaxed">
-                            A GT Cursos foi idealizada para preparar e capacitar técnicos de elite para atender diretamente as demandas da GT Serv Tec. Preparamos você nas instalações e configurações do dia a dia para que você possa participar do nosso banco de talentos prioritário e integrar nossa equipe de profissionais em campo.
+                            A GT Cursos foi idealizada para preparar e capacitar técnicos de elite para atender
+                             diretamente as demandas da GT Serv Tec. Preparamos você nas 
+                             instalações e configurações do dia a dia para que você possa 
+                             participar do nosso banco de talentos prioritário e integrar 
+                             nossa equipe de profissionais em campo.
                         </p>
                     </div>
                 </div>
@@ -666,7 +670,10 @@ foreach ($possiblePaths2 as $path) {
                     </button>
                     <div class="max-h-0 overflow-hidden transition-all duration-300 ease-in-out">
                         <p class="px-6 pb-6 text-sm text-muted leading-relaxed">
-                            Após absorver a base teórica e de normas no ambiente online, você agenda as suas aulas práticas presenciais. Nessas aulas, você manipula, monta e configura centrais de alarme, câmeras CFTV, racks e roteadores corporativos no nosso centro técnico local sob a supervisão de instrutores especializados.
+                            Os alunos que optarem por fazer parte de nossas turmas na modalidade híbrida
+                            vão assistir às aulas online. Porém, nas dependências de nossa escola, esses
+                            alunos serão observados quanto ao compromisso, presença e aplicação nas aulas, 
+                            para futuramente fazerem parte do grupo de prioritários para possíveis contratações.
                         </p>
                     </div>
                 </div>
