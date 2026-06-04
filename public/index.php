@@ -333,7 +333,7 @@ foreach ($possiblePaths2 as $path) {
 
             <!-- Card/Imagem Direita (Hero) -->
             <div class="lg:col-span-5 relative reveal delay-200">
-                <div class="relative w-full aspect-[4/5] rounded-2xl overflow-hidden border border-primary/20 shadow-glow bg-cover bg-center group" style="background-image: linear-gradient(to top, rgba(6, 6, 8, 0.9) 0%, rgba(6, 6, 8, 0.3) 50%, rgba(6, 6, 8, 0) 100%), url('https://images.unsplash.com/photo-1557597774-9d273605dfa9?q=80&w=1470&auto=format&fit=crop');">
+                <div class="relative w-full aspect-[4/5] rounded-2xl overflow-hidden border border-primary/20 shadow-glow bg-cover bg-center group" style="background-image: linear-gradient(to top, rgba(6, 6, 8, 0.9) 0%, rgba(6, 6, 8, 0.3) 50%, rgba(6, 6, 8, 0) 100%), url('assets/images/hero_processo_seletivo.png');">
                     <!-- Overlay de Scanner Tático -->
                     <div class="absolute inset-0 border border-primary/10 rounded-2xl pointer-events-none"></div>
                     <div class="absolute top-4 left-4 inline-flex items-center gap-1.5 px-3 py-1 rounded bg-black/80 backdrop-blur border border-white/10 text-[10px] text-primary uppercase font-bold tracking-widest">
@@ -424,7 +424,32 @@ foreach ($possiblePaths2 as $path) {
             <?php endif; ?>
 
             <!-- Grid de Cursos Dinâmicos -->
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8" id="coursesGridContainer">
+            <?php
+            $coursesCount = !empty($courses) ? count($courses) : 0;
+            $containerClass = "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 justify-center";
+            $cardClass = "w-full";
+
+            if ($coursesCount === 1) {
+                $containerClass = "flex justify-center";
+                $cardClass = "w-full max-w-[380px]";
+            } elseif ($coursesCount === 2) {
+                $containerClass = "flex flex-wrap justify-center gap-8";
+                $cardClass = "w-full md:w-[calc(50%-16px)] max-w-[380px]";
+            } elseif ($coursesCount === 3) {
+                $containerClass = "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 justify-center";
+                $cardClass = "w-full";
+            } elseif ($coursesCount === 4) {
+                $containerClass = "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 max-w-[800px] mx-auto gap-8 justify-center";
+                $cardClass = "w-full";
+            } elseif ($coursesCount === 5) {
+                $containerClass = "flex flex-wrap justify-center gap-8";
+                $cardClass = "w-full md:w-[calc(50%-16px)] lg:w-[calc(33.333%-22px)] max-w-[380px]";
+            } elseif ($coursesCount === 6) {
+                $containerClass = "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 justify-center";
+                $cardClass = "w-full";
+            }
+            ?>
+            <div class="<?php echo $containerClass; ?>" id="coursesGridContainer">
                 <?php if (!empty($courses)): ?>
                     <?php $courseIndex = 0; ?>
                     <?php foreach ($courses as $course): ?>
@@ -432,7 +457,7 @@ foreach ($possiblePaths2 as $path) {
                             $delayClass = 'delay-' . (($courseIndex % 3) * 100); 
                             $courseIndex++;
                         ?>
-                        <div data-category-slug="<?php echo htmlspecialchars($course['category_slug'] ?? 'unassigned', ENT_QUOTES, 'UTF-8'); ?>" class="course-card glass-panel rounded-xl overflow-hidden flex flex-col justify-between group hover:border-primary/20 hover:shadow-glow transition-all duration-500 transform ease-in-out opacity-100 scale-100 reveal <?php echo $delayClass; ?>">
+                        <div data-category-slug="<?php echo htmlspecialchars($course['category_slug'] ?? 'unassigned', ENT_QUOTES, 'UTF-8'); ?>" class="course-card glass-panel rounded-xl overflow-hidden flex flex-col justify-between group hover:border-primary/20 hover:shadow-glow transition-all duration-500 transform ease-in-out opacity-100 scale-100 reveal <?php echo $delayClass; ?> <?php echo $cardClass; ?>">
                             <!-- Thumbnail Area -->
                             <div class="relative aspect-video w-full overflow-hidden bg-cover bg-center border-b border-white/5" style="background-image: url('<?php echo $course['thumbnail_url'] ?? 'https://lh3.googleusercontent.com/aida-public/AB6AXuCOZxoS-KaOHz2AQP_l-4pCnAOU55dDkFGrPU1UWvoYfvguKBjWVSTpGWkrosgpc5tAulMSWltO9FEY_pPGWgXIfJSk3nDGa5Sln93zKm49t0cfx3Rt41EpQmF0oZA7nVtIAsObChnhjSwTCqnSr2bGJfedSqdorO8A6LPiwU6Bzh57MN4fFHkKkFqbp5n1YBlJoOQrhpxl6yUFhz_gymvmJPCHnFCBE487_7b-yyGcSpGHu_NNTksWusxyIRG87m9YbpHDk5klzSnG'; ?>');">
                                 <div class="absolute inset-0 bg-gradient-to-t from-background-dark/95 to-transparent opacity-60"></div>
