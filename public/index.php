@@ -703,6 +703,19 @@ foreach ($possiblePaths2 as $path) {
                         </p>
                     </div>
                 </div>
+
+                <!-- FAQ Item 5 -->
+                <div class="glass-panel rounded-lg overflow-hidden transition-all duration-300 reveal delay-500">
+                    <button class="w-full px-6 py-5 flex items-center justify-between text-left focus:outline-none" onclick="toggleFaq(this)">
+                        <span class="text-base font-bold uppercase tracking-wide text-text-main font-heading">Como funciona o sistema de pontuação e o Banco de Talentos?</span>
+                        <span class="material-symbols-outlined text-primary transition-transform duration-300">expand_more</span>
+                    </button>
+                    <div class="max-h-0 overflow-hidden transition-all duration-300 ease-in-out">
+                        <p class="px-6 pb-6 text-sm text-muted leading-relaxed">
+                            Nossa plataforma conta com um sistema de pontuação exclusivo baseado em seu engajamento e desempenho nas aulas e avaliações. Os alunos que se destacarem e obtiverem as maiores pontuações serão direcionados diretamente para o nosso Banco de Talentos para futuras parcerias de trabalho e prioridade de contratação pela GT Serv Tec.
+                        </p>
+                    </div>
+                </div>
             </div>
         </div>
     </section>
