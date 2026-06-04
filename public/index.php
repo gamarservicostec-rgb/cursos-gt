@@ -258,7 +258,7 @@ foreach ($possiblePaths2 as $path) {
     <!-- 2. Hero Carousel (Banners rotativos) -->
     <section class="relative w-full overflow-hidden bg-black border-b border-solid border-border-color z-10">
         <!-- Container de Slides -->
-        <div class="relative w-full aspect-[1920/600] overflow-hidden">
+        <div class="relative w-full aspect-[1774/887] overflow-hidden">
             <!-- Slide 1 -->
             <div class="absolute inset-0 w-full h-full opacity-100 transition-opacity duration-1000 ease-in-out z-10" id="slide-0">
                 <img src="<?php echo $banner1; ?>" alt="Treinamento Técnico GT Cursos - Banner 1" class="w-full h-full object-cover object-top">
