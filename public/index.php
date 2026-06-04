@@ -157,7 +157,38 @@ try {
         </div>
     </header>
 
-    <!-- 2. Hero Section (Seção 1) -->
+    <!-- 2. Hero Carousel (Banners rotativos) -->
+    <section class="relative w-full overflow-hidden bg-black border-b border-solid border-border-color z-10">
+        <!-- Container de Slides -->
+        <div class="relative w-full aspect-[1920/600] min-h-[260px] sm:min-h-[380px] md:min-h-[500px] lg:h-[600px] overflow-hidden">
+            <!-- Slide 1 -->
+            <div class="absolute inset-0 w-full h-full opacity-100 transition-opacity duration-1000 ease-in-out z-10" id="slide-0">
+                <img src="assets/imagens/banner1.jpg" alt="Treinamento Técnico GT Cursos - Banner 1" class="w-full h-full object-cover">
+                <div class="absolute inset-0 bg-gradient-to-t from-background-dark/95 via-transparent to-transparent"></div>
+            </div>
+            <!-- Slide 2 -->
+            <div class="absolute inset-0 w-full h-full opacity-0 transition-opacity duration-1000 ease-in-out z-0" id="slide-1">
+                <img src="assets/imagens/banner2.jpg" alt="Capacitação Profissional GT Cursos - Banner 2" class="w-full h-full object-cover">
+                <div class="absolute inset-0 bg-gradient-to-t from-background-dark/95 via-transparent to-transparent"></div>
+            </div>
+
+            <!-- Setas Laterais de Navegação -->
+            <button onclick="prevSlide()" class="absolute left-4 top-1/2 -translate-y-1/2 z-20 w-10 md:w-12 h-10 md:h-12 rounded-full bg-black/60 border border-white/10 flex items-center justify-center text-white hover:border-primary hover:text-primary transition-all duration-300">
+                <span class="material-symbols-outlined text-[20px] md:text-[24px]">chevron_left</span>
+            </button>
+            <button onclick="nextSlide()" class="absolute right-4 top-1/2 -translate-y-1/2 z-20 w-10 md:w-12 h-10 md:h-12 rounded-full bg-black/60 border border-white/10 flex items-center justify-center text-white hover:border-primary hover:text-primary transition-all duration-300">
+                <span class="material-symbols-outlined text-[20px] md:text-[24px]">chevron_right</span>
+            </button>
+
+            <!-- Indicadores (Bullets) -->
+            <div class="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 flex gap-2.5">
+                <button onclick="goToSlide(0)" class="w-2.5 h-2.5 rounded-full bg-primary transition-all duration-300" id="bullet-0" aria-label="Slide 1"></button>
+                <button onclick="goToSlide(1)" class="w-2.5 h-2.5 rounded-full bg-white/30 hover:bg-white/60 transition-all duration-300" id="bullet-1" aria-label="Slide 2"></button>
+            </div>
+        </div>
+    </section>
+
+    <!-- 3. Hero Section (Seção 1 - Conexão GT Serv Tec) -->
     <section id="inicio" class="relative min-h-[90vh] flex items-center justify-center px-6 md:px-16 py-12 md:py-24 overflow-hidden border-b border-border-color">
         <!-- Glows de Fundo -->
         <div class="absolute top-1/4 left-1/4 -translate-x-1/2 -translate-y-1/2 w-[350px] md:w-[600px] h-[350px] md:h-[600px] rounded-full bg-primary/5 blur-[120px] pointer-events-none"></div>
@@ -168,18 +199,18 @@ try {
             <div class="lg:col-span-7 flex flex-col items-start text-left gap-6">
                 <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-bold uppercase tracking-widest">
                     <span class="w-2 h-2 rounded-full bg-success animate-ping"></span>
-                    Matrículas Abertas • Ambiente de Elite
+                    Matrículas Abertas • Canal de Talentos
                 </div>
                 <h1 class="text-4xl md:text-6xl lg:text-7xl font-heading font-bold leading-[1.05] uppercase tracking-tight">
-                    Domine Habilidades <br>
-                    <span class="text-primary text-glow">Operacionais de Elite</span>
+                    Sua Carreira Técnica <br>
+                    <span class="text-primary text-glow">na GT Serv Tec</span>
                 </h1>
                 <p class="text-muted text-base md:text-xl font-normal leading-relaxed max-w-xl">
-                    Capacitação profissional tática e estratégica. Cursos de segurança operacional avançada, tecnologia de ponta, inteligência estratégica e gestão de escala. 
+                    Formamos e preparamos os futuros técnicos da nossa empresa. Capacitação de alto nível em segurança eletrônica, automação comercial, infraestrutura de redes e suporte de hardware. Estude conosco e prepare-se para ingressar no time da GT Serv Tec!
                 </p>
                 <div class="flex flex-col sm:flex-row gap-4 w-full sm:w-auto mt-2">
                     <a href="#catalogo" class="flex items-center justify-center rounded h-14 px-8 bg-primary text-background-dark text-sm font-bold tracking-[0.05em] uppercase hover:bg-gold-light hover:shadow-glow-strong transition-all duration-300">
-                        Começar Agora
+                        Ver Cursos
                     </a>
                     <a href="#metodo" class="flex items-center justify-center rounded h-14 px-8 border border-white/10 hover:border-primary/50 text-text-main text-sm font-bold tracking-[0.05em] uppercase hover:bg-white/5 transition-all duration-300">
                         Nossa Metodologia
@@ -197,23 +228,23 @@ try {
                     </div>
                     <div>
                         <h4 class="text-2xl md:text-3xl font-heading font-bold text-primary">100%</h4>
-                        <p class="text-xs text-muted uppercase tracking-wider font-semibold">Híbrido e Prático</p>
+                        <p class="text-xs text-muted uppercase tracking-wider font-semibold">Prático e Híbrido</p>
                     </div>
                 </div>
             </div>
 
             <!-- Card/Imagem Direita (Hero) -->
             <div class="lg:col-span-5 relative">
-                <div class="relative w-full aspect-[4/5] rounded-2xl overflow-hidden border border-primary/20 shadow-glow bg-cover bg-center group" style="background-image: linear-gradient(to top, rgba(6, 6, 8, 0.9) 0%, rgba(6, 6, 8, 0.3) 50%, rgba(6, 6, 8, 0) 100%), url('https://lh3.googleusercontent.com/aida-public/AB6AXuCFxvMNQ91f_nfS0isFpOV1vaeiX2VlZTMX4Y0x7RqqCvPtl6JLOfgOMJ1zlpqNS7yrn-lGdil6HfHk3miu866phRlhp6PszWnsa-RSvWplX-CBskdDJ0VIIyzQ9mIeBH8C_LlsJv25--ClifepKrpcOLoh1DSDZImk86P2ODcTyT1S4pI_61b3T1ai7TT6meVe1VX5DbMVytqO7DLOpN1y3pYRYiT4jQnZsFXSkU2imrbidIlw26R76YUqhq_Ga8jJzihiZc1Ei1Ec');">
+                <div class="relative w-full aspect-[4/5] rounded-2xl overflow-hidden border border-primary/20 shadow-glow bg-cover bg-center group" style="background-image: linear-gradient(to top, rgba(6, 6, 8, 0.9) 0%, rgba(6, 6, 8, 0.3) 50%, rgba(6, 6, 8, 0) 100%), url('https://images.unsplash.com/photo-1557597774-9d273605dfa9?q=80&w=1470&auto=format&fit=crop');">
                     <!-- Overlay de Scanner Tático -->
                     <div class="absolute inset-0 border border-primary/10 rounded-2xl pointer-events-none"></div>
                     <div class="absolute top-4 left-4 inline-flex items-center gap-1.5 px-3 py-1 rounded bg-black/80 backdrop-blur border border-white/10 text-[10px] text-primary uppercase font-bold tracking-widest">
-                        <span class="material-symbols-outlined text-[12px] animate-pulse">radar</span> OPERAÇÃO ATIVA
+                        <span class="material-symbols-outlined text-[12px] animate-pulse">radar</span> PROCESSO SELETIVO
                     </div>
                     <div class="absolute bottom-6 left-6 right-6 flex flex-col gap-2 z-10">
-                        <span class="text-primary text-xs uppercase font-bold tracking-widest font-heading">CURSO DE DESTAQUE</span>
-                        <h3 class="text-text-main text-2xl font-heading font-bold uppercase leading-tight">MASTERCLASS EM SEGURANÇA DE ELITE</h3>
-                        <p class="text-muted text-xs font-normal">Aprenda a operar sob condições críticas e a gerenciar riscos táticos.</p>
+                        <span class="text-primary text-xs uppercase font-bold tracking-widest font-heading">Formação em Destaque</span>
+                        <h3 class="text-text-main text-2xl font-heading font-bold uppercase leading-tight">Instalador de Sistemas de Segurança</h3>
+                        <p class="text-muted text-xs font-normal">Capacitação avançada em CFTV, cabeamento estruturado, centrais de alarme e automação prática.</p>
                     </div>
                 </div>
             </div>
@@ -236,7 +267,7 @@ try {
                         <span class="material-symbols-outlined text-2xl font-bold">school</span>
                     </div>
                     <h3 class="text-xl font-heading font-bold uppercase tracking-wider">ENSINO HÍBRIDO PRÁTICO</h3>
-                    <p class="text-muted text-sm leading-relaxed">Combine teoria teórica avançada em nossa plataforma digital EAD com treinamentos táticos e avaliações práticas presenciais de campo.</p>
+                    <p class="text-muted text-sm leading-relaxed">Combine o estudo teórico online avançado com treinamentos presenciais práticos em equipamentos reais de instalação.</p>
                 </div>
                 
                 <!-- Diferencial 2 -->
@@ -244,17 +275,17 @@ try {
                     <div class="h-12 w-12 rounded bg-primary/10 border border-primary/20 flex items-center justify-center text-primary text-glow">
                         <span class="material-symbols-outlined text-2xl font-bold">workspace_premium</span>
                     </div>
-                    <h3 class="text-xl font-heading font-bold uppercase tracking-wider">CERTIFICAÇÃO RECONHECIDA</h3>
-                    <p class="text-muted text-sm leading-relaxed">Emita certificados profissionais dinâmicos de alta definição contendo verificação por QR Code criptografado na HostGator.</p>
+                    <h3 class="text-xl font-heading font-bold uppercase tracking-wider">CERTIFICAÇÃO TÉCNICA</h3>
+                    <p class="text-muted text-sm leading-relaxed">Emita certificados profissionais dinâmicos com autenticação pública por QR Code, válidos para o mercado de segurança.</p>
                 </div>
 
                 <!-- Diferencial 3 -->
                 <div class="glass-panel p-8 rounded-xl flex flex-col gap-4 hover:border-primary/30 transition-all duration-300 hover:-translate-y-1">
                     <div class="h-12 w-12 rounded bg-primary/10 border border-primary/20 flex items-center justify-center text-primary text-glow">
-                        <span class="material-symbols-outlined text-2xl font-bold">military_tech</span>
+                        <span class="material-symbols-outlined text-2xl font-bold">groups</span>
                     </div>
-                    <h3 class="text-xl font-heading font-bold uppercase tracking-wider">GAMIFICAÇÃO & XP</h3>
-                    <p class="text-muted text-sm leading-relaxed">Aprenda ganhando pontos de XP, suba de nível, ganhe medalhas táticas e apareça no topo do ranking de alunos de elite.</p>
+                    <h3 class="text-xl font-heading font-bold uppercase tracking-wider">BANCO DE TALENTOS</h3>
+                    <p class="text-muted text-sm leading-relaxed">Os alunos destacados nas aulas práticas e exames teóricos entram em prioridade de recrutamento na própria GT Serv Tec.</p>
                 </div>
 
                 <!-- Diferencial 4 -->
@@ -263,7 +294,7 @@ try {
                         <span class="material-symbols-outlined text-2xl font-bold">support_agent</span>
                     </div>
                     <h3 class="text-xl font-heading font-bold uppercase tracking-wider">SUPORTE E CHATS</h3>
-                    <p class="text-muted text-sm leading-relaxed">Comunicação fluida com suporte técnico direto via WhatsApp e painel de tickets administrativo Obsidian Gold integrado.</p>
+                    <p class="text-muted text-sm leading-relaxed">Tire suas dúvidas técnicas via chat de suporte direto integrado na plataforma ou atendimento no WhatsApp.</p>
                 </div>
             </div>
         </div>
@@ -515,12 +546,12 @@ try {
                 <!-- FAQ Item 1 -->
                 <div class="glass-panel rounded-lg overflow-hidden transition-all duration-300">
                     <button class="w-full px-6 py-5 flex items-center justify-between text-left focus:outline-none" onclick="toggleFaq(this)">
-                        <span class="text-base font-bold uppercase tracking-wide text-text-main font-heading">Como funciona a metodologia híbrida da GT Cursos?</span>
+                        <span class="text-base font-bold uppercase tracking-wide text-text-main font-heading">Como funciona a parceria da GT Cursos com a GT Serv Tec?</span>
                         <span class="material-symbols-outlined text-primary transition-transform duration-300">expand_more</span>
                     </button>
                     <div class="max-h-0 overflow-hidden transition-all duration-300 ease-in-out">
                         <p class="px-6 pb-6 text-sm text-muted leading-relaxed">
-                            Nossa metodologia combina o melhor dos dois mundos: você estuda toda a base teórica e de fundamentos online (EAD) por meio de aulas gravadas e exercícios, e depois participa de turmas presenciais para aulas práticas de aplicação física, recebendo presenças reais computadas no seu painel.
+                            A GT Cursos foi idealizada para preparar e capacitar técnicos de elite para atender diretamente as demandas da GT Serv Tec. Preparamos você nas instalações e configurações do dia a dia para que você possa participar do nosso banco de talentos prioritário e integrar nossa equipe de profissionais em campo.
                         </p>
                     </div>
                 </div>
@@ -528,12 +559,12 @@ try {
                 <!-- FAQ Item 2 -->
                 <div class="glass-panel rounded-lg overflow-hidden transition-all duration-300">
                     <button class="w-full px-6 py-5 flex items-center justify-between text-left focus:outline-none" onclick="toggleFaq(this)">
-                        <span class="text-base font-bold uppercase tracking-wide text-text-main font-heading">Quais são as formas de pagamento disponíveis?</span>
+                        <span class="text-base font-bold uppercase tracking-wide text-text-main font-heading">Como funciona a parte prática presencial nos treinamentos híbridos?</span>
                         <span class="material-symbols-outlined text-primary transition-transform duration-300">expand_more</span>
                     </button>
                     <div class="max-h-0 overflow-hidden transition-all duration-300 ease-in-out">
                         <p class="px-6 pb-6 text-sm text-muted leading-relaxed">
-                            Oferecemos pagamento totalmente integrado via Pix (com liberação automática e instantânea) e Cartão de Crédito em até 12 parcelas pelo Checkout do Mercado Pago, além de opção em Boleto Bancário.
+                            Após absorver a base teórica e de normas no ambiente online, você agenda as suas aulas práticas presenciais. Nessas aulas, você manipula, monta e configura centrais de alarme, câmeras CFTV, racks e roteadores corporativos no nosso centro técnico local sob a supervisão de instrutores especializados.
                         </p>
                     </div>
                 </div>
@@ -541,12 +572,12 @@ try {
                 <!-- FAQ Item 3 -->
                 <div class="glass-panel rounded-lg overflow-hidden transition-all duration-300">
                     <button class="w-full px-6 py-5 flex items-center justify-between text-left focus:outline-none" onclick="toggleFaq(this)">
-                        <span class="text-base font-bold uppercase tracking-wide text-text-main font-heading">Como funciona a autenticidade por QR Code nos certificados?</span>
+                        <span class="text-base font-bold uppercase tracking-wide text-text-main font-heading">Os certificados possuem validação oficial?</span>
                         <span class="material-symbols-outlined text-primary transition-transform duration-300">expand_more</span>
                     </button>
                     <div class="max-h-0 overflow-hidden transition-all duration-300 ease-in-out">
                         <p class="px-6 pb-6 text-sm text-muted leading-relaxed">
-                            Todos os certificados emitidos na plataforma possuem um código alfanumérico único e um QR Code de verificação. Qualquer contratante pode ler o QR Code ou acessar a nossa página pública de validação para verificar a autenticidade dos seus dados de aprovação.
+                            Sim! Cada certificado emitido pela GT Cursos possui um código alfa-numérico único e um QR Code impresso. Qualquer empresa ou cliente pode validar a autenticidade e validade da sua certificação apontando a câmera do celular para o QR Code ou consultando a nossa página oficial de verificação.
                         </p>
                     </div>
                 </div>
@@ -554,12 +585,12 @@ try {
                 <!-- FAQ Item 4 -->
                 <div class="glass-panel rounded-lg overflow-hidden transition-all duration-300">
                     <button class="w-full px-6 py-5 flex items-center justify-between text-left focus:outline-none" onclick="toggleFaq(this)">
-                        <span class="text-base font-bold uppercase tracking-wide text-text-main font-heading">Posso usar cupons de desconto nas matrículas?</span>
+                        <span class="text-base font-bold uppercase tracking-wide text-text-main font-heading">Quais são as formas de pagamento para as matrículas?</span>
                         <span class="material-symbols-outlined text-primary transition-transform duration-300">expand_more</span>
                     </button>
                     <div class="max-h-0 overflow-hidden transition-all duration-300 ease-in-out">
                         <p class="px-6 pb-6 text-sm text-muted leading-relaxed">
-                            Sim! Oferecemos campanhas sazonais de descontos fixos ou percentuais. Basta inserir o código de cupom ativo no formulário de checkout para recalcular o valor de forma automática no fechamento da sua matrícula.
+                            As matrículas são integradas de forma 100% segura através do Mercado Pago. Você pode pagar via PIX (com liberação imediata das aulas), Cartão de Crédito em até 12 parcelas (com juros calculados na simulação) ou Boleto Bancário convencional.
                         </p>
                     </div>
                 </div>
@@ -675,6 +706,47 @@ try {
             if (e.target === terms) closeModal('terms');
             if (e.target === privacy) closeModal('privacy');
         });
+
+        // Lógica do Hero Carousel Rotativo (Transições de Esmaecer / Fade)
+        let currentSlideIndex = 0;
+        const totalSlides = 2;
+        let carouselInterval = setInterval(nextSlide, 3500);
+
+        function showSlide(index) {
+            currentSlideIndex = (index + totalSlides) % totalSlides;
+            
+            for (let i = 0; i < totalSlides; i++) {
+                const slide = document.getElementById(`slide-${i}`);
+                const bullet = document.getElementById(`bullet-${i}`);
+                if (slide && bullet) {
+                    if (i === currentSlideIndex) {
+                        slide.classList.remove('opacity-0', 'z-0');
+                        slide.classList.add('opacity-100', 'z-10');
+                        bullet.classList.remove('bg-white/30', 'hover:bg-white/60');
+                        bullet.classList.add('bg-primary');
+                    } else {
+                        slide.classList.remove('opacity-100', 'z-10');
+                        slide.classList.add('opacity-0', 'z-0');
+                        bullet.classList.remove('bg-primary');
+                        bullet.classList.add('bg-white/30', 'hover:bg-white/60');
+                    }
+                }
+            }
+        }
+
+        function nextSlide() {
+            showSlide(currentSlideIndex + 1);
+        }
+
+        function prevSlide() {
+            showSlide(currentSlideIndex - 1);
+        }
+
+        function goToSlide(index) {
+            clearInterval(carouselInterval);
+            showSlide(index);
+            carouselInterval = setInterval(nextSlide, 3500);
+        }
     </script>
 
     <!-- Modal: Termos de Serviço -->
