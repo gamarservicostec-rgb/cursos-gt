@@ -9,7 +9,7 @@ use Helpers\EmailSender;
 
 require_once __DIR__ . '/../../../src/Config/Database.php';
 require_once __DIR__ . '/../../../src/Helpers/EmailSender.php';
-require_once __DIR__ . '/../../../src/Middleware/SecurityHeaders'; // Optional security inclusion if needed
+require_once __DIR__ . '/../../../src/Middleware/SecurityHeaders.php'; // Optional security inclusion if needed
 
 // Permite apenas requisições POST
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
