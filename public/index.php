@@ -315,15 +315,15 @@ foreach ($possiblePaths2 as $path) {
     <!-- 2. Hero Carousel (Banners rotativos) -->
     <section class="relative w-full overflow-hidden bg-black border-b border-solid border-border-color z-10">
         <!-- Container de Slides -->
-        <div class="relative w-full aspect-[1920/600] min-h-[260px] sm:min-h-[380px] md:min-h-[500px] lg:h-[600px] overflow-hidden">
+        <div class="relative w-full aspect-[1920/600] min-h-[220px] sm:min-h-[300px] md:min-h-[420px] overflow-hidden">
             <!-- Slide 1 -->
             <div class="absolute inset-0 w-full h-full opacity-100 transition-opacity duration-1000 ease-in-out z-10" id="slide-0">
-                <img src="<?php echo $banner1; ?>" alt="Treinamento Técnico GT Cursos - Banner 1" class="w-full h-full object-cover">
+                <img src="<?php echo $banner1; ?>" alt="Treinamento Técnico GT Cursos - Banner 1" class="w-full h-full object-cover object-top">
                 <div class="absolute inset-0 bg-gradient-to-t from-background-dark/95 via-transparent to-transparent"></div>
             </div>
             <!-- Slide 2 -->
             <div class="absolute inset-0 w-full h-full opacity-0 transition-opacity duration-1000 ease-in-out z-0" id="slide-1">
-                <img src="<?php echo $banner2; ?>" alt="Capacitação Profissional GT Cursos - Banner 2" class="w-full h-full object-cover">
+                <img src="<?php echo $banner2; ?>" alt="Capacitação Profissional GT Cursos - Banner 2" class="w-full h-full object-cover object-top">
                 <div class="absolute inset-0 bg-gradient-to-t from-background-dark/95 via-transparent to-transparent"></div>
             </div>
 
