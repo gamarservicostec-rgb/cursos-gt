@@ -317,16 +317,16 @@ foreach ($possiblePaths2 as $path) {
                 <!-- Mini Estatísticas Hero -->
                 <div class="grid grid-cols-3 gap-6 md:gap-10 border-t border-white/5 pt-8 mt-4 w-full">
                     <div>
-                        <h4 class="text-2xl md:text-3xl font-heading font-bold text-primary">+5.000</h4>
-                        <p class="text-xs text-muted uppercase tracking-wider font-semibold">Alunos Formados</p>
+                        <h4 class="text-xl md:text-2xl font-heading font-bold text-primary uppercase">Suporte</h4>
+                        <p class="text-xs text-muted uppercase tracking-wider font-semibold">WhatsApp Ativo</p>
                     </div>
                     <div>
-                        <h4 class="text-2xl md:text-3xl font-heading font-bold text-primary">99.4%</h4>
-                        <p class="text-xs text-muted uppercase tracking-wider font-semibold">Aprovação Final</p>
+                        <h4 class="text-xl md:text-2xl font-heading font-bold text-primary uppercase">Prática</h4>
+                        <p class="text-xs text-muted uppercase tracking-wider font-semibold">Equipamentos Reais</p>
                     </div>
                     <div>
-                        <h4 class="text-2xl md:text-3xl font-heading font-bold text-primary">100%</h4>
-                        <p class="text-xs text-muted uppercase tracking-wider font-semibold">Prático e Híbrido</p>
+                        <h4 class="text-xl md:text-2xl font-heading font-bold text-primary uppercase">Diploma</h4>
+                        <p class="text-xs text-muted uppercase tracking-wider font-semibold">QR Code Oficial</p>
                     </div>
                 </div>
             </div>
@@ -553,32 +553,6 @@ foreach ($possiblePaths2 as $path) {
         </div>
     </section>
 
-    <!-- 6. Estatísticas & Impacto (Seção 5) -->
-    <section class="px-6 md:px-16 py-20 border-b border-border-color">
-        <div class="max-w-[1440px] mx-auto glass-panel p-10 md:p-16 rounded-2xl relative overflow-hidden reveal">
-            <!-- Glow do Card -->
-            <div class="absolute -top-24 -right-24 w-80 h-80 rounded-full bg-primary/5 blur-3xl pointer-events-none"></div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 text-center items-center divide-y lg:divide-y-0 lg:divide-x divide-white/5">
-                <div class="flex flex-col gap-2 py-4 lg:py-0">
-                    <span class="text-4xl md:text-5xl font-heading font-bold text-primary text-glow">+5.000</span>
-                    <span class="text-xs text-muted uppercase tracking-wider font-semibold">Alunos Capacitados</span>
-                </div>
-                <div class="flex flex-col gap-2 py-4 lg:py-0">
-                    <span class="text-4xl md:text-5xl font-heading font-bold text-primary text-glow">+400</span>
-                    <span class="text-xs text-muted uppercase tracking-wider font-semibold">Turmas Práticas</span>
-                </div>
-                <div class="flex flex-col gap-2 py-4 lg:py-0">
-                    <span class="text-4xl md:text-5xl font-heading font-bold text-primary text-glow">99.4%</span>
-                    <span class="text-xs text-muted uppercase tracking-wider font-semibold">Aprovação nos Exames</span>
-                </div>
-                <div class="flex flex-col gap-2 py-4 lg:py-0">
-                    <span class="text-4xl md:text-5xl font-heading font-bold text-primary text-glow">+25</span>
-                    <span class="text-xs text-muted uppercase tracking-wider font-semibold">Cidades Atendidas</span>
-                </div>
-            </div>
-        </div>
-    </section>
 
     <!-- 7. Depoimentos de Elite (Seção 6) -->
     <section class="px-6 md:px-16 py-20 bg-surface-dark/40 border-b border-border-color">
