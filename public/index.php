@@ -32,63 +32,6 @@ try {
     $categories = [];
 }
 
-// Fallback robusto caso o banco de dados esteja vazio ou sem os cursos novos
-if (empty($courses) || count($courses) < 4) {
-    $categories = [
-        ['id' => 1, 'name' => 'Segurança Eletrônica', 'slug' => 'seguranca-eletronica'],
-        ['id' => 2, 'name' => 'Automação Smart Home', 'slug' => 'automacao'],
-        ['id' => 3, 'name' => 'Infraestrutura de TI', 'slug' => 'infraestrutura-ti'],
-        ['id' => 4, 'name' => 'Assistência Técnica', 'slug' => 'assistencia-tecnica']
-    ];
-
-    $courses = [
-        [
-            'id' => 1,
-            'title' => 'Instalador de Sistemas de Segurança Eletrônica',
-            'description' => 'Domine a instalação, configuração e manutenção de centrais de alarme residenciais e comerciais, cercas elétricas, interfonia física e sistemas integrados de CFTV com monitoramento por aplicativo móvel.',
-            'thumbnail_url' => 'https://images.unsplash.com/photo-1557597774-9d273605dfa9?q=80&w=1470&auto=format&fit=crop',
-            'type' => 'hybrid',
-            'price' => 890.00,
-            'category_id' => 1,
-            'category_slug' => 'seguranca-eletronica',
-            'category_name' => 'Segurança Eletrônica'
-        ],
-        [
-            'id' => 2,
-            'title' => 'Especialista em Automação Residencial e Smart Home',
-            'description' => 'Aprenda a planejar e instalar sistemas inteligentes de automação residencial. Integração completa de módulos de iluminação, automação de portões, fechaduras eletrônicas inteligentes e sensores integrados com controle via Alexa ou Google Assistant.',
-            'thumbnail_url' => 'https://images.unsplash.com/photo-1558002038-1055907df827?q=80&w=1470&auto=format&fit=crop',
-            'type' => 'hybrid',
-            'price' => 990.00,
-            'category_id' => 2,
-            'category_slug' => 'automacao',
-            'category_name' => 'Automação Smart Home'
-        ],
-        [
-            'id' => 3,
-            'title' => 'Instalador de Redes, Cabeamento Estruturado e Infraestrutura de TI',
-            'description' => 'Capacitação teórica e prática para infraestrutura de TI corporativa e residencial. Aprenda organização de racks, crimpagem profissional RJ45/Keystones, roteadores Wi-Fi de alta performance, e cabeamento estruturado seguindo normas técnicas.',
-            'thumbnail_url' => 'https://images.unsplash.com/photo-1544256718-3bcf237f3974?q=80&w=1471&auto=format&fit=crop',
-            'type' => 'hybrid',
-            'price' => 1190.00,
-            'category_id' => 3,
-            'category_slug' => 'infraestrutura-ti',
-            'category_name' => 'Infraestrutura de TI'
-        ],
-        [
-            'id' => 4,
-            'title' => 'Manutenção de Hardware: PCs, Notebooks e Smartphones',
-            'description' => 'Torne-se um profissional completo em assistência técnica. Diagnóstico de falhas de hardware, troca de telas de celulares, limpeza e troca de pasta térmica, formatação, recuperação e otimização de sistemas operacionais.',
-            'thumbnail_url' => 'https://images.unsplash.com/photo-1597872200969-2b65d56bd16b?q=80&w=1470&auto=format&fit=crop',
-            'type' => 'online',
-            'price' => 790.00,
-            'category_id' => 4,
-            'category_slug' => 'assistencia-tecnica',
-            'category_name' => 'Assistência Técnica'
-        ]
-    ];
-}
-
 // Lógica de Detecção Inteligente e Fallback de Arquivos de Banner
 $banner1 = 'assets/images/banner1.png';
 $banner2 = 'assets/images/banner2.png';
@@ -315,7 +258,7 @@ foreach ($possiblePaths2 as $path) {
     <!-- 2. Hero Carousel (Banners rotativos) -->
     <section class="relative w-full overflow-hidden bg-black border-b border-solid border-border-color z-10">
         <!-- Container de Slides -->
-        <div class="relative w-full aspect-[1920/600] min-h-[220px] sm:min-h-[300px] md:min-h-[420px] overflow-hidden">
+        <div class="relative w-full aspect-[1920/600] overflow-hidden">
             <!-- Slide 1 -->
             <div class="absolute inset-0 w-full h-full opacity-100 transition-opacity duration-1000 ease-in-out z-10" id="slide-0">
                 <img src="<?php echo $banner1; ?>" alt="Treinamento Técnico GT Cursos - Banner 1" class="w-full h-full object-cover object-top">
@@ -606,6 +549,12 @@ foreach ($possiblePaths2 as $path) {
                 </div>
                 <div class="flex flex-col gap-2 py-4 lg:py-0">
                     <span class="text-4xl md:text-5xl font-heading font-bold text-primary text-glow">+25</span>
+                    <span class="text-xs text-muted uppercase tracking-wider font-semibold">Cidades Atendidas</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <!-- 7. Depoimentos de Elite (Seção 6) -->
     <section class="px-6 md:px-16 py-20 bg-surface-dark/40 border-b border-border-color">
         <div class="max-w-[1440px] mx-auto">
