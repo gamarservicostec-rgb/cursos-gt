@@ -426,21 +426,38 @@ try {
                                             <div id="modBody-<?php echo $mod['id']; ?>" class="px-4 pb-4 pt-1 space-y-2 border-t border-[#2A2A35]/50 bg-[#0A0A0C]/50 transition-all <?php echo ($mIndex === 0) ? '' : 'hidden'; ?>">
                                                 <?php if (!empty($mod['subjects'])): ?>
                                                     <?php foreach ($mod['subjects'] as $sub): ?>
-                                                        <?php if (!empty($sub['lessons'])): ?>
-                                                            <?php foreach ($sub['lessons'] as $les): ?>
-                                                                <div class="flex items-center justify-between py-1.5 text-xs">
-                                                                    <div class="flex items-center gap-2 text-[#EAEAEA]">
-                                                                        <?php if ($isEnrolled): ?>
-                                                                            <span class="material-symbols-outlined text-[16px] text-primary">play_circle</span>
-                                                                        <?php else: ?>
-                                                                            <span class="material-symbols-outlined text-[16px] text-[#8F8F9D]" title="Matricule-se para desbloquear">lock</span>
-                                                                        <?php endif; ?>
-                                                                        <span><?php echo htmlspecialchars($les['title'], ENT_QUOTES, 'UTF-8'); ?></span>
+                                                        <!-- Materia Header Accordion -->
+                                                        <button onclick="toggleSubjectSyllabus(<?php echo $sub['id']; ?>)" class="w-full py-2 px-3 rounded-lg flex items-center justify-between hover:bg-white/[0.03] text-left transition-colors border border-white/5 hover:border-primary/20 bg-white/[0.01] mt-2 mb-1">
+                                                            <div class="flex items-center gap-2">
+                                                                <span class="material-symbols-outlined text-primary text-[14px]">folder_open</span>
+                                                                <span class="text-xs font-bold text-[#EAEAEA] uppercase tracking-wide"><?php echo htmlspecialchars($sub['title'], ENT_QUOTES, 'UTF-8'); ?></span>
+                                                                <?php if (!$isEnrolled): ?>
+                                                                    <span class="material-symbols-outlined text-xs text-[#8F8F9D]" title="Conteúdo Restrito">lock</span>
+                                                                <?php endif; ?>
+                                                            </div>
+                                                            <span id="subArrow-<?php echo $sub['id']; ?>" class="material-symbols-outlined text-muted text-sm transition-transform">expand_more</span>
+                                                        </button>
+
+                                                        <!-- Aulas da Materia -->
+                                                        <div id="subBody-<?php echo $sub['id']; ?>" class="hidden pl-2 pr-1 py-1 space-y-1">
+                                                            <?php if (!empty($sub['lessons'])): ?>
+                                                                <?php foreach ($sub['lessons'] as $les): ?>
+                                                                    <div class="flex items-center justify-between py-1.5 text-xs">
+                                                                        <div class="flex items-center gap-2 text-[#EAEAEA]">
+                                                                            <?php if ($isEnrolled): ?>
+                                                                                <span class="material-symbols-outlined text-[16px] text-primary">play_circle</span>
+                                                                            <?php else: ?>
+                                                                                <span class="material-symbols-outlined text-[16px] text-[#8F8F9D]" title="Matricule-se para desbloquear">lock</span>
+                                                                            <?php endif; ?>
+                                                                            <span><?php echo htmlspecialchars($les['title'], ENT_QUOTES, 'UTF-8'); ?></span>
+                                                                        </div>
+                                                                        <span class="text-[#8F8F9D]"><?php echo floor($les['duration'] / 60); ?>m</span>
                                                                     </div>
-                                                                    <span class="text-[#8F8F9D]"><?php echo floor($les['duration'] / 60); ?>m</span>
-                                                                </div>
-                                                            <?php endforeach; ?>
-                                                        <?php endif; ?>
+                                                                <?php endforeach; ?>
+                                                            <?php else: ?>
+                                                                <p class="text-[10px] text-[#8F8F9D] pl-6 py-1">Nenhuma aula cadastrada nesta matéria.</p>
+                                                            <?php endif; ?>
+                                                        </div>
                                                     <?php endforeach; ?>
                                                 <?php else: ?>
                                                     <p class="text-xs text-muted">Aulas sendo carregadas.</p>
@@ -466,6 +483,16 @@ try {
         function toggleModuleSyllabus(modId) {
             const body = document.getElementById(`modBody-${modId}`);
             const arrow = document.getElementById(`modArrow-${modId}`);
+            if (body) {
+                body.classList.toggle('hidden');
+            }
+            if (arrow) {
+                arrow.classList.toggle('rotate-180');
+            }
+        }
+        function toggleSubjectSyllabus(subId) {
+            const body = document.getElementById(`subBody-${subId}`);
+            const arrow = document.getElementById(`subArrow-${subId}`);
             if (body) {
                 body.classList.toggle('hidden');
             }
