@@ -74,8 +74,8 @@ class EmailSender {
             $buttonHtml = '
             <table border="0" cellpadding="0" cellspacing="0" style="margin: 30px auto 0 auto;">
                 <tr>
-                    <td align="center" bgcolor="#F2C94C" style="border-radius: 8px;">
-                        <a href="' . $buttonUrl . '" target="_blank" style="font-family: Arial, sans-serif; font-size: 14px; font-weight: bold; color: #0A0A0C; text-decoration: none; padding: 14px 30px; display: inline-block; text-transform: uppercase; letter-spacing: 1px;">
+                    <td align="center" bgcolor="#F2C94C" style="border-radius: 6px;">
+                        <a href="' . $buttonUrl . '" target="_blank" style="font-family: \'Outfit\', Arial, sans-serif; font-size: 14px; font-weight: bold; color: #060608; text-decoration: none; padding: 15px 32px; display: inline-block; text-transform: uppercase; letter-spacing: 1.5px; border-radius: 6px;">
                             ' . $buttonText . '
                         </a>
                     </td>
@@ -83,39 +83,45 @@ class EmailSender {
             </table>';
         }
 
+        // URL absoluta para a logo oficial
+        $logoUrl = AppConfig::$APP_URL . '/assets/images/logo.png';
+
         return '
         <!DOCTYPE html>
         <html>
         <head>
             <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
             <title>' . $title . '</title>
         </head>
-        <body style="background-color: #0A0A0C; color: #F5F5F7; font-family: Arial, sans-serif; margin: 0; padding: 0;">
-            <table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 600px; background-color: #141417; border: 1px solid rgba(255,255,255,0.05); margin-top: 40px; margin-bottom: 40px; border-radius: 12px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
-                <!-- Header -->
+        <body style="background-color: #060608; color: #F5F5F7; font-family: \'Outfit\', Arial, sans-serif; margin: 0; padding: 0; -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%;">
+            <table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 600px; background-color: #0E0E12; border-top: 4px solid #F2C94C; border-left: 1px solid rgba(242, 201, 76, 0.08); border-right: 1px solid rgba(242, 201, 76, 0.08); border-bottom: 1px solid rgba(242, 201, 76, 0.08); margin-top: 40px; margin-bottom: 40px; border-radius: 12px; overflow: hidden; box-shadow: 0 20px 40px rgba(0,0,0,0.65);">
+                <!-- Header (Logo) -->
                 <tr>
-                    <td align="center" style="padding: 40px 0 20px 0; border-bottom: 1px solid rgba(255,255,255,0.05);">
-                        <span style="font-size: 24px; font-weight: bold; letter-spacing: 2px; color: #F5F5F7;">
-                            CURSOS <span style="color: #F2C94C;">GT</span>
-                        </span>
+                    <td align="center" style="padding: 40px 30px 25px 30px; border-bottom: 1px solid rgba(242, 201, 76, 0.06);">
+                        <a href="' . AppConfig::$APP_URL . '" target="_blank" style="text-decoration: none; display: inline-block;">
+                            <img src="' . $logoUrl . '" alt="Logo GT Cursos" style="height: 52px; width: auto; max-width: 200px; display: block; border: 0; outline: none; object-fit: contain;">
+                        </a>
                     </td>
                 </tr>
-                <!-- Body -->
+                <!-- Body (Conteúdo) -->
                 <tr>
-                    <td style="padding: 40px 30px;">
-                        <h1 style="font-size: 20px; font-weight: bold; color: #F2C94C; margin-top: 0; text-transform: uppercase;">' . $title . '</h1>
-                        <div style="font-size: 15px; line-height: 1.6; color: #EAEAEA;">
+                    <td style="padding: 40px 35px 35px 35px;">
+                        <h1 style="font-family: \'Clash Display\', Arial, sans-serif; font-size: 22px; font-weight: bold; color: #F2C94C; margin-top: 0; margin-bottom: 24px; text-transform: uppercase; letter-spacing: 0.5px;">
+                            ' . $title . '
+                        </h1>
+                        <div style="font-size: 15px; line-height: 1.7; color: #EAEAEA; font-weight: 400;">
                             ' . $content . '
                         </div>
                         ' . $buttonHtml . '
                     </td>
                 </tr>
-                <!-- Footer -->
+                <!-- Footer (Rodapé) -->
                 <tr>
-                    <td align="center" style="padding: 30px; border-top: 1px solid rgba(255,255,255,0.05); font-size: 11px; color: #8F8F9D; line-height: 1.4;">
+                    <td align="center" style="padding: 30px; border-top: 1px solid rgba(242, 201, 76, 0.06); background-color: #09090C; font-size: 11px; color: #8F8F9D; line-height: 1.5; font-weight: 500;">
                         Este é um e-mail automático enviado pela plataforma GT Cursos.<br>
-                        © ' . date('Y') . ' Cursos GT - Todos os direitos reservados.<br>
-                        Hospedagem de Alta Definição e Segurança de Elite.
+                        © ' . date('Y') . ' <a href="' . AppConfig::$APP_URL . '" target="_blank" style="color: #F2C94C; text-decoration: none; font-weight: bold;">GT Cursos</a>. Todos os direitos reservados.<br>
+                        Plataforma de Alta Capacidade e Treinamentos de Elite.
                     </td>
                 </tr>
             </table>
