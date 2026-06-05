@@ -2,8 +2,14 @@
 namespace Helpers;
 
 use Config\AppConfig;
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\SMTP;
+use PHPMailer\PHPMailer\Exception;
 
 require_once __DIR__ . '/../Config/AppConfig.php';
+require_once __DIR__ . '/PHPMailer/Exception.php';
+require_once __DIR__ . '/PHPMailer/PHPMailer.php';
+require_once __DIR__ . '/PHPMailer/SMTP.php';
 
 /**
  * EmailSender
@@ -14,7 +20,7 @@ require_once __DIR__ . '/../Config/AppConfig.php';
 class EmailSender {
 
     /**
-     * Envia um e-mail formatado em HTML para o destinatário.
+     * Envia um e-mail formatado em HTML para o destinatário usando PHPMailer SMTP.
      * 
      * @param string $to E-mail do destinatário
      * @param string $subject Assunto da mensagem
@@ -22,15 +28,35 @@ class EmailSender {
      * @return bool Retorna verdadeiro se o e-mail foi disparado
      */
     public static function send($to, $subject, $bodyHtml) {
-        // Cabeçalhos de e-mail HTML robustos
-        $headers[] = 'MIME-Version: 1.0';
-        $headers[] = 'Content-type: text/html; charset=utf-8';
-        $headers[] = 'From: GT Cursos Suporte <' . AppConfig::$SMTP_USER . '>';
-        $headers[] = 'Reply-To: ' . AppConfig::$SMTP_USER;
-        $headers[] = 'X-Mailer: PHP/' . phpversion();
+        $mail = new PHPMailer(true);
 
-        // Envia usando a função nativa PHP mail() recomendada para compatibilidade cPanel
-        return mail($to, $subject, $bodyHtml, implode("\r\n", $headers));
+        try {
+            // Configurações do Servidor SMTP do Gmail
+            $mail->isSMTP();
+            $mail->Host       = AppConfig::$SMTP_HOST;
+            $mail->SMTPAuth   = true;
+            $mail->Username   = AppConfig::$SMTP_USER;
+            $mail->Password   = AppConfig::$SMTP_PASS;
+            $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+            $mail->Port       = AppConfig::$SMTP_PORT;
+            $mail->CharSet    = 'UTF-8';
+
+            // Destinatários
+            $mail->setFrom(AppConfig::$SMTP_USER, 'GT Cursos Suporte');
+            $mail->addAddress($to);
+            $mail->addReplyTo(AppConfig::$SMTP_USER, 'GT Cursos Suporte');
+
+            // Conteúdo do E-mail
+            $mail->isHTML(true);
+            $mail->Subject = $subject;
+            $mail->Body    = $bodyHtml;
+            $mail->AltBody = strip_tags($bodyHtml);
+
+            return $mail->send();
+        } catch (Exception $e) {
+            error_log("Falha ao enviar e-mail via PHPMailer: " . $mail->ErrorInfo);
+            return false;
+        }
     }
 
     /**
