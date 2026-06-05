@@ -46,6 +46,17 @@ class EmailSender {
             $mail->addAddress($to);
             $mail->addReplyTo(AppConfig::$SMTP_USER, 'GT Cursos Suporte');
 
+            // Anexa a imagem do logo local para exibição inline confiável (CID)
+            $logoPath = __DIR__ . '/../../public/assets/images/logo.png';
+            if (file_exists($logoPath)) {
+                $mail->addEmbeddedImage($logoPath, 'logo_gt', 'logo.png');
+            } else {
+                $altLogoPath = __DIR__ . '/../../public/assets/imagens/logo.png';
+                if (file_exists($altLogoPath)) {
+                    $mail->addEmbeddedImage($altLogoPath, 'logo_gt', 'logo.png');
+                }
+            }
+
             // Conteúdo do E-mail
             $mail->isHTML(true);
             $mail->Subject = $subject;
@@ -83,9 +94,6 @@ class EmailSender {
             </table>';
         }
 
-        // URL absoluta para a logo oficial
-        $logoUrl = AppConfig::$APP_URL . '/assets/images/logo.png';
-
         return '
         <!DOCTYPE html>
         <html>
@@ -100,7 +108,7 @@ class EmailSender {
                 <tr>
                     <td align="center" style="padding: 40px 30px 25px 30px; border-bottom: 1px solid rgba(242, 201, 76, 0.06);">
                         <a href="' . AppConfig::$APP_URL . '" target="_blank" style="text-decoration: none; display: inline-block;">
-                            <img src="' . $logoUrl . '" alt="Logo GT Cursos" style="height: 52px; width: auto; max-width: 200px; display: block; border: 0; outline: none; object-fit: contain;">
+                            <img src="cid:logo_gt" alt="Logo GT Cursos" style="height: 52px; width: auto; max-width: 200px; display: block; border: 0; outline: none; object-fit: contain;">
                         </a>
                     </td>
                 </tr>
